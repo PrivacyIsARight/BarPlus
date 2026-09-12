@@ -73,9 +73,7 @@ function Lobby:_Clean()
 	self.myBattleID = nil
 	self.scriptPassword = nil
 	self.sessionToken = nil
-	local am = Platform.macAddrHash or "0"
-	local as = Platform.sysInfoHash or "0"
-	self.agent = am.." "..as:sub(1,16)
+	self.agent = "0 0"
 
 	-- reconnection delay in seconds
 	self.reconnectionDelay = 15
