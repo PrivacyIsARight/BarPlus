@@ -1,37 +1,150 @@
----@diagnostic disable: undefined-global
---------------------------------------------------------------------------------
--- PluginsWindow: Community Widgets Browser for BYAR-Chobby
---
--- A comprehensive UI for browsing, searching, and downloading community-made
--- widgets from the BAR Workshop CDN. Features a paginated grid view, search
--- filtering, detail modals with README display, and robust error handling.
---
--- CDN Structure:
---   Manifest:    /bar-workshop/manifests.json
---   Thumbnails:  /bar-workshop/sites/{id}/{id}_325x100.png
---   Cover art:   /bar-workshop/sites/{id}/{id}_460x300.png
---   README:      /bar-workshop/sites/{id}/{id}.md
---   Distribution:/bar-workshop/distributions/{id}.zip
---
--- Manifest entry fields:
---   id, display_name, name, author, description, tags, version, last_updated,
---   homepage, github_link, discord_link
---------------------------------------------------------------------------------
 
 
--- Ensure json module is available
 local json = json or VFS.Include and VFS.Include("libs/json.lua") or nil
 
 PluginsWindow = LCS.class{}
 
---------------------------------------------------------------------------------
--- Constants
---------------------------------------------------------------------------------
 
-local CDN_BASE         = "https://widget-hub.beyondallreason.dev"
-local MANIFEST_URL     = CDN_BASE .. "/manifests.json"
+local DEFAULT_CDN = {
+    base          = "https://widget-hub.beyondallreason.dev",
+    manifest      = "/manifests.json",
+    resources     = "/sites/%s",
+    distributions = "/distributions/%s.zip",
+}
+
+local gitRepoInfo      = nil
+local sourceWidgetDirs = {}
+local sourceWidgetFiles= {}
+local sourceManifestPending = { count = 0, done = 0, failed = 0 }
+local sourceInstalls   = {}
+local trackedFileInstalls = {}
+local gitWidgetDirs        = {}
+local gitWidgetManifests   = {}
+local sourceWidgetFileLists= {}
+
+local function parseHubValue(value)
+    if type(value) ~= "string" or value == "" then
+        return nil
+    end
+    local text = value:gsub("%s+", ""):gsub("/+$", "")
+    local function asGitRepo(gitOwner, gitRepo, branch)
+        local explicit = branch ~= nil
+        branch = branch or "main"
+        return {
+            base = "https://raw.githubusercontent.com/" .. gitOwner .. "/" .. gitRepo .. "/" .. branch,
+            gitOwner = gitOwner,
+            gitRepo = gitRepo,
+            branch = branch,
+            explicitBranch = explicit,
+        }
+    end
+
+    if string.match(text, "^https?://") then
+        local norm = text:gsub("^https?://www%.github%.com/", "https://github.com/")
+        local ghOwner, ghRepo, ghBranch = string.match(norm, "^https?://github%.com/([%w%.%-_]+)/([%w%.%-_]+)/tree/([%w%.%-_/]+)$")
+        if not ghOwner then
+            ghOwner, ghRepo = string.match(norm, "^https?://github%.com/([%w%.%-_]+)/([%w%.%-_]+)$")
+        end
+        if ghOwner then
+            return asGitRepo(ghOwner, ghRepo, ghBranch)
+        end
+        return { base = text }
+    end
+
+    local owner, repo, branch = string.match(text, "^([%w%.%-_]+)/([%w%.%-_]+)@([%w%.%-_]+)$")
+    if not owner then
+        owner, repo = string.match(text, "^([%w%.%-_]+)/([%w%.%-_]+)$")
+    end
+    if owner then
+        return asGitRepo(owner, repo, branch)
+    end
+    return nil
+end
+
+local function applyGitRepoInfo(parsed)
+    local sameRepo = gitRepoInfo
+        and gitRepoInfo.gitOwner == parsed.gitOwner
+        and gitRepoInfo.gitRepo == parsed.gitRepo
+    local branch = parsed.branch
+    if not parsed.explicitBranch and sameRepo and gitRepoInfo.branch then
+        branch = gitRepoInfo.branch
+    end
+    return {
+        gitOwner = parsed.gitOwner,
+        gitRepo = parsed.gitRepo,
+        branch = branch,
+        explicitBranch = parsed.explicitBranch,
+    }
+end
+
+local function getConfiguredCdn()
+    local cdn = {}
+    for key, value in pairs(DEFAULT_CDN) do
+        cdn[key] = value
+    end
+
+    local Configuration = WG.Chobby and WG.Chobby.Configuration
+    local configured = Configuration
+        and (Configuration.pluginsCdnUrl
+            or (Configuration.gameConfig and Configuration.gameConfig.pluginsCdnUrl))
+
+    if type(configured) == "string" then
+        local parsed = parseHubValue(configured)
+        if parsed then
+            if parsed.gitOwner then
+                gitRepoInfo = applyGitRepoInfo(parsed)
+            end
+            cdn.base = parsed.base
+        end
+    elseif type(configured) == "table" then
+        if type(configured.base) == "string" and configured.base ~= "" then
+            local parsed = parseHubValue(configured.base)
+            if parsed then
+                if parsed.gitOwner then
+                    gitRepoInfo = applyGitRepoInfo(parsed)
+                end
+                cdn.base = parsed.base
+            end
+        end
+        for _, key in ipairs({ "manifest", "resources", "distributions" }) do
+            if type(configured[key]) == "string" and configured[key] ~= "" then
+                cdn[key] = configured[key]
+            end
+        end
+    end
+
+    if gitRepoInfo and gitRepoInfo.gitOwner then
+        cdn.base = "https://raw.githubusercontent.com/" .. gitRepoInfo.gitOwner .. "/" .. gitRepoInfo.gitRepo .. "/" .. (gitRepoInfo.branch or "main")
+    end
+
+    cdn.base = cdn.base:gsub("%s+", ""):gsub("/+$", "")
+    return cdn
+end
+
+local function resetGitHubState()
+    gitRepoInfo = nil
+    sourceWidgetDirs = {}
+    sourceWidgetFiles = {}
+    sourceManifestPending = { count = 0, done = 0, failed = 0 }
+    sourceInstalls = {}
+local trackedFileInstalls = {}
+    gitWidgetDirs = {}
+    gitWidgetManifests = {}
+    sourceWidgetFileLists = {}
+end
+
+local function getManifestUrl()
+    local cdn = getConfiguredCdn()
+    return cdn.base .. cdn.manifest
+end
+
 local MANIFEST_DEST    = "LuaUI/Widgets/manifests.json"
 local MANIFEST_NAME    = "plugin_manifest"
+
+local GIT_TREE_NAME    = "git_repo_tree"
+local GIT_TREE_DEST    = "LuaUI/Widgets/git_repo_tree.json"
+local GIT_SRC_MANIFEST_PREFIX = "git_widget_manifest_"
+local GIT_SRC_MANIFESTS_DIR   = "LuaUI/Widgets/git_source_manifests/"
 
 local PLUGINS_DIR         = "plugins/"
 local IMG_FALLBACK_LARGE  = "LuaMenu/images/load_img_512.png"
@@ -39,9 +152,9 @@ local IMG_FALLBACK_MEDIUM = "LuaMenu/images/load_img_128.png"
 local IMG_SOURCE          = "LuaMenu/images/source.png"
 local IMG_DISCORD         = "LuaMenu/images/Discord-Symbol-White.png"
 
-local ITEM_MIN_WIDTH   = 300  -- Minimum width for a widget card; actual width is dynamic based on container size
+local ITEM_MIN_WIDTH   = 300
 local ITEM_HEIGHT      = 240
-local ITEMS_PER_PAGE   = 10    -- 5 rows * 2 columns
+local ITEMS_PER_PAGE   = 10
 local HEADER_HEIGHT    = 48
 local HEADER_ROW_GAP   = 4
 local HEADER_TOTAL_HEIGHT = HEADER_HEIGHT * 2 + HEADER_ROW_GAP
@@ -51,52 +164,41 @@ local STATE_LOADING    = "loading"
 local STATE_LOADED     = "loaded"
 local STATE_ERROR      = "error"
 
---------------------------------------------------------------------------------
--- Module-level state
---------------------------------------------------------------------------------
 
-local widgetsList      = {}       -- Array of parsed widget entries
-local widgetPanelCache = {}       -- id -> Chili panel cache
-local currentFilter    = ""       -- Current search string
-local currentPage      = 1        -- Current pagination page
+local widgetsList      = {}
+local widgetPanelCache = {}
+local currentFilter    = ""
+local currentPage      = 1
 local loadState        = STATE_LOADING
 local loadError        = nil
 
--- UI references (set during init, cleared on dispose)
 local mainGrid         = nil
 local scrollPanel      = nil
 local pageLabel        = nil
 local statusLabel      = nil
-local detailWindow     = nil      -- Currently open detail modal
+local detailWindow     = nil
 local searchBox        = nil
-local detailReadmeBox  = nil      -- TextBox inside detail modal showing README
-local detailCoverImage = nil      -- Image inside detail modal showing cover art
-local detailWidgetId   = nil      -- id of widget currently shown in detail modal
-local updateAllButton  = nil      -- header button, only visible when updates are available
+local detailReadmeBox  = nil
+local detailCoverImage = nil
+local detailWidgetId   = nil
+local updateAllButton  = nil
+local hubButton        = nil
 
-local installingWidgets = {}      -- id -> true while install download is in progress
-local installedWidgets  = {}      -- id -> true after successful install
-local upgradeBackups    = {}      -- id -> backup path for in-progress upgrades
-local installedLastUpdatedCache = {} -- id -> last_updated from installed manifest.json (false = none)
+local installingWidgets = {}
+local installedWidgets  = {}
+local upgradeBackups    = {}
+local installedLastUpdatedCache = {}
 
--- Parallel download pipeline state
-local downloadToWidgetId = {}     -- download name -> widget id (O(1) lookup)
-local cardImageRefs      = {}     -- widget id -> Chili Image widget for in-place updates
-local refreshPending     = false  -- debounce flag for grid refresh
+local downloadToWidgetId = {}
+local cardImageRefs      = {}
+local refreshPending     = false
 
---------------------------------------------------------------------------------
--- Utility: Safe string match (case-insensitive, pattern-safe)
---------------------------------------------------------------------------------
 
 local function containsText(haystack, needle)
     if not haystack or not needle or needle == "" then return true end
-    -- Use plain find to avoid pattern injection
     return string.find(string.lower(haystack), string.lower(needle), 1, true) ~= nil
 end
 
---------------------------------------------------------------------------------
--- Utility: Clamp a number between min and max
---------------------------------------------------------------------------------
 
 local function clamp(val, lo, hi)
     if val < lo then return lo end
@@ -104,19 +206,11 @@ local function clamp(val, lo, hi)
     return val
 end
 
---------------------------------------------------------------------------------
--- Utility: Check that a manifest link field is a non-empty string
---------------------------------------------------------------------------------
 
 local function hasLink(url)
     return type(url) == "string" and url ~= ""
 end
 
---------------------------------------------------------------------------------
--- Utility: Compare two ISO 8601 timestamps (e.g. "2026-07-12T00:00:00.000Z")
--- Returns -1 if t1 < t2, 0 if equal, 1 if t1 > t2
--- Same-format UTC timestamps order correctly as plain strings.
---------------------------------------------------------------------------------
 
 local function compareTimestamps(t1, t2)
     if not t1 and not t2 then return 0 end
@@ -127,9 +221,6 @@ local function compareTimestamps(t1, t2)
     return 1
 end
 
---------------------------------------------------------------------------------
--- Asset path helpers
---------------------------------------------------------------------------------
 
 local function getThumbnailPath(widgetId)
     return PLUGINS_DIR .. widgetId .. "_325x100.png"
@@ -144,7 +235,8 @@ local function getReadmePath(widgetId)
 end
 
 local function getDistributionUrl(widgetId)
-    return CDN_BASE .. "/distributions/" .. widgetId .. ".zip"
+    local cdn = getConfiguredCdn()
+    return cdn.base .. cdn.distributions:gsub("%%s", function() return widgetId end)
 end
 
 local function getInstallPath(widgetId)
@@ -160,13 +252,9 @@ local function getWidgetDisplayName(widgetId)
     return widgetId
 end
 
---------------------------------------------------------------------------------
--- Install helpers
---------------------------------------------------------------------------------
 
 local function isWidgetInstalled(widgetId)
     if installedWidgets[widgetId] then return true end
-    -- Check if the install directory already exists on disk
     local installDir = getInstallPath(widgetId) .. "/"
     local files = VFS.DirList(installDir)
     if files and #files > 0 then
@@ -176,11 +264,60 @@ local function isWidgetInstalled(widgetId)
     return false
 end
 
+
+local function createDirForFile(filePath)
+    local dir = string.match(filePath, "^(.+)/[^/]+$")
+    if not dir or dir == "" then return end
+    local prefix = ""
+    for part in string.gmatch(dir, "[^/]+") do
+        prefix = prefix == "" and part or (prefix .. "/" .. part)
+        Spring.CreateDir(prefix)
+    end
+end
+
+local function queueSourceWidgetFiles(widget, kind)
+    local widgetId = widget.id
+    local files = widget._srcFiles or (sourceWidgetFiles and sourceWidgetFiles[widgetId])
+    local widgetDir = widget._srcDir or (sourceWidgetDirs and sourceWidgetDirs[widgetId])
+    if not files or #files == 0 or not widgetDir then
+        return false
+    end
+    if not (WG.DownloadHandler and WG.DownloadHandler.QueueDownload) then
+        return false
+    end
+    local installDir = getInstallPath(widgetId)
+    local base = getConfiguredCdn().base
+    trackedFileInstalls[widgetId] = { kind = kind, total = #files, done = 0 }
+    for i, relPath in ipairs(files) do
+        local relToWidget = string.sub(relPath, #widgetDir + 2)
+        local destFile = installDir .. "/" .. relToWidget
+        Spring.CreateDir(installDir)
+        createDirForFile(destFile)
+        local downloadName = (kind == "upgrade" and "srcup_" or "srcinst_") .. widgetId .. "_" .. i
+        sourceInstalls[downloadName] = widgetId
+        WG.DownloadHandler.QueueDownload(downloadName, "resource", -1, 0, {
+            url = base .. "/" .. relPath,
+            destination = destFile,
+            extract = false,
+        })
+    end
+    return true
+end
+
 local function installWidget(widget)
     local widgetId = widget.id or widget.name or "unknown"
-    if installingWidgets[widgetId] then return end -- already in progress
+    if installingWidgets[widgetId] then return end
 
     installingWidgets[widgetId] = true
+
+    if widget._srcDir or (sourceWidgetDirs and sourceWidgetDirs[widgetId]) then
+        if not queueSourceWidgetFiles(widget, "install") then
+            installingWidgets[widgetId] = nil
+            Spring.Echo("[PluginsWindow] Cannot install git-sourced widget (no files known): " .. widgetId)
+        end
+        return
+    end
+
     local installDir = getInstallPath(widgetId)
 
     local downloadName = "install_" .. widgetId
@@ -199,10 +336,8 @@ local function installWidget(widget)
     end
 end
 
--- Configuration key for the "do not show again" preference on the install disclaimer
 local INSTALL_DISCLAIMER_PREF_KEY = "pluginsInstallDisclaimerAccepted"
 
--- Show the custom-code disclaimer (unless the user opted out) before installing.
 local function confirmAndInstall(widget, afterInstall)
     local function doInstall()
         installWidget(widget)
@@ -211,7 +346,6 @@ local function confirmAndInstall(widget, afterInstall)
 
     local Configuration = WG.Chobby and WG.Chobby.Configuration
     if Configuration and Configuration[INSTALL_DISCLAIMER_PREF_KEY] then
-        -- User previously chose not to be asked again
         doInstall()
     elseif WG.Chobby and WG.Chobby.ConfirmationPopup then
         WG.Chobby.ConfirmationPopup(
@@ -228,9 +362,6 @@ local function confirmAndInstall(widget, afterInstall)
     end
 end
 
---------------------------------------------------------------------------------
--- Upgrade helpers
---------------------------------------------------------------------------------
 
 local function getInstalledLastUpdated(widgetId)
     local manifestPath = getInstallPath(widgetId) .. "/manifest.json"
@@ -251,8 +382,6 @@ local function getInstalledLastUpdated(widgetId)
     return nil
 end
 
--- Cached wrapper; card rendering queries this repeatedly and the uncached
--- version hits the disk and decodes JSON every call
 local function getInstalledLastUpdatedCached(widgetId)
     local cached = installedLastUpdatedCache[widgetId]
     if cached ~= nil then
@@ -295,7 +424,6 @@ local function updateUpdateAllButton()
 end
 
 local function renameLuaFilesRecursive(dirPath)
-    -- Ensure trailing slash for VFS calls
     local dir = dirPath
     if string.sub(dir, -1) ~= "/" then dir = dir .. "/" end
     local luaFiles = VFS.DirList(dir, "*.lua")
@@ -313,7 +441,6 @@ local function renameLuaFilesRecursive(dirPath)
 end
 
 local function backupDirectory(dirPath)
-    -- Strip trailing slash for a clean rename
     local cleanPath = dirPath
     if string.sub(cleanPath, -1) == "/" then
         cleanPath = string.sub(cleanPath, 1, -2)
@@ -323,7 +450,6 @@ local function backupDirectory(dirPath)
     local ok, err = os.rename(cleanPath, backupPath)
     if ok then
         Spring.Echo("[PluginsWindow] Backed up directory: " .. cleanPath .. " -> " .. backupPath)
-        -- Recursively rename all .lua files to .lua.backup so the engine won't load them
         renameLuaFilesRecursive(backupPath)
     else
         Spring.Echo("[PluginsWindow] Failed to backup directory: " .. tostring(cleanPath) .. " - " .. tostring(err))
@@ -339,7 +465,6 @@ local function upgradeWidget(widget)
     end
     Spring.Echo("[PluginsWindow] Upgrading " .. widgetId .. " (installed: " .. tostring(getInstalledLastUpdatedCached(widgetId)) .. ", available: " .. tostring(widget.last_updated) .. ")")
 
-    -- Backup the existing install folder by renaming it
     local installDir = getInstallPath(widgetId)
     local ok, backupPath = backupDirectory(installDir)
     if not ok then
@@ -350,7 +475,16 @@ local function upgradeWidget(widget)
     installingWidgets[widgetId] = true
     upgradeBackups[widgetId] = backupPath
 
-    -- Download and extract to the original install path (same as fresh install)
+    if widget._srcDir or (sourceWidgetDirs and sourceWidgetDirs[widgetId]) then
+        if not queueSourceWidgetFiles(widget, "upgrade") then
+            os.rename(backupPath, installDir)
+            installingWidgets[widgetId] = nil
+            upgradeBackups[widgetId] = nil
+            Spring.Echo("[PluginsWindow] Cannot upgrade git-sourced widget (no files known): " .. widgetId)
+        end
+        return
+    end
+
     local downloadName = "upgrade_" .. widgetId
     local url = getDistributionUrl(widgetId) .. "?t=" .. os.time()
 
@@ -362,7 +496,6 @@ local function upgradeWidget(widget)
         })
         Spring.Echo("[PluginsWindow] Queued upgrade download to: " .. installDir)
     else
-        -- Restore backup since we can't proceed
         os.rename(backupPath, installDir)
         installingWidgets[widgetId] = nil
         upgradeBackups[widgetId] = nil
@@ -378,7 +511,6 @@ local function checkForUpgrades()
 
     local Configuration = WG.Chobby and WG.Chobby.Configuration
     if Configuration and not Configuration.autoUpdateWidgets then
-        -- Auto-update disabled: only notify; the widget's Update button handles the rest
         local body
         if #upgradable == 1 then
             body = i18n("plugins_update_available_notification", { name = getWidgetDisplayName(upgradable[1].id) })
@@ -398,17 +530,14 @@ local function checkForUpgrades()
     end
 end
 
---------------------------------------------------------------------------------
--- Asset downloading via DownloadHandler
---------------------------------------------------------------------------------
 
 local function ensureDirectoryExists(filePath)
     local dir = string.match(filePath, "^(.+)/[^/]+$")
     if dir then Spring.CreateDir(dir) end
 end
 
-local ASSET_PRIORITY_CURRENT = 3   -- Priority for current-page asset downloads
-local ASSET_PRIORITY_PREFETCH = 1  -- Lower priority for next-page prefetches
+local ASSET_PRIORITY_CURRENT = 3
+local ASSET_PRIORITY_PREFETCH = 1
 
 local function downloadAsset(downloadName, cdnPath, localPath, priority)
     if VFS.FileExists(localPath) then
@@ -417,22 +546,28 @@ local function downloadAsset(downloadName, cdnPath, localPath, priority)
 
     ensureDirectoryExists(localPath)
 
-    local url = CDN_BASE .. cdnPath
+    local url = getConfiguredCdn().base .. cdnPath
     if WG.DownloadHandler and WG.DownloadHandler.MaybeDownloadArchive then
         WG.DownloadHandler.MaybeDownloadArchive(downloadName, "resource", priority or ASSET_PRIORITY_CURRENT, {
             url = url,
             destination = localPath,
             extract = false,
-            hidden = true,  -- background asset; suppress from user-facing download UI
+            hidden = true,
         })
     end
-    return nil -- Not yet available
+    return nil
 end
 
 local function ensureThumbnail(widget, priority)
     local id = widget.id or "unknown"
     local localPath = getThumbnailPath(id)
-    local cdnPath = "/sites/" .. id .. "/" .. id .. "_325x100.png"
+    local cdn = getConfiguredCdn()
+    local cdnPath
+    if widget._srcDir then
+        cdnPath = "/" .. widget._srcDir .. "/cover.png"
+    else
+        cdnPath = cdn.resources:gsub("%%s", function() return id end) .. "/" .. id .. "_325x100.png"
+    end
     local result = downloadAsset(id .. "_thumb", cdnPath, localPath, priority)
     return result or IMG_FALLBACK_MEDIUM
 end
@@ -440,7 +575,13 @@ end
 local function ensureCover(widget, priority)
     local id = widget.id or "unknown"
     local localPath = getCoverPath(id)
-    local cdnPath = "/sites/" .. id .. "/" .. id .. "_460x300.png"
+    local cdn = getConfiguredCdn()
+    local cdnPath
+    if widget._srcDir then
+        cdnPath = "/" .. widget._srcDir .. "/cover.png"
+    else
+        cdnPath = cdn.resources:gsub("%%s", function() return id end) .. "/" .. id .. "_460x300.png"
+    end
     local result = downloadAsset(id .. "_cover", cdnPath, localPath, priority)
     return result or IMG_FALLBACK_LARGE
 end
@@ -448,21 +589,23 @@ end
 local function ensureReadme(widget, priority)
     local id = widget.id or "unknown"
     local localPath = getReadmePath(id)
-    local cdnPath = "/sites/" .. id .. "/" .. id .. ".md"
+    local cdn = getConfiguredCdn()
+    local cdnPath
+    if widget._srcDir then
+        cdnPath = "/" .. widget._srcDir .. "/README.md"
+    else
+        cdnPath = cdn.resources:gsub("%%s", function() return id end) .. "/" .. id .. ".md"
+    end
     downloadAsset(id .. "_readme", cdnPath, localPath, priority)
     return localPath
 end
 
---------------------------------------------------------------------------------
--- Filtering
---------------------------------------------------------------------------------
 
 local function matchesFilter(widget, filter)
     if not filter or filter == "" then return true end
     if containsText(widget.name, filter) then return true end
     if containsText(widget.author, filter) then return true end
     if containsText(widget.description, filter) then return true end
-    -- Search in tags array
     if widget.tags then
         for _, tag in ipairs(widget.tags) do
             if containsText(tag, filter) then return true end
@@ -484,9 +627,6 @@ local function getFilteredWidgets()
     return results
 end
 
---------------------------------------------------------------------------------
--- Pagination
---------------------------------------------------------------------------------
 
 local function getTotalPages(filteredCount)
     if filteredCount <= 0 then return 1 end
@@ -503,9 +643,6 @@ local function getPageSlice(filteredList, page)
     return slice
 end
 
---------------------------------------------------------------------------------
--- Detail Modal
---------------------------------------------------------------------------------
 
 local function closeDetail()
     if detailWindow then
@@ -543,7 +680,6 @@ local function openDetail(widget)
         },
     }
 
-    -- Title
     Label:New {
         caption = widget.name or i18n("plugins_unknown_widget"),
         x = 15,
@@ -555,7 +691,6 @@ local function openDetail(widget)
         parent = detailWindow,
     }
 
-    -- Close button
     Button:New {
         right = 8,
         y = 5,
@@ -568,7 +703,6 @@ local function openDetail(widget)
         parent = detailWindow,
     }
 
-    -- Metadata bar
     local metaY = 40
     Label:New {
         caption = i18n("plugins_by_author", { author = widget.author or i18n("plugins_unknown_author") }),
@@ -592,7 +726,6 @@ local function openDetail(widget)
         }
     end
 
-    -- Tags display
     if widget.tags and #widget.tags > 0 then
         local tagStr = table.concat(widget.tags, ", ")
         Label:New {
@@ -608,7 +741,6 @@ local function openDetail(widget)
 
     local contentY = metaY + 48
 
-    -- Left side: README content in a scroll panel
     ScrollPanel:New {
         x = 10,
         y = contentY,
@@ -633,7 +765,6 @@ local function openDetail(widget)
         },
     }
 
-    -- Right side: cover image and action buttons
     local rightX = "62%"
 
     do
@@ -651,8 +782,6 @@ local function openDetail(widget)
         detailCoverImage = img
     end
 
-    -- Action buttons stack upward from the bottom of the right column;
-    -- link buttons only appear when the manifest provides a URL.
     local actionBottom = 15
     local function nextActionBottom()
         local value = actionBottom
@@ -739,15 +868,12 @@ local function openDetail(widget)
         parent = detailWindow,
     }
 
-    -- Modal overlay background
     PriorityPopup(detailWindow, closeDetail, nil, nil, nil, true)
 end
 
---------------------------------------------------------------------------------
--- Widget Card Panel (for grid items)
---------------------------------------------------------------------------------
 
 local scheduleRefresh
+local fetchManifest
 
 local function createWidgetCard(widget, itemWidth)
     local id = widget.id
@@ -757,7 +883,6 @@ local function createWidgetCard(widget, itemWidth)
 
     local thumbPath = ensureThumbnail(widget)
 
-    -- Create thumbnail image separately so we can store a reference for in-place updates
     local thumbImage = Image:New {
         file = thumbPath,
         x = 0,
@@ -772,16 +897,13 @@ local function createWidgetCard(widget, itemWidth)
         cardImageRefs[id] = thumbImage
     end
 
-    -- Use a fixed item height to avoid variable sizing on the last page
     local cardHeight = ITEM_HEIGHT
     local card = Panel:New {
         width = itemWidth,
         height = cardHeight,
         padding = {4, 4, 4, 4},
         children = {
-            -- Thumbnail image at top (pre-created for in-place updates)
             thumbImage,
-            -- Widget name
             Label:New {
                 caption = widget.name or i18n("plugins_unnamed_widget"),
                 x = 8,
@@ -792,7 +914,6 @@ local function createWidgetCard(widget, itemWidth)
                 autosize = false,
                 wordwrap = true,
             },
-            -- Author
             Label:New {
                 caption = i18n("plugins_by_author", { author = widget.author or i18n("plugins_unknown_author") }),
                 x = 8,
@@ -802,7 +923,6 @@ local function createWidgetCard(widget, itemWidth)
                 fontSize = 12,
                 autosize = false,
             },
-            -- Short description
             Label:New {
                 caption = widget.description or "",
                 x = 8,
@@ -813,7 +933,6 @@ local function createWidgetCard(widget, itemWidth)
                 autosize = false,
                 wordwrap = true,
             },
-            -- Install/Update button
             Button:New {
                 caption = (installingWidgets[id] and i18n("plugins_installing"))
                     or (isUpgradeAvailable(widget) and i18n("plugins_update"))
@@ -844,7 +963,6 @@ local function createWidgetCard(widget, itemWidth)
                     end
                 },
             },
-            -- Details button
             Button:New {
                 caption = i18n("plugins_details"),
                 right = 4,
@@ -861,7 +979,6 @@ local function createWidgetCard(widget, itemWidth)
         },
     }
 
-    -- Small icon-only link buttons in the bottom-left corner of the card
     local linkIconX = 4
     local function addLinkIcon(iconFile, url, tooltip)
         Button:New {
@@ -901,9 +1018,6 @@ local function createWidgetCard(widget, itemWidth)
     return card
 end
 
---------------------------------------------------------------------------------
--- Grid Refresh
---------------------------------------------------------------------------------
 
 local function refreshGrid()
     if not mainGrid then return end
@@ -946,16 +1060,11 @@ local function refreshGrid()
         return
     end
 
-    -- Hide status when we have results
     if statusLabel then statusLabel:SetVisibility(false) end
 
-    -- Calculate grid dimensions.
-    -- Use scrollPanel.clientWidth for accurate container width.
-    -- If not yet available (first frame), defer the refresh.
     local margin = 8
     local containerWidth = scrollPanel and scrollPanel.clientWidth or 0
     if containerWidth <= 0 then
-        -- clientWidth not available yet; schedule a deferred refresh
         WG.Delay(function() refreshGrid() end, 0.05)
         return
     end
@@ -963,8 +1072,6 @@ local function refreshGrid()
     local itemWidth = math.floor((containerWidth - margin * (columns + 1)) / columns)
     local rows = math.ceil(#pageSlice / columns)
 
-    -- Manually position each card so size is always exactly ITEM_HEIGHT,
-    -- regardless of how many items are on the page.
     local index = 0
     for _, widget in ipairs(pageSlice) do
         if widget.id then
@@ -979,16 +1086,13 @@ local function refreshGrid()
         end
     end
 
-    -- Set the container height to exactly fit the occupied rows.
     mainGrid:SetPos(nil, nil, nil, math.max(rows, 1) * ITEM_HEIGHT)
     mainGrid:UpdateLayout()
 
-    -- Update pagination label
     if pageLabel then
         pageLabel:SetCaption(i18n("plugins_page_status", { page = currentPage, total = totalPages, count = #filtered }))
     end
 
-    -- Prefetch thumbnails for the next page at lower priority
     local nextPage = currentPage + 1
     if nextPage <= totalPages then
         local nextSlice = getPageSlice(filtered, nextPage)
@@ -998,7 +1102,6 @@ local function refreshGrid()
     end
 end
 
--- Debounced grid refresh: coalesces rapid download completions into a single rebuild
 scheduleRefresh = function()
     if refreshPending then return end
     refreshPending = true
@@ -1008,9 +1111,79 @@ scheduleRefresh = function()
     end, 0.15)
 end
 
---------------------------------------------------------------------------------
--- Manifest Download and Parsing
---------------------------------------------------------------------------------
+
+local function reloadWidgets()
+    widgetPanelCache = {}
+    cardImageRefs = {}
+    widgetsList = {}
+    downloadToWidgetId = {}
+    installedLastUpdatedCache = {}
+    resetGitHubState()
+    currentPage = 1
+    fetchManifest()
+    refreshGrid()
+end
+
+local function getConfiguredHubValue()
+    local Configuration = WG.Chobby and WG.Chobby.Configuration
+    local value = Configuration
+        and (Configuration.pluginsCdnUrl
+            or (Configuration.gameConfig and Configuration.gameConfig.pluginsCdnUrl))
+    if type(value) == "string" then
+        return value
+    end
+    if type(value) == "table" and type(value.base) == "string" and value.base ~= "" then
+        return value.base
+    end
+    return DEFAULT_CDN.base
+end
+
+local function isValidHubValue(value)
+    if value == "" then
+        return true
+    end
+    if string.match(value, "^https?://%S+$") then
+        return true
+    end
+    return string.match(value, "^[%w%.%-_]+/[%w%.%-_]+(@[%w%.%-_]+)?$") ~= nil
+end
+
+local function openHubUrlPopup()
+    if not (WG.TextEntryWindow and WG.TextEntryWindow.CreateTextEntryWindow) then
+        return
+    end
+
+    local Configuration = WG.Chobby and WG.Chobby.Configuration
+    WG.TextEntryWindow.CreateTextEntryWindow({
+        defaultValue = getConfiguredHubValue(),
+        caption = i18n("plugins_hub_caption"),
+        labelCaption = i18n("plugins_hub_label"),
+        hint = i18n("plugins_hub_hint"),
+        height = 300,
+        width = 560,
+        oklabel = i18n("plugins_hub_save"),
+        OnAccepted = function(value)
+            local newUrl = (value or ""):gsub("%s+", ""):gsub("/+$", "")
+            if not isValidHubValue(newUrl) then
+                if Chotify then
+                    Chotify:Post({
+                        title = i18n("plugins_title"),
+                        body = i18n("plugins_hub_invalid"),
+                        time = 6,
+                    })
+                end
+                return
+            end
+            if Configuration then
+                Configuration:SetConfigValue("pluginsCdnUrl", newUrl ~= "" and newUrl or nil)
+            end
+            if hubButton then
+                hubButton.tooltip = i18n("plugins_hub_tooltip", { url = getConfiguredHubValue() })
+            end
+            reloadWidgets()
+        end
+    })
+end
 
 local function parseManifest(rawJson)
     if not json then
@@ -1028,18 +1201,15 @@ local function parseManifest(rawJson)
     end
 
     widgetsList = {}
-    downloadToWidgetId = {} -- rebuild lookup map
+    downloadToWidgetId = {}
     for _, entry in ipairs(data) do
-        -- Normalize: use display_name as name if available
         if entry.display_name and (not entry.name or entry.name == "") then
             entry.name = entry.display_name
         end
-        -- Ensure tags is always a table
         if type(entry.tags) ~= "table" then
             entry.tags = {}
         end
         widgetsList[#widgetsList + 1] = entry
-        -- Register asset download names for O(1) lookup on completion
         if entry.id then
             downloadToWidgetId[entry.id .. "_thumb"] = entry.id
             downloadToWidgetId[entry.id .. "_cover"] = entry.id
@@ -1053,6 +1223,215 @@ local function parseManifest(rawJson)
     currentPage = 1
 end
 
+
+local function queueDownloadFile(downloadName, url, destPath)
+    if not (WG.DownloadHandler and WG.DownloadHandler.QueueDownload) then
+        return false
+    end
+    ensureDirectoryExists(destPath)
+    WG.DownloadHandler.QueueDownload(downloadName, "resource", -1, 0, {
+        url = url,
+        destination = destPath,
+        extract = false,
+    })
+    return true
+end
+
+local function readJsonFile(path)
+    if not json then VFS.Include("libs/json.lua") end
+    local f = io.open(path, "r")
+    local content
+    if f then
+        content = f:read("*all")
+        f:close()
+    end
+    if not content then
+        content = VFS.LoadFile(path)
+    end
+    if not content then return nil end
+    local ok, data = pcall(function() return json.decode(content) end)
+    if ok then
+        return data
+    end
+    return nil
+end
+
+local function tryFetchManifest()
+    local url = getManifestUrl() .. "?t=" .. os.time()
+    if queueDownloadFile(MANIFEST_NAME, url, MANIFEST_DEST) then
+        return
+    end
+    loadState = STATE_ERROR
+    loadError = i18n("plugins_error_no_handler")
+    refreshGrid()
+end
+
+local function fetchRepoTrees()
+    if not (gitRepoInfo and gitRepoInfo.gitOwner) then return end
+    local branch = gitRepoInfo.branch or "main"
+    if not gitRepoInfo.explicitBranch then
+        gitRepoInfo.branch = branch
+    end
+    local treeUrl = "https://api.github.com/repos/" .. gitRepoInfo.gitOwner .. "/" .. gitRepoInfo.gitRepo .. "/git/trees/" .. branch .. "?recursive=1"
+    if not queueDownloadFile(GIT_TREE_NAME, treeUrl, GIT_TREE_DEST) then
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_no_handler")
+        refreshGrid()
+    end
+end
+
+local function isNestedWidgetDir(dir, dirSet)
+    local walk = dir
+    while walk do
+        walk = string.match(walk, "^(.*)/[^/]+$")
+        if walk and dirSet[walk] then
+            return true
+        end
+    end
+    return false
+end
+
+local function onGitTreeLoaded()
+    local data = readJsonFile(GIT_TREE_DEST)
+    if type(data) ~= "table" or type(data.tree) ~= "table" then
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_repo_layout")
+        refreshGrid()
+        return
+    end
+
+    local hasSourceManifests = false
+    for _, blob in ipairs(data.tree) do
+        if blob.type == "blob" and type(blob.path) == "string" and string.match(blob.path, "/manifest%.json$") then
+            hasSourceManifests = true
+            break
+        end
+    end
+
+    if not hasSourceManifests then
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_repo_no_widgets")
+        refreshGrid()
+        return
+    end
+
+    local manifestPaths = {}
+    for _, blob in ipairs(data.tree) do
+        if blob.type == "blob" and type(blob.path) == "string" then
+            if string.match(blob.path, "/manifest%.json$") then
+                manifestPaths[#manifestPaths + 1] = blob.path
+            end
+        end
+    end
+
+    local dirSet = {}
+    for _, path in ipairs(manifestPaths) do
+        local dir = string.match(path, "^(.*)/[^/]+$")
+        if dir and dir ~= "." and not dirSet[dir] then
+            dirSet[dir] = true
+        end
+    end
+
+    gitWidgetDirs = {}
+    for dir in pairs(dirSet) do
+        if not isNestedWidgetDir(dir, dirSet) then
+            gitWidgetDirs[#gitWidgetDirs + 1] = dir
+        end
+    end
+    table.sort(gitWidgetDirs)
+
+    if #gitWidgetDirs == 0 then
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_repo_no_widgets")
+        refreshGrid()
+        return
+    end
+
+    sourceWidgetFileLists = {}
+    local prefixes = {}
+    for i, dir in ipairs(gitWidgetDirs) do
+        prefixes[i] = dir .. "/"
+        sourceWidgetFileLists[i] = {}
+    end
+    for _, blob in ipairs(data.tree) do
+        if blob.type == "blob" and type(blob.path) == "string" then
+            for i, prefix in ipairs(prefixes) do
+                if string.sub(blob.path, 1, #prefix) == prefix then
+                    sourceWidgetFileLists[i][#sourceWidgetFileLists[i] + 1] = blob.path
+                    break
+                end
+            end
+        end
+    end
+
+    sourceManifestPending = { count = #gitWidgetDirs, done = 0, failed = 0 }
+    gitWidgetManifests = {}
+    local base = getConfiguredCdn().base
+    for i, dir in ipairs(gitWidgetDirs) do
+        local destPath = GIT_SRC_MANIFESTS_DIR .. i .. ".json"
+        local url = base .. "/" .. dir .. "/manifest.json?t=" .. os.time()
+        if not queueDownloadFile(GIT_SRC_MANIFEST_PREFIX .. i, url, destPath) then
+            sourceManifestPending.failed = sourceManifestPending.failed + 1
+        end
+    end
+
+    Spring.Echo("[PluginsWindow] Discovered " .. #gitWidgetDirs .. " widget folders in repository " .. (gitRepoInfo and (gitRepoInfo.gitOwner .. "/" .. gitRepoInfo.gitRepo) or "?"))
+end
+
+local function assembleSourceCatalog()
+    local merged = {}
+    for i = 1, sourceManifestPending.count do
+        local entry = gitWidgetManifests[i]
+        local dir = gitWidgetDirs[i]
+        if type(entry) == "table" and type(dir) == "string" and type(entry.id) == "string" and entry.id ~= "" then
+            local files = sourceWidgetFileLists[i] or {}
+            entry._srcDir = dir
+            entry._srcFiles = files
+            sourceWidgetDirs[entry.id] = dir
+            sourceWidgetFiles[entry.id] = files
+            merged[#merged + 1] = entry
+        end
+    end
+
+    if #merged == 0 then
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_repo_no_widgets")
+        refreshGrid()
+        return
+    end
+
+    local ok, encoded = pcall(function() return json.encode(merged) end)
+    if not ok or not encoded then
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_invalid_manifest")
+        refreshGrid()
+        return
+    end
+
+    parseManifest(encoded)
+    if loadState == STATE_LOADED then
+        checkForUpgrades()
+    end
+    updateUpdateAllButton()
+    refreshGrid()
+    Spring.Echo("[PluginsWindow] Assembled git-source catalog with " .. #merged .. " widgets")
+end
+
+local function onGitWidgetManifestFinished(index)
+    local destPath = GIT_SRC_MANIFESTS_DIR .. index .. ".json"
+    local data = readJsonFile(destPath)
+    if type(data) == "table" then
+        gitWidgetManifests[index] = data
+        sourceManifestPending.done = sourceManifestPending.done + 1
+    else
+        Spring.Echo("[PluginsWindow] Failed to parse source manifest #" .. index)
+        sourceManifestPending.failed = sourceManifestPending.failed + 1
+    end
+    if sourceManifestPending.done + sourceManifestPending.failed >= sourceManifestPending.count then
+        assembleSourceCatalog()
+    end
+end
+
 local function onDownloadFinished(listener, downloadID, downloadName, downloadFileType)
     if downloadName == MANIFEST_NAME then
         local f = io.open(MANIFEST_DEST, "r")
@@ -1061,7 +1440,6 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
             f:close()
             parseManifest(content)
         else
-            -- Try VFS as fallback
             local content = VFS.LoadFile(MANIFEST_DEST)
             if content then
                 parseManifest(content)
@@ -1071,7 +1449,6 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
                 Spring.Echo("[PluginsWindow] Could not open manifest file at: " .. MANIFEST_DEST)
             end
         end
-        -- Auto-upgrade installed widgets that have newer versions available
         if loadState == STATE_LOADED then
             checkForUpgrades()
         end
@@ -1080,14 +1457,63 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
         return
     end
 
-    -- Check if this is an upgrade completion
+    if downloadName == GIT_TREE_NAME then
+        onGitTreeLoaded()
+        return
+    end
+
+    local gitSrcIndex = string.match(downloadName, "^" .. GIT_SRC_MANIFEST_PREFIX .. "(%d+)$")
+    if gitSrcIndex then
+        onGitWidgetManifestFinished(tonumber(gitSrcIndex))
+        return
+    end
+
+    local srcFileWidgetId = sourceInstalls[downloadName]
+    if srcFileWidgetId then
+        sourceInstalls[downloadName] = nil
+        local track = trackedFileInstalls[srcFileWidgetId]
+        if track then
+            track.done = track.done + 1
+            if track.done >= track.total then
+                trackedFileInstalls[srcFileWidgetId] = nil
+                if track.kind == "upgrade" then
+                    installingWidgets[srcFileWidgetId] = nil
+                    installedWidgets[srcFileWidgetId] = true
+                    upgradeBackups[srcFileWidgetId] = nil
+                    widgetPanelCache[srcFileWidgetId] = nil
+                    installedLastUpdatedCache[srcFileWidgetId] = nil
+                    updateUpdateAllButton()
+                    Spring.Echo("[PluginsWindow] Widget upgraded: " .. srcFileWidgetId)
+                    Chotify:Post({
+                        title = i18n("plugins_title"),
+                        body = i18n("plugins_upgraded_notification", { name = getWidgetDisplayName(srcFileWidgetId) }),
+                        time = 10,
+                    })
+                else
+                    installingWidgets[srcFileWidgetId] = nil
+                    installedWidgets[srcFileWidgetId] = true
+                    widgetPanelCache[srcFileWidgetId] = nil
+                    installedLastUpdatedCache[srcFileWidgetId] = nil
+                    Spring.Echo("[PluginsWindow] Widget installed: " .. srcFileWidgetId)
+                    Chotify:Post({
+                        title = i18n("plugins_title"),
+                        body = i18n("plugins_installed_notification", { name = getWidgetDisplayName(srcFileWidgetId) }),
+                        time = 10,
+                    })
+                end
+                refreshGrid()
+            end
+        end
+        return
+    end
+
     if string.find(downloadName, "^upgrade_") then
-        local widgetId = string.sub(downloadName, 9) -- strip "upgrade_" prefix
+        local widgetId = string.sub(downloadName, 9)
         installingWidgets[widgetId] = nil
         installedWidgets[widgetId] = true
-        upgradeBackups[widgetId] = nil -- backup kept on disk but no longer tracked
+        upgradeBackups[widgetId] = nil
         widgetPanelCache[widgetId] = nil
-        installedLastUpdatedCache[widgetId] = nil -- re-read manifest.json from the new install
+        installedLastUpdatedCache[widgetId] = nil
         updateUpdateAllButton()
         Spring.Echo("[PluginsWindow] Widget upgraded: " .. widgetId)
         Chotify:Post({
@@ -1099,13 +1525,12 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
         return
     end
 
-    -- Check if this is a widget install completion
     if string.find(downloadName, "^install_") then
-        local widgetId = string.sub(downloadName, 9) -- strip "install_" prefix
+        local widgetId = string.sub(downloadName, 9)
         installingWidgets[widgetId] = nil
         installedWidgets[widgetId] = true
         widgetPanelCache[widgetId] = nil
-        installedLastUpdatedCache[widgetId] = nil -- re-read manifest.json from the new install
+        installedLastUpdatedCache[widgetId] = nil
         Spring.Echo("[PluginsWindow] Widget installed: " .. widgetId)
         Chotify:Post({
             title = i18n("plugins_title"),
@@ -1116,10 +1541,8 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
         return
     end
 
-    -- For asset downloads (images, readmes), use O(1) lookup and in-place updates
     local widgetId = downloadToWidgetId[downloadName]
     if widgetId then
-        -- Try in-place thumbnail update (avoids full grid rebuild)
         if string.find(downloadName, "_thumb", 1, true) then
             local imageRef = cardImageRefs[widgetId]
             if imageRef then
@@ -1131,12 +1554,10 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
                     end
                 end
             else
-                -- No cached image ref; invalidate panel so next refresh rebuilds it
                 widgetPanelCache[widgetId] = nil
             end
         end
 
-        -- If the detail modal is open for this widget, update it in-place
         if detailWidgetId == widgetId then
             if string.find(downloadName, "_readme", 1, true) then
                 local readmePath = getReadmePath(widgetId)
@@ -1160,12 +1581,10 @@ local function onDownloadFinished(listener, downloadID, downloadName, downloadFi
             end
         end
 
-        -- Debounced refresh as safety net (handles edge cases like first-time cache miss)
         scheduleRefresh()
         return
     end
 
-    -- Unknown download name — debounced refresh
     scheduleRefresh()
 end
 
@@ -1178,7 +1597,51 @@ local function onDownloadFailed(listener, downloadID, errorID, downloadName, dow
         return
     end
 
-    -- Handle upgrade failures — restore from backup
+    if downloadName == GIT_TREE_NAME then
+        if gitRepoInfo and not gitRepoInfo.explicitBranch and gitRepoInfo.branch ~= "master" then
+            gitRepoInfo.branch = "master"
+            fetchRepoTrees()
+            return
+        end
+        loadState = STATE_ERROR
+        loadError = i18n("plugins_error_repo_layout")
+        Spring.Echo("[PluginsWindow] Failed to read repository layout: " .. tostring(errorID))
+        refreshGrid()
+        return
+    end
+
+    local gitSrcIndex = string.match(downloadName, "^" .. GIT_SRC_MANIFEST_PREFIX .. "(%d+)$")
+    if gitSrcIndex then
+        Spring.Echo("[PluginsWindow] Source manifest download failed: " .. tostring(downloadName) .. " (error " .. tostring(errorID) .. ")")
+        sourceManifestPending.failed = sourceManifestPending.failed + 1
+        if sourceManifestPending.done + sourceManifestPending.failed >= sourceManifestPending.count then
+            assembleSourceCatalog()
+        end
+        return
+    end
+
+    local srcFileWidgetId = sourceInstalls[downloadName]
+    if srcFileWidgetId then
+        sourceInstalls[downloadName] = nil
+        local track = trackedFileInstalls[srcFileWidgetId]
+        trackedFileInstalls[srcFileWidgetId] = nil
+        Spring.Echo("[PluginsWindow] Widget " .. ((track and track.kind) or "install") .. " failed: " .. srcFileWidgetId .. " (error " .. tostring(errorID) .. ")")
+        if track and track.kind == "upgrade" then
+            local backupPath = upgradeBackups[srcFileWidgetId]
+            if backupPath then
+                local installDir = getInstallPath(srcFileWidgetId)
+                Spring.Echo("[PluginsWindow] Restoring backup after failed upgrade: " .. backupPath .. " -> " .. installDir)
+                os.rename(backupPath, installDir)
+            end
+        end
+        installingWidgets[srcFileWidgetId] = nil
+        upgradeBackups[srcFileWidgetId] = nil
+        widgetPanelCache[srcFileWidgetId] = nil
+        updateUpdateAllButton()
+        refreshGrid()
+        return
+    end
+
     if string.find(downloadName, "^upgrade_") then
         local widgetId = string.sub(downloadName, 9)
         local backupPath = upgradeBackups[widgetId]
@@ -1196,7 +1659,6 @@ local function onDownloadFailed(listener, downloadID, errorID, downloadName, dow
         return
     end
 
-    -- Handle install failures
     if string.find(downloadName, "^install_") then
         local widgetId = string.sub(downloadName, 9)
         installingWidgets[widgetId] = nil
@@ -1206,52 +1668,47 @@ local function onDownloadFailed(listener, downloadID, errorID, downloadName, dow
     end
 end
 
-local function fetchManifest()
+fetchManifest = function()
     loadState = STATE_LOADING
     loadError = nil
 
-    -- Remove stale cached manifest
-    if VFS.FileExists(MANIFEST_DEST) then
-        local ok, err = os.remove(MANIFEST_DEST)
-        if not ok then
-            Spring.Echo("[PluginsWindow] Failed to remove stale manifest: " .. tostring(err))
+    for _, path in ipairs({ MANIFEST_DEST, GIT_TREE_DEST }) do
+        if VFS.FileExists(path) then
+            local ok, err = os.remove(path)
+            if not ok then
+                Spring.Echo("[PluginsWindow] Failed to remove stale file " .. path .. ": " .. tostring(err))
+            end
+        end
+    end
+    local staleSrcManifests = VFS.DirList(GIT_SRC_MANIFESTS_DIR)
+    if staleSrcManifests then
+        for _, path in ipairs(staleSrcManifests) do
+            pcall(os.remove, path)
         end
     end
 
-    -- Cache-bust the URL with a timestamp
-    local url = MANIFEST_URL .. "?t=" .. os.time()
+    resetGitHubState()
+    getConfiguredCdn()
 
-    if WG.DownloadHandler and WG.DownloadHandler.QueueDownload then
-        WG.DownloadHandler.QueueDownload(MANIFEST_NAME, "resource", -1, 0, {
-            url = url,
-            destination = MANIFEST_DEST,
-            extract = false,
-        })
-    else
-        loadState = STATE_ERROR
-        loadError = i18n("plugins_error_no_handler")
-        Spring.Echo("[PluginsWindow] DownloadHandler not available")
+    if gitRepoInfo and gitRepoInfo.gitOwner then
+        fetchRepoTrees()
+        return
     end
+
+    tryFetchManifest()
 end
 
---------------------------------------------------------------------------------
--- Search Handler
---------------------------------------------------------------------------------
 
 local function onSearchChanged(newText)
     local text = newText or ""
     if text == currentFilter then return end
     currentFilter = text
     currentPage = 1
-    -- Clear panel cache so filter results get fresh panels
     widgetPanelCache = {}
     cardImageRefs = {}
     refreshGrid()
 end
 
---------------------------------------------------------------------------------
--- Pagination Controls
---------------------------------------------------------------------------------
 
 local function goToPage(page)
     local filtered = getFilteredWidgets()
@@ -1262,7 +1719,6 @@ local function goToPage(page)
         widgetPanelCache = {}
         cardImageRefs = {}
         refreshGrid()
-        -- Reset scroll to top when changing pages
         if scrollPanel and type(scrollPanel.SetScrollPos) == "function" then
             scrollPanel:SetScrollPos(0, 0, false, false)
         end
@@ -1286,12 +1742,8 @@ local function lastPage()
     goToPage(getTotalPages(#filtered))
 end
 
---------------------------------------------------------------------------------
--- Initialization
---------------------------------------------------------------------------------
 
 function PluginsWindow:init(parent)
-    -- Register download event listeners
     if WG.DownloadHandler and WG.DownloadHandler.AddListener then
         WG.DownloadHandler.AddListener("DownloadFinished", onDownloadFinished)
         WG.DownloadHandler.AddListener("DownloadFailed", onDownloadFailed)
@@ -1299,13 +1751,11 @@ function PluginsWindow:init(parent)
         Spring.Echo("[PluginsWindow] WARNING: DownloadHandler not available for event registration")
     end
 
-    -- Compute dynamic item width inside init based on parent width
     local parentWidth = (parent and parent.width) or 1300
-    local usableWidth = parentWidth - 40  -- margins
-    local columns = math.max(1, math.floor((usableWidth + 8) / (ITEM_MIN_WIDTH + 8))) -- 8 is margin
+    local usableWidth = parentWidth - 40
+    local columns = math.max(1, math.floor((usableWidth + 8) / (ITEM_MIN_WIDTH + 8)))
     local itemWidth = math.floor(usableWidth / columns)
 
-    -- Main container (use Control to avoid nesting a full Window inside the main window)
     self.window = Control:New {
         x = 0,
         right = 0,
@@ -1317,17 +1767,12 @@ function PluginsWindow:init(parent)
         draggable = false,
     }
 
-    -- Track disposal for cleanup
     self.window.OnDispose = self.window.OnDispose or {}
     self.window.OnDispose[#self.window.OnDispose + 1] = function()
         self:cleanup()
     end
 
-    ----------------------------------------------------------------------
-    -- Header bar (two rows)
-    ----------------------------------------------------------------------
 
-    -- First row: title and disclaimer only
     local btnW = 110
     local btnH = 28
     local btnFont = 12
@@ -1357,54 +1802,54 @@ function PluginsWindow:init(parent)
         parent = self.window,
     }
 
-    -- Second row: all header buttons (left), search box (right)
     local btnY = row2Y + 6
     local btnGap = 8
-    local btnW = 110
-    local btnH = 28
     local btnFont = 12
-    local btnLeft = 0
-    Button:New {
+    local headerX = 0
+    local function addHeaderButton(config)
+        local btn = Button:New {
+            x = headerX,
+            y = btnY,
+            width = config.width,
+            height = btnH,
+            fontSize = btnFont,
+            caption = config.caption,
+            tooltip = config.tooltip,
+            classname = config.classname,
+            OnClick = config.OnClick,
+            parent = self.window,
+        }
+        headerX = headerX + config.width + btnGap
+        return btn
+    end
+    addHeaderButton {
         caption = i18n("plugins_folder"),
         tooltip = i18n("plugins_folder_tooltip"),
-        x = btnLeft,
-        y = btnY,
         width = btnW,
-        height = btnH,
-        fontSize = btnFont,
         OnClick = { function() if WG.Connector and WG.Connector.writePath then WG.WrapperLoopback.OpenFolder(WG.Connector.writePath .. "/LuaUI/Widgets") end end },
-        parent = self.window,
     }
-    Button:New {
+    addHeaderButton {
         caption = i18n("plugins_contribute"),
         tooltip = i18n("plugins_contribute_tooltip"),
-        x = btnLeft + btnW + btnGap,
-        y = btnY,
         width = btnW - 10,
-        height = btnH,
-        fontSize = btnFont,
         OnClick = { function() WG.WrapperLoopback.OpenUrl("https://github.com/beyond-all-reason/BAR-widgets#how-to-contribute-a-new-widget") end },
-        parent = self.window,
     }
-    Button:New {
+    hubButton = addHeaderButton {
+        caption = i18n("plugins_hub"),
+        tooltip = i18n("plugins_hub_tooltip", { url = getConfiguredCdn().base }),
+        width = btnW,
+        OnClick = { openHubUrlPopup },
+    }
+    addHeaderButton {
         caption = i18n("plugins_refresh"),
         tooltip = i18n("plugins_refresh_tooltip"),
-        x = btnLeft + 2 * btnW - 10 + 2 * btnGap,
-        y = btnY,
         width = btnW - 20,
-        height = btnH,
-        fontSize = btnFont,
-        OnClick = { function() widgetPanelCache = {}; cardImageRefs = {}; widgetsList = {}; downloadToWidgetId = {}; installedLastUpdatedCache = {}; currentPage = 1; fetchManifest(); refreshGrid() end },
-        parent = self.window,
+        OnClick = { reloadWidgets },
     }
-    updateAllButton = Button:New {
+    updateAllButton = addHeaderButton {
         caption = i18n("plugins_update_all"),
         tooltip = i18n("plugins_update_all_tooltip"),
-        x = btnLeft + 3 * btnW - 30 + 3 * btnGap,
-        y = btnY,
         width = btnW - 10,
-        height = btnH,
-        fontSize = btnFont,
         classname = "action_button",
         OnClick = { function()
             for _, widget in ipairs(getUpgradableWidgets()) do
@@ -1416,7 +1861,6 @@ function PluginsWindow:init(parent)
             updateUpdateAllButton()
             refreshGrid()
         end },
-        parent = self.window,
     }
     updateUpdateAllButton()
 
@@ -1441,13 +1885,9 @@ function PluginsWindow:init(parent)
         parent = self.window,
     }
 
-    ----------------------------------------------------------------------
-    -- Pagination bar (below header)
-    ----------------------------------------------------------------------
 
     local paginationY = HEADER_TOTAL_HEIGHT + 2
 
-    -- Pagination bar: use relative positions (left, right, center)
     local pagBtnW = 40
     local pagBtnH = 30
     local pagFont = 13
@@ -1511,9 +1951,6 @@ function PluginsWindow:init(parent)
         parent = self.window,
     }
 
-    ----------------------------------------------------------------------
-    -- Status label (shown during loading/error/empty states)
-    ----------------------------------------------------------------------
 
     local contentY = paginationY + PAGINATION_HEIGHT + 5
 
@@ -1529,12 +1966,7 @@ function PluginsWindow:init(parent)
         parent = self.window,
     }
 
-    ----------------------------------------------------------------------
-    -- Grid inside ScrollPanel
-    ----------------------------------------------------------------------
 
-    -- Use a plain Control so cards can be manually positioned with exact sizes.
-    -- The Grid widget's resizeItems logic was stretching cards on partial pages.
     mainGrid = Control:New {
         width = "100%",
         height = ITEM_HEIGHT,
@@ -1543,7 +1975,7 @@ function PluginsWindow:init(parent)
         draggable = false,
         children = {},
     }
-    mainGrid.itemWidth = itemWidth  -- keep for refreshGrid reference
+    mainGrid.itemWidth = itemWidth
 
     scrollPanel = ScrollPanel:New {
         x = 0,
@@ -1562,21 +1994,14 @@ function PluginsWindow:init(parent)
         },
     }
 
-    ----------------------------------------------------------------------
-    -- Kick off manifest download
-    ----------------------------------------------------------------------
 
     fetchManifest()
 
-    -- Schedule a deferred grid refresh so clientWidth is available on first render
     WG.Delay(function() refreshGrid() end, 0.1)
 
     Spring.Echo("[PluginsWindow] Initialized")
 end
 
---------------------------------------------------------------------------------
--- Cleanup
---------------------------------------------------------------------------------
 
 function PluginsWindow:cleanup()
     closeDetail()
@@ -1590,6 +2015,7 @@ function PluginsWindow:cleanup()
     statusLabel = nil
     searchBox = nil
     updateAllButton = nil
+    hubButton = nil
     widgetPanelCache = {}
     installingWidgets = {}
     upgradeBackups = {}
@@ -1597,5 +2023,6 @@ function PluginsWindow:cleanup()
     downloadToWidgetId = {}
     cardImageRefs = {}
     refreshPending = false
+    resetGitHubState()
     Spring.Echo("[PluginsWindow] Cleaned up")
 end

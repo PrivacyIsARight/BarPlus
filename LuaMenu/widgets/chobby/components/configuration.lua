@@ -182,6 +182,7 @@ function Configuration:init()
 
 	self.loadLocalWidgets = false
 	self.autoUpdateWidgets = true
+	self.pluginsCdnUrl = nil
 	self.displayBots = false
 	self.filterbattleroom = true
 	self.displayBadEngines2 = false
@@ -756,6 +757,7 @@ function Configuration:GetConfigData()
 		rememberQueuesOnStart = self.rememberQueuesOnStart,
 		loadLocalWidgets = self.loadLocalWidgets,
 		autoUpdateWidgets = self.autoUpdateWidgets,
+		pluginsCdnUrl = self.pluginsCdnUrl,
 		activeDebugConsole = self.activeDebugConsole,
 		onlyShowFeaturedMaps = self.onlyShowFeaturedMaps,
 		simpleAiList = self.simpleAiList,

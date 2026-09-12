@@ -38,6 +38,13 @@ return {
 		plugins_contribute_tooltip = "Learn how to submit your own widget to the community repository (opens in browser)",
 		plugins_refresh = "Refresh",
 		plugins_refresh_tooltip = "Re-download the widget list from the community repository",
+		plugins_hub = "Hub URL",
+		plugins_hub_tooltip = "Widget hub used for browsing and downloading widgets (currently %{url})",
+		plugins_hub_caption = "Widget hub URL",
+		plugins_hub_label = "Enter a Github repository or website",
+		plugins_hub_hint = "yourname/widget-hub or https://...",
+		plugins_hub_save = "Save",
+		plugins_hub_invalid = "That looks invalid. Use a GitHub repo like owner/repo, or a URL starting with https:// or http://.",
 		plugins_search_hint = "Search widgets...",
 		plugins_loading = "Loading widgets...",
 		plugins_loading_short = "Loading...",
@@ -75,6 +82,8 @@ return {
 		plugins_error_read_manifest = "Could not read downloaded manifest file",
 		plugins_error_network = "Network error (code %{code})",
 		plugins_error_no_handler = "Download handler not available",
+		plugins_error_repo_layout = "Could not read the GitHub repository layout. Is the repo/branch reachable?",
+		plugins_error_repo_no_widgets = "No widgets found in that repository (no manifest.json files at the repo root or in widget folders).",
 
 		-- console
 		type_here_to_chat = "Type here to chat. Press enter to send.",
