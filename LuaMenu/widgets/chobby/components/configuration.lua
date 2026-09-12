@@ -85,7 +85,7 @@ function Configuration:init()
 	self.password = false
 	self.autoLogin = true
 	self.rememberPassword = true
-	self.uploadLogPrompt = 'Prompt'
+	self.uploadLogPrompt = 'Always No'
 	self.firstLoginEver = true
 	self.canAuthenticateWithSteam = false
 	self.wantAuthenticateWithSteam = true
