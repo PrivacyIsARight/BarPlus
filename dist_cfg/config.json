@@ -9,7 +9,7 @@
                 "display": "Alpha",
                 "platform": "linux"
             },
-            "config_url": "https://launcher-config.beyondallreason.dev/config.json",
+            "config_url": "https://raw.githubusercontent.com/PrivacyIsARight/BarPlus/master/dist_cfg/config.json",
             "env_variables": {
                 "PRD_HTTP_SEARCH_URL": "https://files-cdn.beyondallreason.dev/find",
                 "PRD_RAPID_USE_STREAMER": "false",
@@ -17,7 +17,7 @@
             },
             "auto_download": true,
             "downloads": {
-                "games": ["byar:test", "byar-chobby:test"],
+                "games": ["byar:test"],
                 "resources": [
                     {
                         "url": "https://pool-init.beyondallreason.dev/data.7z",
@@ -35,7 +35,7 @@
             "no_start_script": true,
             "logs_s3_bucket": "bar-infologs",
             "launch": {
-                "start_args": ["--menu", "rapid://byar-chobby:test"],
+                "start_args": ["--menu", "BYAR Chobby $VERSION"],
                 "engine": "recoil_2026.07.04",
                 "springsettings": {
                     "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
@@ -48,7 +48,7 @@
                 "display": "Alpha",
                 "platform": "win32"
             },
-            "config_url": "https://launcher-config.beyondallreason.dev/config.json",
+            "config_url": "https://raw.githubusercontent.com/PrivacyIsARight/BarPlus/master/dist_cfg/config.json",
             "env_variables": {
                 "PRD_HTTP_SEARCH_URL": "https://files-cdn.beyondallreason.dev/find",
                 "PRD_RAPID_USE_STREAMER": "false",
@@ -56,7 +56,7 @@
             },
             "auto_download": true,
             "downloads": {
-                "games": ["byar:test", "byar-chobby:test"],
+                "games": ["byar:test"],
                 "resources": [
                     {
                         "url": "https://pool-init.beyondallreason.dev/data.7z",
@@ -74,7 +74,7 @@
             "no_start_script": true,
             "logs_s3_bucket": "bar-infologs",
             "launch": {
-                "start_args": ["--menu", "rapid://byar-chobby:test"],
+                "start_args": ["--menu", "BYAR Chobby $VERSION"],
                 "engine": "recoil_2026.07.04",
                 "springsettings": {
                     "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
@@ -87,7 +87,7 @@
                 "display": "Engine Test",
                 "platform": "linux"
             },
-            "config_url": "https://launcher-config.beyondallreason.dev/config.json",
+            "config_url": "https://raw.githubusercontent.com/PrivacyIsARight/BarPlus/master/dist_cfg/config.json",
             "env_variables": {
                 "PRD_HTTP_SEARCH_URL": "https://files-cdn.beyondallreason.dev/find",
                 "PRD_RAPID_USE_STREAMER": "false",
@@ -95,7 +95,7 @@
             },
             "auto_download": true,
             "downloads": {
-                "games": ["byar:test", "byar-chobby:test"],
+                "games": ["byar:test"],
                 "resources": [
                     {
                         "url": "https://pool-init.beyondallreason.dev/data.7z",
@@ -113,7 +113,7 @@
             "no_start_script": true,
             "logs_s3_bucket": "bar-infologs",
             "launch": {
-                "start_args": ["--menu", "rapid://byar-chobby:test"],
+                "start_args": ["--menu", "BYAR Chobby $VERSION"],
                 "engine": "recoil_2026.07.03",
                 "springsettings": {
                     "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
@@ -126,7 +126,7 @@
                 "display": "Engine Test",
                 "platform": "win32"
             },
-            "config_url": "https://launcher-config.beyondallreason.dev/config.json",
+            "config_url": "https://raw.githubusercontent.com/PrivacyIsARight/BarPlus/master/dist_cfg/config.json",
             "env_variables": {
                 "PRD_HTTP_SEARCH_URL": "https://files-cdn.beyondallreason.dev/find",
                 "PRD_RAPID_USE_STREAMER": "false",
@@ -134,7 +134,7 @@
             },
             "auto_download": true,
             "downloads": {
-                "games": ["byar:test", "byar-chobby:test"],
+                "games": ["byar:test"],
                 "resources": [
                     {
                         "url": "https://pool-init.beyondallreason.dev/data.7z",
@@ -152,7 +152,7 @@
             "no_start_script": true,
             "logs_s3_bucket": "bar-infologs",
             "launch": {
-                "start_args": ["--menu", "rapid://byar-chobby:test"],
+                "start_args": ["--menu", "BYAR Chobby $VERSION"],
                 "engine": "recoil_2026.07.03",
                 "springsettings": {
                     "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
@@ -165,7 +165,7 @@
                 "display": "Dev Lobby",
                 "platform": "linux"
             },
-            "config_url": "https://launcher-config.beyondallreason.dev/config.json",
+            "config_url": "https://raw.githubusercontent.com/PrivacyIsARight/BarPlus/master/dist_cfg/config.json",
             "env_variables": {
                 "PRD_HTTP_SEARCH_URL": "https://files-cdn.beyondallreason.dev/find",
                 "PRD_RAPID_USE_STREAMER": "false",
@@ -194,7 +194,7 @@
                 "display": "Dev Lobby",
                 "platform": "win32"
             },
-            "config_url": "https://launcher-config.beyondallreason.dev/config.json",
+            "config_url": "https://raw.githubusercontent.com/PrivacyIsARight/BarPlus/master/dist_cfg/config.json",
             "env_variables": {
                 "PRD_HTTP_SEARCH_URL": "https://files-cdn.beyondallreason.dev/find",
                 "PRD_RAPID_USE_STREAMER": "false",
