@@ -39,7 +39,7 @@ return {
 		plugins_refresh = "Refresh",
 		plugins_refresh_tooltip = "Re-download the widget list from the community repository",
 		plugins_hub = "Hub URL",
-		plugins_hub_tooltip = "Widget hub used for browsing and downloading widgets (currently %{url})",
+		plugins_hub_tooltip = "Widget hub used for browsing and downloading widgets",
 		plugins_hub_caption = "Widget hub URL",
 		plugins_hub_label = "Enter a Github repository or website",
 		plugins_hub_hint = "yourname/widget-hub or https://...",

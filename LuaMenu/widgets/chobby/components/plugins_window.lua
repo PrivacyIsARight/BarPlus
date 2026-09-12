@@ -1178,7 +1178,7 @@ local function openHubUrlPopup()
                 Configuration:SetConfigValue("pluginsCdnUrl", newUrl ~= "" and newUrl or nil)
             end
             if hubButton then
-                hubButton.tooltip = i18n("plugins_hub_tooltip", { url = getConfiguredHubValue() })
+                hubButton.tooltip = i18n("plugins_hub_tooltip")
             end
             reloadWidgets()
         end
@@ -1836,7 +1836,7 @@ function PluginsWindow:init(parent)
     }
     hubButton = addHeaderButton {
         caption = i18n("plugins_hub"),
-        tooltip = i18n("plugins_hub_tooltip", { url = getConfiguredCdn().base }),
+        tooltip = i18n("plugins_hub_tooltip"),
         width = btnW,
         OnClick = { openHubUrlPopup },
     }
