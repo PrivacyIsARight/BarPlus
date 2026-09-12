@@ -77,7 +77,7 @@ function Interface:TextEraseNewline(str)
 end
 
 function Interface:_SendCommand(command, sendMessageCount)
-	-- command = self:TextEraseNewline(command) -- produces errors with telemetry commands
+	-- command = self:TextEraseNewline(command)
 	if sendMessageCount then
 		self.messagesSentCount = self.messagesSentCount + 1
 		command = "#" .. self.messagesSentCount .. " " .. command

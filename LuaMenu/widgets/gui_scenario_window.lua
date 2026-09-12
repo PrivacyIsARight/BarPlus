@@ -567,9 +567,7 @@ local function CreateScenarioPanel(shortname, sPanel)
 						caption = "Rate this scenario",
 						labelCaption = "How much did you enjoy this scenario?",
 						OnAccepted = function(ratingvalue)
-							if WG.Analytics and WG.Analytics.SendRepeatEvent then
-								WG.Analytics.SendRepeatEvent("scenario:rating", {scenarioid = scen.scenarioid, rating = ratingvalue})
-							end
+
 						end
 					})
 				end
@@ -743,9 +741,7 @@ local function CreateScenarioPanel(shortname, sPanel)
 					local scriptTxt = createstartscript()
 					Spring.Echo("Mission Ready")
 					Spring.Echo(scriptTxt)
-					if WG.Analytics and WG.Analytics.SendRepeatEvent then
-						WG.Analytics.SendRepeatEvent("game_start:singleplayer:scenario_start", {scenarioid = scen.scenarioid, difficulty = mydifficulty.name})
-					end
+
 
 					if not VFS.HasArchive(barversion) then
 						WG.Chobby.InformationPopup("You do not have the latest game version, check your downloads tab or update the game.", {caption = "OK"})
@@ -1113,9 +1109,7 @@ function widget:RecvLuaMsg(msg)
 		if stats.benchmarkcommand then
 			Spring.Echo("Recieved Benchmark Results")
 			--Spring.Utilities.TableEcho(stats)
-			if WG.Analytics and WG.Analytics.SendRepeatEvent then
-				WG.Analytics.SendRepeatEvent("system:benchmark", stats)
-			end
+
 		else
 			local decodedscenopts = Json.decode(Spring.Utilities
 			.Base64Decode(stats.scenariooptions))
@@ -1127,9 +1121,7 @@ function widget:RecvLuaMsg(msg)
 			local won = (stats.won and stats.cheated ~= true ) or false
 
 			Spring.Echo(lastScenarioID, lastScenarioVersion, lastDifficulty, lastTime, lastResources, won)
-			if WG.Analytics and WG.Analytics.SendRepeatEvent then
-				WG.Analytics.SendRepeatEvent("game_start:singleplayer:scenario_end", {scenarioid = lastScenarioID, difficulty = lastDifficulty, won = won, endtime = lastTime, resources = lastResources })
-			end
+
 
 			if won then
 				SetScore(lastScenarioID, lastScenarioVersion, lastDifficulty, lastTime, lastResources, won)

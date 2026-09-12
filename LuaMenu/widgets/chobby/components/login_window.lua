@@ -1315,7 +1315,6 @@ function LoginWindow:tryRegister()
         return
     end
 
-	WG.Analytics.SendOnetimeEvent("lobby:try_register")
 	self.txtErrorRegister:SetText("")
 
 	local password = (self.ebPasswordRegister.visible and self.ebPasswordRegister.text) or nil
@@ -1398,7 +1397,6 @@ function LoginWindow:tryChangeUserName()
 			return Configuration:GetWarningColor()
 		end
 
-		WG.Analytics.SendOnetimeEvent("lobby:try_changeusername")
 		self.pendingRenameUserName = newusername
 		SetRenameButtonEnabled(false)
 		self.txtErrorChangeUserName:SetText(Configuration:GetWarningColor() .. "Sending rename request for: " .. newusername)
@@ -1466,8 +1464,6 @@ function LoginWindow:tryChangeEmail()
 		Configuration:GetWarningColor() ..
 		"Sending Request for: " .. newemail
 	)
-
-	WG.Analytics.SendOnetimeEvent("lobby:try_changeemail")
 
 	self.onChangeEmailRequestDenied = function(listener, errorMsg)
 		lobby:RemoveListener("OnChangeEmailRequestDenied", self.onChangeEmailRequestDenied)
@@ -1545,7 +1541,6 @@ function LoginWindow:tryChangeEmailVerification ()
 	lobby:AddListener("OnChangeEmailDenied", self.onChangeEmailDenied)
 	lobby:AddListener("OnChangeEmailAccepted", self.onChangeEmailAccepted)
 
-	WG.Analytics.SendOnetimeEvent("lobby:try_changeemailverification")
 	lobby:ChangeEmail(newemail, verificationCode)
 end
 
@@ -1611,8 +1606,6 @@ function LoginWindow:tryResetPasswordEmail()
 	lobby:AddListener("OnConnect",ResetPasswordRequest)
 
 	lobby:AddListener("OnDenied",ResetPasswordRequest)
-
-	WG.Analytics.SendOnetimeEvent("lobby:try_resetpassword")
 
 	self.txtErrorResetPassword:SetText(
 		Configuration:GetErrorColor() ..
@@ -1682,8 +1675,6 @@ function LoginWindow:tryResetPasswordVerification ()
 
 	lobby:AddListener("OnDenied",ResetPassword)
 
-	WG.Analytics.SendOnetimeEvent("lobby:try_resetpasswordverification")
-
 	Configuration.userName = false --nuke username so we dont try to log in unsuccessfully
 	lobby:Connect(Configuration:GetServerAddress(), Configuration:GetServerPort(), nil, nil, 3, nil, GetLobbyName())
 end
@@ -1711,7 +1702,6 @@ function LoginWindow:tryChangePassword()
 		)
 	end
 
-	WG.Analytics.SendOnetimeEvent("lobby:try_changepassword")
 	lobby:ChangePassword(oldPassword, newPassword)
 
 	self.txtErrorChangePassword:SetText(

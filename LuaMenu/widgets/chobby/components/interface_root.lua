@@ -562,16 +562,14 @@ function GetInterfaceRoot(optionsParent, mainWindowParent, fontFunction)
 			displayPanel        = mainContent_window,
 			initialTabs         = {},
 			tabWidth            = statusButtonWidth,
-			tabControlOverride  = battleStatusTabControls,
-			analyticsName       = "lobby:battle"
+			tabControlOverride  = battleStatusTabControls
 		}
 	)
 
 	local rightPanelHandler = GetTabPanelHandler("panelTabs", {
 			buttonWindow = panelButtons_buttons,
 			displayPanel = rightPanel_window,
-			initialTabs = rightPanelTabs,
-			analyticsName = "lobby:panel",
+			initialTabs = rightPanelTabs
 		}
 	)
 

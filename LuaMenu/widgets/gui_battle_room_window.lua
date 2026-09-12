@@ -791,7 +791,7 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 	local function RejoinBattleFunc()
 		--Spring.Echo("\LuaMenu\widgets\chobby\components\battle\battle_watch_list_window.lua","RejoinBattleFunc()","") -- Beherith Debug
 		battleLobby:RejoinBattle(battleID)
-		WG.Analytics.SendOnetimeEvent("lobby:multiplayer:custom:rejoin")
+
 	end
 
 	if battleLobby.name ~= "singleplayer" then
@@ -880,10 +880,8 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 						local Configuration = WG.Chobby.Configuration
 						Configuration.gameConfig.mapStartBoxes.setBoxes(currentStartRects)
 						battle.startPosType = Configuration.singleplayerStartPosType ~= nil and Configuration.singleplayerStartPosType or 2
-						WG.Analytics.SendOnetimeEvent("lobby:singleplayer:skirmish:start")
 						WG.SteamCoopHandler.AttemptGameStart("skirmish", battle.gameName, battle.mapName)
 					else
-						WG.Analytics.SendOnetimeEvent("lobby:multiplayer:custom:start")
 						battleLobby:StartBattle("skirmish")
 					end
 				end
@@ -998,7 +996,7 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 					end
 				end
 
-				WG.Analytics.SendOnetimeEvent("lobby:multiplayer:custom:spectate")
+
 				if WG.Chobby.Configuration.useLastGameSpectatorState == 1 then
 					WG.Chobby.Configuration:SetConfigValue("lastGameSpectatorState", true)
 				end
@@ -1033,7 +1031,7 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 					SetButtonStatePlaying()
 				end
 
-				WG.Analytics.SendOnetimeEvent("lobby:multiplayer:custom:play")
+
 				if WG.Chobby.Configuration.useLastGameSpectatorState == 1 then
 					WG.Chobby.Configuration:SetConfigValue("lastGameSpectatorState", false)
 				end
@@ -3718,11 +3716,8 @@ local function InitializeSetupPage(subPanel, screenHeight, pageConfig, nextPage,
 			function(obj)
 				if nextPage then
 					subPanel:SetVisibility(false)
-					WG.Analytics.SendOnetimeEvent("lobby:singleplayer:skirmish:" .. pageConfig.name, selectedOptions[pageConfig.name])
 					nextPage:SetVisibility(true)
 				else
-					WG.Analytics.SendOnetimeEvent("lobby:singleplayer:skirmish:" .. pageConfig.name, selectedOptions[pageConfig.name])
-					WG.Analytics.SendOnetimeEvent("lobby:singleplayer:skirmish:start_quick")
 					ApplyFunction(true)
 				end
 			end
@@ -3763,7 +3758,6 @@ local function InitializeSetupPage(subPanel, screenHeight, pageConfig, nextPage,
 		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
 		OnClick = {
 			function(obj)
-				WG.Analytics.SendOnetimeEvent("lobby:singleplayer:skirmish:advanced")
 				subPanel:SetVisibility(false)
 				ApplyFunction(false)
 			end

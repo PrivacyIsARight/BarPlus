@@ -12,7 +12,7 @@ function GetTabPanelHandler(name, conf)
 	local tabControlOverride  = conf.tabControlOverride
 	local submenuControl      = conf.submenuControl
 	local titleUpdateFunction = conf.titleUpdateFunction
-	local analyticsName       = conf.analyticsName
+
 	local hideMyButtons       = conf.hideMyButtons
 	local startWithTabOpen    = conf.startWithTabOpen
 
@@ -74,9 +74,7 @@ function GetTabPanelHandler(name, conf)
 	end
 
 	local function ToggleShow(obj, tab, openOnly, closeOnly)
-		if analyticsName then
-			WG.Analytics.SendOnetimeEvent(analyticsName .. ":" .. tab.name)
-		end
+
 		if tab.panelHandler then
 			OpenSubmenu(tab.panelHandler)
 			return true
@@ -471,7 +469,7 @@ function GetTabPanelHandler(name, conf)
 				tabControlOverride = tabControlOverride,
 				submenuControl = submenuData.submenuControl,
 				titleUpdateFunction = titleUpdateFunction,
-				analyticsName = (analyticsName and (analyticsName .. ":" .. name)) or nil,
+
 				hideMyButtons = submenuData.hideMyButtons,
 				startWithTabOpen = submenuData.startWithTabOpen,
 			}

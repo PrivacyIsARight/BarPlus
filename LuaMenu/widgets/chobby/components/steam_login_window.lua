@@ -172,7 +172,7 @@ function SteamLoginWindow:ShowPassword()
 end
 
 function SteamLoginWindow:tryRegister()
-	WG.Analytics.SendOnetimeEvent("lobby:try_register")
+
 	self.txtError:SetText("")
 
 	local username = self.ebUsername.text

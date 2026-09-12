@@ -114,7 +114,7 @@ local function InitializeListeners()
 
 	-- Register and login response codes
 	local function OnRegistrationAccepted()
-		WG.Analytics.SendOnetimeEvent("lobby:account_created")
+
 		if currentLoginWindow then
 			registerRecieved = true
 			WG.Delay(ResetRegisterRecieved, 0.8)
@@ -125,8 +125,7 @@ local function InitializeListeners()
 		end
 	end
 
-	local function OnRegistrationDenied(listener, err, accountAlreadyExists)
-		WG.Analytics.SendErrorEvent(err or "unknown")
+
 
 		if Configuration.canAuthenticateWithSteam and Configuration.wantAuthenticateWithSteam then
 			Configuration.steamLinkComplete = true
@@ -145,7 +144,7 @@ local function InitializeListeners()
 	local function OnLoginAccepted()
 		isWaitingInQueue = false
 		Configuration.firstLoginEver = false
-		WG.Analytics.SendOnetimeEvent("lobby:logged_in")
+
 
 		if Configuration.canAuthenticateWithSteam and Configuration.wantAuthenticateWithSteam then
 			Configuration.steamLinkComplete = true
@@ -167,7 +166,7 @@ local function InitializeListeners()
 
 	local function OnLoginDenied(listener, err)
 		isWaitingInQueue = false
-		WG.Analytics.SendErrorEvent(err or "unknown")
+
 		lobby:Disconnect()
 		if currentLoginWindow and not registerRecieved then
 			currentLoginWindow.txtError:SetText(Configuration:GetErrorColor() .. (err or "Denied, unknown reason"))
@@ -236,12 +235,9 @@ local function InitializeListeners()
 	lobby:AddListener("OnQueued", OnQueued)
 	lobby:AddListener("OnLoginInfoEnd", OnLoginInfoEnd)
 
-	-- Stored register on connect
 	local function OnConnect()
-		WG.Analytics.SendOnetimeEvent("lobby:server_connect")
 		local steamMode = Configuration.canAuthenticateWithSteam and Configuration.wantAuthenticateWithSteam
 		if registerName then
-			WG.Analytics.SendOnetimeEvent("lobby:send_register")
 			lobby:Register(registerName, registerPassword, registerEmail, steamMode)
 			Configuration.userName = registerName
 			Configuration.password = registerPassword

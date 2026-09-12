@@ -189,9 +189,7 @@ local communityLines = {
 					OnAccepted = function(reportreason)
 						local infolog = VFS.LoadFile("infolog.txt")
 						local compressedlog = Spring.Utilities.Base64Encode(VFS.ZlibCompress(infolog))
-						if WG.Analytics then 
-							WG.Analytics.SendCrashReportOneTimeEvent("infolog.txt", "UserUpload", reportreason, compressedlog, false )
-						end
+
 					end
 				})
 			end

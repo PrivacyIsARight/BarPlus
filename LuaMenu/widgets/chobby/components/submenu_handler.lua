@@ -95,7 +95,7 @@ function GetSubmenuHandler(buttonWindow, panelWindow, submenuPanelWindow, submen
 		if buttonsHolder.visible then
 			buttonsHolder:Hide()
 		end
-		WG.Analytics.SendOnetimeEvent(submenus[index].analyticsName)
+
 
 		submenus[index].panelHandler.Show()
 
@@ -161,7 +161,7 @@ function GetSubmenuHandler(buttonWindow, panelWindow, submenuPanelWindow, submen
 	function externalFunctions.ReplaceSubmenu(index, newTabs, newCleanupFunction)
 		externalFunctions.SetBackAtMainMenu()
 		submenus[index].panelHandler.Destroy()
-		submenus[index].analyticsName = "lobby:" .. submenus[index].name
+
 
 		local conf = {
 			buttonWindow        = buttonWindow,
@@ -173,7 +173,7 @@ function GetSubmenuHandler(buttonWindow, panelWindow, submenuPanelWindow, submen
 			cleanupFunction     = newCleanupFunction,
 			fontSizeScale       = fontSizeScale,
 			titleUpdateFunction = SetTitle,
-			analyticsName       = "lobby:" .. submenus[index].name
+
 		}
 
 		local newPanelHandler = GetTabPanelHandler(submenus[index].name, conf)
@@ -211,9 +211,6 @@ function GetSubmenuHandler(buttonWindow, panelWindow, submenuPanelWindow, submen
 	}
 
 	for i = 1, #submenus do
-
-		submenus[i].analyticsName = "lobby:" .. submenus[i].name
-
 		local conf = {
 			buttonWindow = buttonWindow,
 			displayPanel = panelWindow,
@@ -225,7 +222,6 @@ function GetSubmenuHandler(buttonWindow, panelWindow, submenuPanelWindow, submen
 			fontSizeScale = fontSizeScale,
 			submenuControl = submenus[i].submenuControl,
 			titleUpdateFunction = SetTitle,
-			analyticsName = submenus[i].analyticsName,
 			hideMyButtons = submenus[i].hideMyButtons,
 			startWithTabOpen = submenus[i].startWithTabOpen,
 		}

@@ -1738,11 +1738,6 @@ function BattleListWindow:OpenHostWindow()
 				errorLabel:SetCaption("Could not find a suitable battle room in your selected region!\nPlease try another.")
 			else
 				errorLabel:SetCaption("")
-				if WG.Analytics then
-					WG.Analytics.SendRepeatEvent("lobby:multiplayer:hostgame", {
-						hostregion = requestedregion
-					})
-				end
 				-- Configuration:SetConfigValue("lastGameSpectatorState", false) -- assume that private hoster wants to play, needed so he can boss self!
 
 				--Spring.Echo("Found a battle")
