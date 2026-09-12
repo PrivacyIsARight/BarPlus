@@ -1,8 +1,10 @@
 name: Launcher
 
 on:
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+  push:
+    branches:
+      - master
 
 defaults:
   run:
@@ -11,6 +13,9 @@ defaults:
 jobs:
   build:
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      id-token: write
     strategy:
       matrix:
         include:
@@ -38,7 +43,7 @@ jobs:
       - name: Setup NodeJs
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 20
           cache: 'npm'
           cache-dependency-path: launcher/package-lock.json
 
@@ -76,5 +81,6 @@ jobs:
           npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EP_DRAFT: false
           ELECTRON_CACHE: ${{ github.workspace }}/.electron-cache/main
           ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.electron-cache/builder
