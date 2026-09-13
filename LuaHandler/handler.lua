@@ -42,6 +42,57 @@ local ipairs = ipairs
 local emptyTable = {}
 
 
+local userAction = false
+local trustedClient = nil
+
+local CLIENT_NAME   = "Settings Window"
+local CLIENT_DIGEST = "717b09f7e69a5c2d"
+
+local function FNV64(data)
+	local P = 16777619
+	local TWO16 = 65536
+	local TWO32 = 4294967296
+	local function bxor(a, b)
+		local r, t = 0, 1
+		while (a > 0)or(b > 0) do
+			local aa = a % 2
+			local bb = b % 2
+			if (aa ~= bb) then
+				r = r + t
+			end
+			a = (a - aa) / 2
+			b = (b - bb) / 2
+			t = t * 2
+		end
+		return r
+	end
+	local function step(h, byte)
+		h = (h - h % 256) + bxor(h % 256, byte)
+		local hi = math.floor(h / TWO16)
+		local lo = h % TWO16
+		return (lo * P + (hi * P % TWO16) * TWO16) % TWO32
+	end
+	local h = 2166136261
+	for i = 1, #data do
+		h = step(h, data:byte(i))
+	end
+	local h1 = h
+	h = P
+	for i = 1, #data do
+		h = step(h, data:byte(i))
+	end
+	return ("%08x%08x"):format(h1, h)
+end
+
+local function IsTrustedClient(caller)
+	if (type(caller) ~= "table") then
+		return false
+	end
+	return (caller == trustedClient)
+		or (caller.widget == trustedClient)
+end
+
+
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 -- A Lua List Object
@@ -629,6 +680,15 @@ function handler:Load(filepath, _VFSMODE)
 		Spring.Log(LUA_NAME, "warning", ('loaded unsafe %s: %s'):format(handler.addonName, name))
 	end
 
+	if (name == CLIENT_NAME) then
+		local fdata = VFS.LoadFile(ki.filepath, _VFSMODE or VFSMODE)
+		if (fdata and (FNV64(fdata) == CLIENT_DIGEST)) then
+			trustedClient = addon
+		else
+			Spring.Log(LUA_NAME, "warning", "client widget integrity check failed; widget control is disabled")
+		end
+	end
+
 	--// Link the CallIns
 	for ciName,ciFunc in knownCallins(addon) do
 		InsertAddonCallIn(ciName, addon)
@@ -660,12 +720,19 @@ end
 
 
 function handler:Remove(addon, _reason)
+	local caller = getfenv(2)
+
 	if not addon then
-		addon = getfenv(2)
+		addon = caller
 	end
 
 	if (type(addon) ~= "table")or(type(addon._info) ~= "table")or(not addon._info.name) then
 		error("Wrong input to handler:Remove()", 2)
+	end
+
+	if (addon ~= caller) and (_reason ~= "dependency") and (_reason ~= "crash") and (not userAction) and (not IsTrustedClient(caller)) then
+		Spring.Log(LUA_NAME, "warning", ("blocked deactivation of %s \"%s\"."):format(handler.AddonName, addon._info.name))
+		return
 	end
 
 	--// Try clean exit
@@ -857,55 +924,66 @@ function handler:Enable(name)
 end
 
 
-function handler:Disable(name)
+local function DisableAddon(name)
 	local ki = handler.knownInfos[name]
 	if (not ki) then
 		Spring.Log(LUA_NAME, "warning", "::Disable: Didn\'t find \"" .. name .. "\".")
-		return false
-	end
-	if (not ki.active)and((order or 0) > 0) then
 		return false
 	end
 
 	local addon = handler:FindByName(name)
-	if (addon) then
-		local str = ((ki.api and "Removing API %s: ") or "Removing %s: "):format(handler.addonName)
-		Spring.Echo(("%-20s %-21s  %s"):format(str, name, handler:GetFancyString(name,ki.basename)))
-		handler:Remove(addon) --// deactivate
-		handler.orderList[name] = 0 --// disable
-		handler:SaveOrderList()
-		return true
-	else
+	if (not addon) then
 		Spring.Log(LUA_NAME, "warning", "::Disable: Didn\'t find \"" .. name .. "\".")
+		return false
 	end
+
+	local str = ((ki.api and "Removing API %s: ") or "Removing %s: "):format(handler.addonName)
+	Spring.Echo(("%-20s %-21s  %s"):format(str, name, handler:GetFancyString(name, ki.basename)))
+	userAction = true
+	handler:Remove(addon)
+	userAction = false
+	handler.orderList[name] = 0
+	handler:SaveOrderList()
+	return true
+end
+
+
+function handler:Disable(name)
+	if (not IsTrustedClient(getfenv(2))) then
+		return false
+	end
+	return DisableAddon(name)
 end
 
 
 function handler:Toggle(name)
+	if (not IsTrustedClient(getfenv(2))) then
+		return false
+	end
+
 	local ki = handler.knownInfos[name]
 	if (not ki) then
 		Spring.Log(LUA_NAME, "warning", "::Toggle: Couldn\'t find \"" .. name .. "\".")
-		return
+		return false
 	end
 
-	--// we don't want to crash the calling addon, so run in a pcall (FIXME make other/all code safe too?)
 	local status, msg = pcall(function()
 		if (ki.active) then
-			return handler:Disable(name)
-		elseif (handler.orderList[name] <= 0) then
+			return DisableAddon(name)
+		elseif ((handler.orderList[name] or 0) <= 0) then
 			return handler:Enable(name)
 		else
-			--// the addon is not active, but enabled; disable it
 			handler.orderList[name] = 0
 			handler:SaveOrderList()
 		end
 	end)
 	if not status then
 		Spring.Log(LUA_NAME, "warning", "::Toggle Error: \"" .. msg .. "\".")
-		return
+		return false
 	end
-	return status
+	return true
 end
+
 
 --// backward compab.
 handler[s"Find%{Addon}"]    = handler.FindByName
