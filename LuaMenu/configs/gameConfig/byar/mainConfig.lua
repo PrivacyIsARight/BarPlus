@@ -11,16 +11,6 @@ local skirmishSetupData  = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/byar/s
 local rankFunction       = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/byar/rankFunction.lua")
 local backgroundConfig   = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/skinning/skinConfig.lua")
 
-local welcomePanelItems = {{Header = "Failed to parse welcomePanelItems.lua", Text = "Unknown error"}}
-
-local success, err = pcall(function()
-		local wpi = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/welcomePanelItems.lua")
-		welcomePanelItems = wpi
-	end)
-if not success then
-	welcomePanelItems[1].Text = err
-end
-
 --Map stuff:
 local mapDetails   = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/mapDetails.lua")
 local mapStartBoxes   = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/mapStartBoxes.lua")
@@ -90,7 +80,6 @@ local externalFuncAndData = {
 	mapDetails             = mapDetails,
 	mapStartBoxes          = mapStartBoxes,
 	useDefaultStartBoxes   = useDefaultStartBoxes,
-	welcomePanelItems      = welcomePanelItems,
 	showSinglePlayerIngame = showSinglePlayerIngame,
 	settingsConfig         = settingsConfig,
 	settingsNames          = settingsNames,
@@ -117,7 +106,6 @@ local externalFuncAndData = {
 	disableSteam 				= true, -- removes settings related to steam
 	disablePlanetwars 			= true, -- removes settings related to planetwars
 	disableMatchMaking 			= true, -- removes match making
-	disableCommunityWindow 		= false, -- removes Community Window
 	featuredMapsSelectionDisable 	= true, -- removes the setting to enable a filter that allows featured (by Zero-K) map
 	link_homePage           = link_homePage,
 	link_replays            = link_replays,

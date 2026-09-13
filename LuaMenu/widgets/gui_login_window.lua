@@ -84,7 +84,7 @@ local function TrySimpleLogin()
 end
 
 local function CheckAutologin()
-	local UserCountLimited = WG.CommunityWindow.LoadStaticCommunityData().UserCountLimited
+	local UserCountLimited = WG.Chobby.Configuration.LoadStaticCommunityData().UserCountLimited
 	if UserCountLimited then
 		Spring.Echo("No automatic login - UserCountLimited")
 		return
@@ -98,7 +98,7 @@ local function CheckAutologin()
 end
 
 local function CheckFirstTimeRegister()
-	local UserCountLimited = WG.CommunityWindow.LoadStaticCommunityData().UserCountLimited
+	local UserCountLimited = WG.Chobby.Configuration.LoadStaticCommunityData().UserCountLimited
 	if UserCountLimited then
 		Spring.Echo("No automatic login - UserCountLimited")
 		return

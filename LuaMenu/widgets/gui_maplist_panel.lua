@@ -1444,7 +1444,7 @@ local function InitializeControls()
 		parent = listHolder,
 	}
 
-	local featuredMapList = WG.CommunityWindow.LoadStaticCommunityData().MapItems or {}
+	local featuredMapList = WG.Chobby.Configuration.LoadStaticCommunityData().MapItems or {}
 	local featuredMapIndex = 1
 	local mapFuncs = {}
 	local mapList = WG.Chobby.SortableList(listHolder, spacedHeadings, 64, 1, true, mapScrollPanel, ItemInFilter)
