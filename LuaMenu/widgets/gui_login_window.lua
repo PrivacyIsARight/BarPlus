@@ -114,7 +114,6 @@ local function InitializeListeners()
 
 	-- Register and login response codes
 	local function OnRegistrationAccepted()
-
 		if currentLoginWindow then
 			registerRecieved = true
 			WG.Delay(ResetRegisterRecieved, 0.8)
@@ -125,7 +124,7 @@ local function InitializeListeners()
 		end
 	end
 
-
+	local function OnRegistrationDenied(listener, err, accountAlreadyExists)
 
 		if Configuration.canAuthenticateWithSteam and Configuration.wantAuthenticateWithSteam then
 			Configuration.steamLinkComplete = true
@@ -144,7 +143,6 @@ local function InitializeListeners()
 	local function OnLoginAccepted()
 		isWaitingInQueue = false
 		Configuration.firstLoginEver = false
-
 
 		if Configuration.canAuthenticateWithSteam and Configuration.wantAuthenticateWithSteam then
 			Configuration.steamLinkComplete = true
@@ -166,7 +164,6 @@ local function InitializeListeners()
 
 	local function OnLoginDenied(listener, err)
 		isWaitingInQueue = false
-
 		lobby:Disconnect()
 		if currentLoginWindow and not registerRecieved then
 			currentLoginWindow.txtError:SetText(Configuration:GetErrorColor() .. (err or "Denied, unknown reason"))
