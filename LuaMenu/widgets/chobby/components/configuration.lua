@@ -311,8 +311,8 @@ function Configuration:init()
 	self.simplifiedSkirmishSetup = true
 	self.randomSkirmishDifficulty = "easy"
 	self.debugMode = false
-	self.devMode = VFS.FileExists("devmode.txt") or VFS.FileExists("devmode.txt.txt") or VFS.FileExists("devmode.rtf.txt")
-	self.ShowhiddenModopions = false
+	self.devMode = true
+	self.ShowhiddenModopions = true
 	self.enableProfiler = false
 	self.enableInspector = false
 	self.enableCacheRapidPool = true
