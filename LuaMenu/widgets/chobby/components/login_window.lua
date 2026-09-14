@@ -335,29 +335,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 	}
 	registerChildren[#registerChildren + 1] = self.lblRegistrationMultiplayer
 
-  if not (Configuration.firstLoginEver) then
-		self.altAcknowlegementLabel = Label:New {
-				x = 15,
-				width = 170,
-				y = 305,
-				height = 35,
-				caption = i18n("alt_acknowledgement"),
-				objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-			}
-		registerChildren[#registerChildren + 1] = self.altAcknowlegementLabel
 
-		self.TextAcknowledgementBox = EditBox:New {
-			x = 15,
-			width = '90%',
-	        y = 365,
-	        height = 35,
-			text = "",
-            hint = i18n("ask_moderation"),
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-		}
-		registerChildren[#registerChildren + 1] = self.TextAcknowledgementBox
-	end
 
 	self.cbAutoLogin = Checkbox:New {
 		x = 15,
@@ -978,13 +956,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 			[3] = { name = "reset", caption = "Recover/Change", children = recoverChildren, objectOverrideFont = WG.Chobby.Configuration:GetFont(2)},
 			--[3] = { name = "test", caption = "teset2", children = {self.testbutton}, objectOverrideFont = WG.Chobby.Configuration:GetFont(2)},
 		},
-		OnTabChange = {
-			function(obj, name)
-				if name == "register" and not Configuration.firstLoginEver then
-					WG.Chobby.InformationPopup(i18n("register_extra"), {width = 840, height = 550})
-				end
-			end
-		}
+
 	}
 
 	self.tabBarHolder = Control:New {
@@ -1246,10 +1218,6 @@ function LoginWindow:tryRegister()
 		return
 	end
 
-    if (not Configuration.firstLoginEver) and (VFS.CalculateHash(self.TextAcknowledgementBox.text, 1) ~= "a374635fe062d9b6694049d64b3f3c69527e7a0a63628b2374fed654da7388e549aa7a5294e3b05295b6a450edf22b5b4f289955c56e281085f65680fbdbe052") then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "Contact moderation first (#open-ticket on Discord).")
-        return
-    end
 
 	self.txtErrorRegister:SetText("")
 
