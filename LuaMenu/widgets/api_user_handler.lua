@@ -749,6 +749,21 @@ local function GetBattleTeamFormat(battle, lobby)
 	return nil
 end
 
+local function GetFormatArticle(formatText)
+	local number = tonumber((formatText or ""):match("^(%d+)"))
+	if number then
+		if number >= 100 then
+			number = math.floor(number / 10 ^ (math.floor(math.log10(number)) - 1))
+		elseif number >= 20 then
+			number = math.floor(number / 10) * 10
+		end
+		if number == 8 or number == 11 or number == 18 or (number >= 80 and number <= 89) or (number >= 800 and number <= 899) then
+			return "an"
+		end
+	end
+	return "a"
+end
+
 local function GetIngameStatusKey(userName, userControl)
 	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
 	if not userInfo.battleID then
@@ -765,7 +780,7 @@ local function GetIngameStatusKey(userName, userControl)
 
 	local formatText = GetBattleTeamFormat(battle, userControl.lobby)
 	if formatText then
-		return "ingame_" .. rankPrefix .. formatText, "In a " .. rankText .. formatText .. " game"
+		return "ingame_" .. rankPrefix .. formatText, "In " .. GetFormatArticle(formatText) .. " " .. rankText .. formatText .. " game"
 	end
 
 	if mode then
