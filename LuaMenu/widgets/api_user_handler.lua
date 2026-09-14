@@ -713,6 +713,22 @@ local function GetUserNameColorFont(userName, userControl)
 	return Configuration:GetFont(1, "UserName", {color = Configuration:GetUserNameColor()} )
 end
 
+local function GetIngameStatusKey(userName, userControl)
+	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
+	if not userInfo.battleID then
+		return "ingame_skirmish"
+	end
+	local battle = userControl.lobby:GetBattle(userInfo.battleID)
+	if not battle then
+		return "ingame_skirmish"
+	end
+	local mode = WG.Chobby.Configuration.battleTypeToHumanName[battle.battleMode]
+	if battle.isMatchMaker then
+		return mode and ("ingame_ranked_" .. mode:lower()) or "ingame_ranked"
+	end
+	return mode and ("ingame_" .. mode:lower()) or "ingame"
+end
+
 -- gets status name, image and colorFont
 -- used for large user displays
 local function GetUserStatusFont(userName, isInBattle, userControl)
@@ -721,7 +737,7 @@ local function GetUserStatusFont(userName, isInBattle, userControl)
 		return IMAGE_OFFLINE, "offline", WG.Chobby.Configuration:GetFont(1, "offline", {color = {0.5, 0.5, 0.5, 1}} )
 	elseif userInfo.isInGame or (userInfo.battleID and not isInBattle) then
 		if userInfo.isInGame then
-			return IMAGE_INGAME, "ingame", WG.Chobby.Configuration:GetFont(1, "ingame", {color = {1, 0.5, 0.5, 1}} )
+			return IMAGE_INGAME, GetIngameStatusKey(userName, userControl), WG.Chobby.Configuration:GetFont(1, "ingame", {color = {1, 0.5, 0.5, 1}} )
 		else
 			return IMAGE_BATTLE, "battle", WG.Chobby.Configuration:GetFont(1, "battle", {color = {0.5, 1, 0.5, 1}} )
 		end
