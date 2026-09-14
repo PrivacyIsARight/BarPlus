@@ -1,0 +1,96 @@
+name: Menu build
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+concurrency:
+  group: menu-build
+  cancel-in-progress: false
+
+jobs:
+  menu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute build number
+        run: |
+          BUILD_NUM=$(git rev-list --count HEAD -- ':(exclude)dist_cfg/config.json')
+          echo "BUILD_NUM=$BUILD_NUM" >> "$GITHUB_ENV"
+          echo "Build number: $BUILD_NUM"
+
+      - name: Detect menu changes in this commit
+        run: |
+          if git diff-tree --no-commit-id --name-only -r HEAD | grep -qE '^(LuaMenu|LuaHandler|modinfo\.lua|libs|Sounds|anims|Gamedata|profile|fonts|MenuLoadscreens)'; then
+            echo "MENU_CHANGED=true" >> "$GITHUB_ENV"
+          else
+            echo "MENU_CHANGED=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Skip if this build is already released
+        env:
+          ASSET: BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
+        run: |
+          if [ "$MENU_CHANGED" != "true" ]; then
+            if gh release view menu --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' 2>/dev/null | grep -qx "$ASSET"; then
+              echo "menu build $BUILD_NUM already released and nothing changed; skipping"
+              exit 0
+            fi
+          fi
+
+      - name: Install archiver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Stage and pack the menu
+        env:
+          ARTIFACT: BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
+        run: |
+          set -euo pipefail
+          STAGE="$RUNNER_TEMP/BYAR-Chobby-$BUILD_NUM.sdd"
+          mkdir -p "$STAGE" "$GITHUB_WORKSPACE/artifacts"
+          cp -a . "$STAGE/"
+          rm -rf "$STAGE/.git" "$STAGE/.github"
+          sed -i "s/version = '\$VERSION'/version = '$BUILD_NUM'/" "$STAGE/modinfo.lua"
+          cd "$STAGE"
+          7z a -bd -mx=9 "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" . >/dev/null
+          cd "$GITHUB_WORKSPACE"
+
+      - name: Publish rolling release
+        env:
+          ARTIFACT: BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
+        run: |
+          set -euo pipefail
+          if gh release view menu --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' 2>/dev/null | grep -qx "$ARTIFACT"; then
+            echo "Asset $ARTIFACT already published"
+            exit 0
+          fi
+          gh release upload menu "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" --repo "$GITHUB_REPOSITORY" --clobber \
+            || gh release create menu "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" \
+               --repo "$GITHUB_REPOSITORY" --title "Menu" \
+               --notes "Latest BarPlus menu build $BUILD_NUM."
+
+      - name: Repoint launcher config at the new menu
+        env:
+          MENU_URL: https://github.com/${{ github.repository }}/releases/download/menu/BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
+        run: |
+          set -euo pipefail
+          node build/update_launcher_config.js dist_cfg/config.json "$MENU_URL" "$BUILD_NUM"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist_cfg/config.json
+          if git diff --cached --quiet; then
+            echo "config unchanged"
+          else
+            git commit -m "Update menu target to build $BUILD_NUM"
+            git push
+          fi
