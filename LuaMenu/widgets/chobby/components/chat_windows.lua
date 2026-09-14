@@ -600,6 +600,11 @@ function ChatWindows:_NotifyTab(tabName, userName, chanName, nameMentioned, mess
 			WG.Chobby.interfaceRoot.OpenRightPanelTab("chat")
 			self.tabPanel.tabBar:Select(tabName)
 		end
+
+		if tabName == self.currentTab then
+			return
+		end
+
 		local console = self.tabbars[tabName]
 		local oldMessages = console.unreadMessages
 		console.unreadMessages = console.unreadMessages + 1
