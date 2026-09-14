@@ -79,15 +79,6 @@ local function Logout()
 	end
 end
 
-local function GoToProfilePage()
-	if WG.Chobby and WG.Chobby.Configuration then
-		local Configuration = WG.Chobby.Configuration
-		if Configuration.gameConfig.link_homePage ~= nil then
-			WG.BrowserHandler.OpenUrl(Configuration.gameConfig.link_homePage())
-		end
-	end
-end
-
 local function ShowKeys()
 	WG.KeysPanel.Show()
 end
@@ -137,21 +128,6 @@ local function InitializeControls(window)
 		OnClick = {Logout}
 	}
 	menuX = menuX + 108
-
-	if WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration.gameConfig and WG.Chobby.Configuration.gameConfig.link_homePage ~= nil then
-		menuX = menuX + 3
-		btnProfile = Button:New {
-			y = 2,
-			right = menuX,
-			width = 108,
-			height = 38,
-			caption = i18n("home"),
-			parent = window,
-			objectOverrideFont = (WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration:GetFont(2)) or nil,
-			OnClick = {GoToProfilePage}
-		}
-		menuX = menuX + 108
-	end
 
 	menuX = menuX + 3
 	btnKeys = Button:New {
