@@ -40,11 +40,12 @@ jobs:
           ASSET: BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "$MENU_CHANGED" != "true" ]; then
-            if gh release view menu --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' 2>/dev/null | grep -qx "$ASSET"; then
-              echo "menu build $BUILD_NUM already released and nothing changed; skipping"
-              exit 0
-            fi
+          TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName --jq '.[0].tagName // empty')
+          [ -n "$TAG" ] || { echo "no releases yet; proceeding"; exit 0; }
+          URL="https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ASSET"
+          if [ "$MENU_CHANGED" != "true" ] && curl -fsI -o /dev/null "$URL"; then
+            echo "menu build $BUILD_NUM already attached to $TAG and nothing changed; skipping"
+            exit 0
           fi
 
       - name: Install archiver
@@ -66,24 +67,21 @@ jobs:
           7z a -bd -mx=9 "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" . >/dev/null
           cd "$GITHUB_WORKSPACE"
 
-      - name: Publish rolling release
+      - name: Attach menu build to latest release
         env:
           ARTIFACT: BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          if gh release view menu --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name' 2>/dev/null | grep -qx "$ARTIFACT"; then
-            echo "Asset $ARTIFACT already published"
-            exit 0
-          fi
-          gh release upload menu "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" --repo "$GITHUB_REPOSITORY" --clobber \
-            || gh release create menu "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" \
-               --repo "$GITHUB_REPOSITORY" --title "Menu" \
-               --notes "Latest BarPlus menu build $BUILD_NUM."
+          TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 1 --json tagName --jq '.[0].tagName // empty')
+          [ -n "$TAG" ] || { echo "no existing release to attach to" >&2; exit 1; }
+          echo "Attaching $ARTIFACT to release $TAG"
+          echo "MENU_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/$ARTIFACT" >> "$GITHUB_ENV"
+          gh release upload "$TAG" "$GITHUB_WORKSPACE/artifacts/$ARTIFACT" --repo "$GITHUB_REPOSITORY" --clobber
 
       - name: Repoint launcher config at the new menu
         env:
-          MENU_URL: https://github.com/${{ github.repository }}/releases/download/menu/BYAR-Chobby-${{ env.BUILD_NUM }}.sdd.7z
+          MENU_URL: ${{ env.MENU_URL }}
         run: |
           set -euo pipefail
           node build/update_launcher_config.js dist_cfg/config.json "$MENU_URL" "$BUILD_NUM"
