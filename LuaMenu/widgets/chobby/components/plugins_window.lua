@@ -1828,12 +1828,6 @@ function PluginsWindow:init(parent)
         width = btnW,
         OnClick = { function() if WG.Connector and WG.Connector.writePath then WG.WrapperLoopback.OpenFolder(WG.Connector.writePath .. "/LuaUI/Widgets") end end },
     }
-    addHeaderButton {
-        caption = i18n("plugins_contribute"),
-        tooltip = i18n("plugins_contribute_tooltip"),
-        width = btnW - 10,
-        OnClick = { function() WG.WrapperLoopback.OpenUrl("https://github.com/beyond-all-reason/BAR-widgets#how-to-contribute-a-new-widget") end },
-    }
     hubButton = addHeaderButton {
         caption = i18n("plugins_hub"),
         tooltip = i18n("plugins_hub_tooltip"),
