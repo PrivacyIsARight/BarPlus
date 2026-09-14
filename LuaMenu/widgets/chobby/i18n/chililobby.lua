@@ -102,8 +102,6 @@ return {
 		login_long = "Connect to server",
 		register_long = "Register your account",
         confirm_email = "Confirm email",
-		register_extra = 'CAREFUL! ONE ACCOUNT ONLY!\n \nWe don\'t allow alternate accounts, because they:\n- allow people to evade justifiably earned reputations\n- can disrupt ratings and cause imbalanced games (for both high and low ratings; so called "smurfs" in other games)\n- enable evading of moderation actions\n \nWe are strict on this rule. Many people feel they should be allowed to have an alternate account and are still turned down.\n \nYou can solve a lot of account issues, like renames or email changes, yourself - use the Recover/Change tab.\n \nTo save time both for you and ourselves, we have moved to an "ask first, create later" system. Use the Discord button on the next screen, find the #open-ticket channel and talk to the moderation team. If we agree you should get an exception, you will receive a code to use on the next screen.\n \nIF YOU MAKE ALTERNATE ACCOUNTS WITHOUT CONTACTING THE MODERATION TEAM YOU WILL BE PERMANENTLY BANNED.',
-		alt_acknowledgement = 'By pressing Register, you acknowledge the\nrules concerning alt accounts.',
 		register_steam_long = "Enter a username for multiplayer",
 		autoLogin = "Login automatically",
 		rememberPassword = "Remember password",
@@ -121,7 +119,6 @@ return {
 		submit_email = "Submit email",
 		submit_verification = "Submit Verification",
 		required_for_online = "Required for online play only",
-		ask_moderation = "Ask moderation on Discord for keyword",
 		-- gui_battle_status_panel
 		spectating_game_status = "Spectating",
 		playing_game_status = "Playing",
