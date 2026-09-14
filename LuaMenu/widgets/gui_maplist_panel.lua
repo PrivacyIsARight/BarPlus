@@ -1768,22 +1768,7 @@ local function InitializeControls()
 
 	WG.Chobby.PriorityPopup(mapListWindow, CloseFunc)
 
-	local btnOnlineMaps = Button:New {
-		right = 286,
-		y = 13,
-		width = 180,
-		height = 35,
-		caption = i18n("download_maps"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		tooltip = i18n("download_maps_tooltip"),
-		classname = "option_button",
-		parent = mapListWindow,
-		OnClick = {
-			function ()
-				WG.BrowserHandler.OpenUrl("https://www.beyondallreason.info/maps")
-			end
-		},
-	}
+
 
 	-------------------------
 	-- Filtering

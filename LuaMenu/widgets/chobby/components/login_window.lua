@@ -486,23 +486,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 	}
 	loginChildren[#loginChildren+1] = self.btnLogin
 
-    if not (Configuration.firstLoginEver) then
-        self.btnDiscord = Button:New {
-            right = 273,
-            width = 130,
-            y = self.windowHeight - 143,
-            height = 70,
-            caption = "Discord",
-            objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-            classname = "option_button",
-            OnClick = {
-                function()
-                    WG.BrowserHandler.OpenUrl("https://discord.com/channels/549281623154229250/1005537149564755989")
-                end
-            },
-        }
-		registerChildren[#registerChildren + 1] = self.btnDiscord
-	end
+
 
 	self.btnRegister = Button:New {
 		right = 140,
@@ -632,23 +616,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 	}
 	recoverChildren[#recoverChildren+1] = self.txtResetPassword
 
-	self.btnResetPassword = Button:New {
-		x = pad + formw * 0 ,
-		y = 220 ,
-		width =   formw * 3 ,
-		height =  formh * 2 ,
-		caption = "Reset your password via a browser link",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		classname = "negative_button",
-		OnClick = {
-			function()
-				WG.BrowserHandler.OpenUrl("https://server4.beyondallreason.info/forgot_password")
-			end
-		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnResetPassword
-	
-	recoverChildren[#recoverChildren+1] = Line:New{x=5,y=280,right=5, height = 1}
+
 --[[
 
 
@@ -757,22 +725,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 	}
 	recoverChildren[#recoverChildren+1] = self.txtChangePassword
 
-	self.btnChangePassword = Button:New {
-		x = pad + formw * 0 ,
-		y = 342 ,
-		width =   formw * 3 ,
-		height =  formh * 2 ,
-		caption = "Edit your password via a browser link",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		classname = "negative_button",
-		OnClick = {
-			function()
-				WG.BrowserHandler.OpenUrl("https://server4.beyondallreason.info/teiserver/account/security/edit_password")
-			end
-		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnChangePassword
-	recoverChildren[#recoverChildren+1] = Line:New{x=5,y=410,right=5, height = 1}
+
 
 --[[
 	self.lblChangePasswordOld =  Label:New {
@@ -984,24 +937,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 
 	recoverChildren[#recoverChildren+1] = self.btnLogOut
 
-	self.btnTeiserver = Button:New {
-		x = 2,
-		y = self.windowHeight - 143,
-		width = 207,
-		height = 70,
-		caption = "Server Website",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		classname = "option_button",
-		OnClick = {
-			function ()
-				WG.BrowserHandler.OpenUrl("https://server4.beyondallreason.info/")
-			end
-		},
-		tooltip = "Visit the server's website for all your account and clan management needs at https://server4.beyondallreason.info/. You can also recover your account/password from there.",
-	}
 
-	
-	recoverChildren[#recoverChildren+1] = self.btnTeiserver
 
 	local width = math.min(620, math.max(580, ww - 20))
 
@@ -1791,37 +1727,7 @@ function LoginWindow:createAgreementWindow()
 		}
 	end
 
-	local button = Button:New {
-		x = "2%",
-		height = 60,
-		right = "2%",
-		bottom = 204,
-		caption = "Privacy policy",
-		classname = "link_button",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		OnClick = {
-			function ()
-				WG.BrowserHandler.OpenUrl("https://www.beyondallreason.info/privacy")
-			end
-		},
-		parent = self.agreementWindow,
-	}
 
-	local button = Button:New {
-		x = "2%",
-		height = 60,
-		right = "2%",
-		bottom = 140,
-		caption = "Code of conduct",
-		classname = "link_button",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		OnClick = {
-			function ()
-				WG.BrowserHandler.OpenUrl("https://www.beyondallreason.info/code-of-conduct")
-			end
-		},
-		parent = self.agreementWindow,
-	}
 
 	self.btnYes = Button:New {
 		x = "2%",
