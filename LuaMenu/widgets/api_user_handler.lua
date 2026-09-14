@@ -713,20 +713,65 @@ local function GetUserNameColorFont(userName, userControl)
 	return Configuration:GetFont(1, "UserName", {color = Configuration:GetUserNameColor()} )
 end
 
+local function GetBattleTeamFormat(battle, lobby)
+	if battle and battle.users then
+		local teamSizes = {}
+		for i = 1, #battle.users do
+			local battleStatus = lobby:GetUserBattleStatus(battle.users[i])
+			if battleStatus and not battleStatus.isSpectator and battleStatus.allyNumber ~= nil then
+				teamSizes[battleStatus.allyNumber] = (teamSizes[battleStatus.allyNumber] or 0) + 1
+			end
+		end
+		local sizes = {}
+		for _, size in pairs(teamSizes) do
+			sizes[#sizes + 1] = size
+		end
+		if #sizes >= 2 then
+			table.sort(sizes, function(a, b) return a < b end)
+			if not (#sizes > 2 and sizes[#sizes] == 1) then
+				return table.concat(sizes, "v")
+			end
+		end
+	end
+
+	local nbTeams = battle and tonumber(battle.nbTeams)
+	local teamSize = battle and tonumber(battle.teamSize)
+	if nbTeams and teamSize and nbTeams >= 2 and teamSize >= 1 then
+		if teamSize == 1 then
+			return nbTeams > 2 and "ffa" or "1v1"
+		end
+		local parts = {}
+		for i = 1, nbTeams do
+			parts[i] = tostring(teamSize)
+		end
+		return table.concat(parts, "v")
+	end
+	return nil
+end
+
 local function GetIngameStatusKey(userName, userControl)
 	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
 	if not userInfo.battleID then
-		return "ingame_skirmish"
+		return "ingame_skirmish", "In a skirmish game"
 	end
 	local battle = userControl.lobby:GetBattle(userInfo.battleID)
 	if not battle then
-		return "ingame_skirmish"
+		return "ingame", "In a game"
 	end
+
 	local mode = WG.Chobby.Configuration.battleTypeToHumanName[battle.battleMode]
-	if battle.isMatchMaker then
-		return mode and ("ingame_ranked_" .. mode:lower()) or "ingame_ranked"
+	local rankPrefix = battle.isMatchMaker and "ranked_" or ""
+	local rankText = battle.isMatchMaker and "ranked " or ""
+
+	local formatText = GetBattleTeamFormat(battle, userControl.lobby)
+	if formatText then
+		return "ingame_" .. rankPrefix .. formatText, "In a " .. rankText .. formatText .. " game"
 	end
-	return mode and ("ingame_" .. mode:lower()) or "ingame"
+
+	if mode then
+		return "ingame_" .. rankPrefix .. mode:lower(), "In a " .. rankText .. mode .. " game"
+	end
+	return "ingame_" .. rankPrefix, "In a " .. rankText .. "game"
 end
 
 -- gets status name, image and colorFont
@@ -734,17 +779,18 @@ end
 local function GetUserStatusFont(userName, isInBattle, userControl)
 	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
 	if userInfo.isOffline then
-		return IMAGE_OFFLINE, "offline", WG.Chobby.Configuration:GetFont(1, "offline", {color = {0.5, 0.5, 0.5, 1}} )
+		return IMAGE_OFFLINE, "offline", WG.Chobby.Configuration:GetFont(1, "offline", {color = {0.5, 0.5, 0.5, 1}} ), "Offline"
 	elseif userInfo.isInGame or (userInfo.battleID and not isInBattle) then
 		if userInfo.isInGame then
-			return IMAGE_INGAME, GetIngameStatusKey(userName, userControl), WG.Chobby.Configuration:GetFont(1, "ingame", {color = {1, 0.5, 0.5, 1}} )
+			local status, statusText = GetIngameStatusKey(userName, userControl)
+			return IMAGE_INGAME, status, WG.Chobby.Configuration:GetFont(1, "ingame", {color = {1, 0.5, 0.5, 1}} ), statusText
 		else
-			return IMAGE_BATTLE, "battle", WG.Chobby.Configuration:GetFont(1, "battle", {color = {0.5, 1, 0.5, 1}} )
+			return IMAGE_BATTLE, "battle", WG.Chobby.Configuration:GetFont(1, "battle", {color = {0.5, 1, 0.5, 1}} ), "In battle"
 		end
 	elseif userInfo.isAway then
-		return IMAGE_AFK, "afk", WG.Chobby.Configuration:GetFont(1, "afk", {color = {0.5, 0.5, 1, 1}} )
+		return IMAGE_AFK, "afk", WG.Chobby.Configuration:GetFont(1, "afk", {color = {0.5, 0.5, 1, 1}} ), "Away"
 	else
-		return IMAGE_ONLINE, "online", WG.Chobby.Configuration:GetFont(1, "online", {color = {1, 1, 1, 1}} )
+		return IMAGE_ONLINE, "online", WG.Chobby.Configuration:GetFont(1, "online", {color = {1, 1, 1, 1}} ), "Online"
 	end
 end
 
@@ -809,14 +855,14 @@ local function UpdateUserControlStatus(userName, userControls)
 		return
 	end
 	if userControls.imStatusLarge then
-		local imgFile, status, font = GetUserStatusFont(userName, isInBattle, userControls)
+		local imgFile, status, font, statusText = GetUserStatusFont(userName, isInBattle, userControls)
 		userControls.tbName.font = font
 		userControls.tbName:Invalidate()
 		UpdateUserDisplayName(userName, userControls)
 		userControls.imStatusLarge.file = imgFile
 		userControls.imStatusLarge:Invalidate()
 		userControls.lblStatusLarge.font = font
-		userControls.lblStatusLarge:SetCaption(i18n(status .. "_status"))
+		userControls.lblStatusLarge:SetCaption(i18n(status .. "_status", {default = statusText}))
 		return
 	elseif not userControls.statusImages then
 		return
@@ -2044,7 +2090,7 @@ local function GetUserControls(userName, opts)
 		if large then
 			offsetY = offsetY + 35
 			offset = 5
-			local imgFile, status, font = GetUserStatusFont(userName, isInBattle, userControls)
+			local imgFile, status, font, statusText = GetUserStatusFont(userName, isInBattle, userControls)
 			userControls.imStatusLarge = Image:New {
 				name = "imStatusLarge",
 				x = offset,
@@ -2063,7 +2109,7 @@ local function GetUserControls(userName, opts)
 				height = 25,
 				valign = 'center',
 				parent = userControls.mainControl,
-				caption = i18n(status .. "_status"),
+				caption = i18n(status .. "_status", {default = statusText}),
 				objectOverrideFont = font,
 			}
 
