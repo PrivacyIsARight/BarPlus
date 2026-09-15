@@ -92,5 +92,6 @@ jobs:
             echo "config unchanged"
           else
             git commit -m "Update menu target to build $BUILD_NUM"
+            git pull --rebase --autostash
             git push
           fi
