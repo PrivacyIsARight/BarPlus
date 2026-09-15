@@ -128,21 +128,6 @@ end
 --------------------------------------------------------------------------------
 -- Utilities
 
-local function GetMapType(is1v1, isTeam, isFFA, isChicken, isSpecial)
-	if isSpecial then
-		return "Special"
-	elseif isChicken then
-		return "Chicken"
-	elseif isFFA then
-		return "FFA"
-	elseif is1v1 then
-		return "1v1"
-	elseif isTeam then
-		return "Team"
-	end
-	return "Special"
-end
-
 local function GetMapTypeBar(is1v1, isTeam, isFFA)
   local mapTypeString = ""
 	if is1v1 then
@@ -363,29 +348,6 @@ local function GetCertifiedLevelBar(isCertified,isClassic,LastUpdate)
   if isCertified then return "Certified" end
   if isClassic then return "Classic" end
   return "Unofficial"
-end
-
-
-local function GetTerrainType(hillLevel, waterLevel)
-	if waterLevel == 3 then
-		return "Sea"
-	end
-	local first
-	if hillLevel == 1 then
-		first = "Flat "
-	elseif hillLevel == 2 then
-		first = "Hilly "
-	else
-		first = "Mountainous "
-	end
-	local second
-	if waterLevel == 1 then
-		second = "land"
-	else
-		second = "mixed"
-	end
-
-	return first .. second
 end
 
 local function CreateMapEntry(mapName, mapData, CloseFunc, OnFilterDataChanged, OnPreviewDataChanged, OnMapLocked)--{"ResourceID":7098,"Name":"2_Mountains_Battlefield","SupportLevel":2,"Width":16,"Height":16,"IsAssymetrical":false,"Hills":2,"WaterLevel":1,"Is1v1":false,"IsTeams":true,"IsFFA":false,"IsChickens":false,"FFAMaxTeams":null,"RatingCount":3,"RatingSum":10,"IsSpecial":false},
@@ -1019,13 +981,6 @@ local function InitializeControls()
 			return nil
 		end
 		return os.date("%Y-%m-%d", ts)
-	end
-
-	local function TryAddInfoLine(lines, key, value)
-		value = NormalizeInfoValue(value)
-		if value then
-			lines[#lines + 1] = key .. ": " .. value
-		end
 	end
 
 	local function BuildPreviewInfoText(mapName, mapData)

@@ -87,15 +87,6 @@ local function MaybeDownloadMap(mapName)
 	WG.DownloadHandler.MaybeDownloadArchive(mapName, "map", -1)
 end
 
-local function ShortenGameName(gameName)
-	gameName = gameName:gsub("Beyond All Reason","BAR")
-	gameName = gameName:gsub("test","")
-	if gameName:find("-[^-]*$") then
-	  gameName = gameName:sub(1, gameName:find("-[^-]*$") -1 )
-	end
-	return gameName
-end
-
 local function DownloadRequirements()
 	local config = WG.Chobby.Configuration
 	local gameName = config:GetDefaultGameName()
@@ -107,18 +98,6 @@ local function DownloadRequirements()
 		alreadyDownloaded = true
 	end
 end
-
-local function ShortenEngineName(engineName)
-	if engineName:find("-[^-]*$") then
-		engineName = engineName:sub(1, engineName:find("-[^-]*$") -1)
-	end
-	return engineName
-end
-
-local function ternary(condition, T, F)
-	if condition then return T else return F end
-end
-
 
 local function LoadScenarios()
 	local dummyVar = 'temp'	-- delete this any time

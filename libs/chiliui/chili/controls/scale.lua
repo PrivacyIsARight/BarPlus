@@ -28,10 +28,6 @@ local this = Scale
 
 local glVertex = gl.Vertex
 
-local function defaultTransform(x)
-	return (math.log(1 + x*140 ) / math.log(141))
-end
-
 local function drawScaleLines(self)
 	local hline = self.y + self.height
 	local h1 = self.y + self.fontsize
