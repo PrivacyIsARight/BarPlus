@@ -28,13 +28,13 @@ body,button,input,select,textarea {
 }
 
 .progress.is-primary::-webkit-progress-value {
-	background: rgb(43,74,106);
-	background: linear-gradient(0deg, rgba(43,74,106,1) 0%, rgba(64,103,143,1) 100%);
+	background: rgb(24,126,86);
+	background: linear-gradient(0deg, rgba(24,126,86,1) 0%, rgba(32,152,104,1) 100%);
 }
 
 .progress.is-success::-webkit-progress-value {
-	background: rgb(44,187,105);
-	background: linear-gradient(0deg, rgba(44,187,105,1) 0%, rgba(51,224,125,1) 100%);
+	background: rgb(24,126,86);
+	background: linear-gradient(0deg, rgba(24,126,86,1) 0%, rgba(32,152,104,1) 100%);
 }
 
 #config-select__div {
@@ -48,11 +48,11 @@ body,button,input,select,textarea {
 }
 
 #btn-progress {
-	background: rgb(22, 86, 120);
-	background: linear-gradient(180deg, rgba(22, 86, 120, 1) 0%, rgba(19, 109, 161, 1) 100%);
+	background: rgb(24,126,86);
+	background: linear-gradient(180deg, rgba(24,126,86,1) 0%, rgba(20,106,72,1) 100%);
 }
 
 #btn-progress:hover {
-	background: rgb(24, 96, 134);
-	background: linear-gradient(180deg, rgba(24, 96, 134, 1) 0%, rgba(18, 124, 186, 1) 100%);
+	background: rgb(28,142,96);
+	background: linear-gradient(180deg, rgba(28,142,96,1) 0%, rgba(22,116,78,1) 100%);
 }
