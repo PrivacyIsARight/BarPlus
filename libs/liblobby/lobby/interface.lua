@@ -33,7 +33,7 @@ function Interface:Register(userName, password, email)
 	return self
 end
 
-local function GetLobbyName()
+local function GetLobbyRapidTag()
 	local byarchobbyrapidTag = "unknown"
 	for i,v in ipairs(VFS.GetLoadedArchives()) do 
 			if string.find(v,"BYAR Chobby ", nil, true) then
@@ -42,9 +42,17 @@ local function GetLobbyName()
 			break
 		end
 	end
-	local lobbyname = 'BarPlus Version '..byarchobbyrapidTag
+	return byarchobbyrapidTag
+end
+
+local function GetLobbyName()
+	local lobbyname = 'BarPlus Version '..GetLobbyRapidTag()
 	--Spring.Utilities.TraceFullEcho()
 	return lobbyname
+end
+
+local function GetServerLobbyName()
+	return 'Chobby:'..GetLobbyRapidTag()
 end
 
 function Interface:Login(user, password, cpu, localIP, lobbyVersion)
@@ -62,7 +70,7 @@ function Interface:Login(user, password, cpu, localIP, lobbyVersion)
 
 	if self.buffer then self.buffer = "" end 
 	password = VFS.CalculateHash(password, 0)
-	sentence = "LuaLobby " .. lobbyVersion .. "\t" .. self.agent .. "\t" .. "b sp"
+	sentence = "LuaLobby " .. GetServerLobbyName() .. "\t" .. self.agent .. "\t" .. "b sp"
 	cmd = concat("LOGIN", user, password, "0", localIP, sentence)
 	self:_SendCommand(cmd)
 	return self
