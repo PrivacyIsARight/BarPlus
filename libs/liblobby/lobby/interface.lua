@@ -33,7 +33,7 @@ function Interface:Register(userName, password, email)
 	return self
 end
 
-local function GetLobbyName()
+local function GetLobbyRapidTag()
 	local byarchobbyrapidTag = "unknown"
 	for i,v in ipairs(VFS.GetLoadedArchives()) do 
 			if string.find(v,"BYAR Chobby ", nil, true) then
@@ -42,9 +42,24 @@ local function GetLobbyName()
 			break
 		end
 	end
-	local lobbyname = 'BarPlus Version '..byarchobbyrapidTag
+	return byarchobbyrapidTag
+end
+
+-- User-facing lobby/version name. NOT sent to the server, this only travels
+-- via the lobbyVersion argument (used for display/logging) and is stored in loginData.
+local function GetLobbyName()
+	local lobbyname = 'BarPlus Version '..GetLobbyRapidTag()
 	--Spring.Utilities.TraceFullEcho()
 	return lobbyname
+end
+
+-- Client identity sent to the server in the LOGIN command. Must identify as the stock
+-- Chobby client: Teiserver only grants the "partial" protocol optimisation - which streams
+-- per-battle rosters into the lobby list - to known client names. Unknown names fall back to
+-- ":full", which suppresses JOINEDBATTLE for lobbies you are not in, making every lobby list
+-- show 0 players. Never leak "BarPlus" here.
+local function GetServerLobbyName()
+	return 'Chobby:'..GetLobbyRapidTag()
 end
 
 function Interface:Login(user, password, cpu, localIP, lobbyVersion)
@@ -62,7 +77,7 @@ function Interface:Login(user, password, cpu, localIP, lobbyVersion)
 
 	if self.buffer then self.buffer = "" end 
 	password = VFS.CalculateHash(password, 0)
-	sentence = "LuaLobby " .. lobbyVersion .. "\t" .. self.agent .. "\t" .. "b sp"
+	sentence = "LuaLobby " .. GetServerLobbyName() .. "\t" .. self.agent .. "\t" .. "b sp"
 	cmd = concat("LOGIN", user, password, "0", localIP, sentence)
 	self:_SendCommand(cmd)
 	return self
