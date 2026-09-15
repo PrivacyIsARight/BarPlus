@@ -360,6 +360,7 @@ skin.progressbar = {
   tiles       = {10, 10, 10, 10},
 
   backgroundColor = {0,0,0,0.5},
+  color           = {0.0941, 0.4941, 0.3373, 0.8},
 
   DrawControl = DrawProgressbar,
 }

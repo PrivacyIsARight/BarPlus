@@ -165,6 +165,7 @@ skin.progressbar = {
   backgroundColor = {1,1,1,1},
 
   DrawControl = DrawProgressbar,
+  color           = {0.0941, 0.4941, 0.3373, 0.8},
 }
 
 skin.scrollpanel = {
