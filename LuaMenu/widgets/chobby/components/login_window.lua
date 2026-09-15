@@ -893,7 +893,6 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		if lobby:GetConnectionStatus() ~= "offline" then
 			Spring.Echo("Logout")
 			WG.Chobby.interfaceRoot.CleanMultiplayerState()
-			WG.Chobby.Configuration:SetConfigValue("autoLogin", false)
 			lobby:Disconnect()
 		else
 			Spring.Echo("Logout pressed, but already offline")

@@ -60,9 +60,7 @@ end
 
 local function Logout()
 	if lobby:GetConnectionStatus() ~= "offline" then
-		if WG.Chobby and WG.Chobby.Configuration then
-			WG.Chobby.Configuration:SetConfigValue("autoLogin", false)
-		end
+
 		if WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration.gameConfig and WG.Chobby.Configuration.gameConfig.logoutOpensLoginPanel then
 			WG.LoginWindowHandler.TryLogin()
 			--WG.LoginWindowHandler.tabPanel.tabBar:Select("reset")
