@@ -116,7 +116,7 @@ function GetInterfaceRoot(optionsParent, mainWindowParent, fontFunction)
 		parent = lobbyInterfaceHolder,
 		objectOverrideFont = version_font,
 		caption =  "\255\185\185\185" .. "Game: " .. Configuration.gameConfig.ShortenNameString(Configuration:GetDefaultGameName()) .. "  Engine: " .. Configuration:GetTruncatedEngineVersion() .. "  "
-			.. 'BarPlus:' .. byarchobbyrapidTag,
+			.. 'BarPlus Version ' .. byarchobbyrapidTag,
 		align = "right",
 		valign = 'bottom',
 	}
