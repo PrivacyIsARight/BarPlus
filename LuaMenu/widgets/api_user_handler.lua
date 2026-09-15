@@ -1049,12 +1049,25 @@ local function UpdateUserActivityList(listener, userList)
 	end
 end
 
+local function UpdateFriendsInBattle(battleID)
+	for userName, userControls in pairs(friendUsers) do
+		local userInfo = userControls.lobby:TryGetUser(userName)
+		if userInfo.battleID and userInfo.battleID == battleID then
+			UpdateUserActivity(_, userName)
+		end
+	end
+end
+
 -- only reacts to map changes
 local function UpdateBattleInfo(listener, battleID, battleInfo)
 	if not ChobbyReady() then
 		return
 	end
 	local Configuration  = WG.Chobby.Configuration
+
+	if battleInfo.teamSize ~= nil or battleInfo.nbTeams ~= nil then
+		UpdateFriendsInBattle(battleID)
+	end
 
 	if battleInfo.mapName ~= nil then
 		for userName, userControls in pairs(friendUsers) do	
@@ -2524,6 +2537,13 @@ local function AddListeners()
 	lobby:AddListener("OnUserVoted", OnUserVoted)
 	lobby:AddListener("OnUpdateBattleInfo", UpdateBattleInfo)
 	
+	lobby:AddListener("OnBattleOpened", function(listener, battleID)
+		if not ChobbyReady() then
+			return
+		end
+		UpdateFriendsInBattle(battleID)
+	end)
+
 	lobby:AddListener("OnJoinedBattle", UpdateUserBattle)
 	lobby:AddListener("OnLeftBattle", UpdateUserBattle)
 
