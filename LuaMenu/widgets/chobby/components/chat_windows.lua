@@ -605,16 +605,19 @@ function ChatWindows:_NotifyTab(tabName, userName, chanName, nameMentioned, mess
 			return
 		end
 
-		local console = self.tabbars[tabName]
-		local oldMessages = console.unreadMessages
-		console.unreadMessages = console.unreadMessages + 1
-		self:SetTabBadge(tabName, tostring(console.unreadMessages))
-		local mentionNumber = (nameMentioned and 0) or 1
-		self:SetTabActivation(tabName, (nameMentioned and 2) or 1, {1, mentionNumber, mentionNumber, 1})
-		self.totalNewMessages = self.totalNewMessages + (console.unreadMessages - oldMessages)
+		local isPrivateChat = chanName == "Private"
+		if isPrivateChat then
+			local console = self.tabbars[tabName]
+			local oldMessages = console.unreadMessages
+			console.unreadMessages = console.unreadMessages + 1
+			self:SetTabBadge(tabName, tostring(console.unreadMessages))
+			local mentionNumber = (nameMentioned and 0) or 1
+			self:SetTabActivation(tabName, (nameMentioned and 2) or 1, {1, mentionNumber, mentionNumber, 1})
+			self.totalNewMessages = self.totalNewMessages + (console.unreadMessages - oldMessages)
 
-		if not self.window.parent then
-			interfaceRoot.GetRightPanelHandler().SetActivity("chat", self.totalNewMessages, 2 - mentionNumber)
+			if not self.window.parent then
+				interfaceRoot.GetRightPanelHandler().SetActivity("chat", self.totalNewMessages, 2 - mentionNumber)
+			end
 		end
 
 		if nameMentioned and WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration:AllowNotification(userName) then
