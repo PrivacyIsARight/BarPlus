@@ -28,7 +28,7 @@ Progressbar = Control:Inherit{
 	caption   = "",
 	noFont    = false,
 
-	color     = {0.03, 0.55, 0.95, 0.8},
+	color     = {0.0941, 0.4941, 0.3373, 0.8},
 	backgroundColor = {1, 1, 1, 1},
 
 	OnChange  = {},
