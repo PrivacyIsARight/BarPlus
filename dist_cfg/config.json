@@ -264,12 +264,7 @@
       }
     }
   ],
-  "links": [
-    {
-      "title": "Troubleshooting",
-      "url": "https://www.beyondallreason.info/troubleshooting"
-    }
-  ],
+  "links": [],
   "json_files": {
     "chobby_config.json": {
       "server": {
