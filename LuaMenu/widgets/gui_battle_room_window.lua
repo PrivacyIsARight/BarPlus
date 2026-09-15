@@ -4757,9 +4757,6 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 
 	-- whoever wrote lua string parser needs to get rammed by a horse
 
-	local function dontshowvote()
-	end
-
 	-- Per-key old/new from OnSetModOptions(changes); lowercased keys for SPADS SAYBATTLEEX rewrite.
 	local recentModoptionDiff = {}
 	local inBSetFragment = false

@@ -93,15 +93,6 @@ function WrapperLoopback.StartNewSpring(args)
 	WG.Connector.Send("StartNewSpring", args)
 end
 
-local function GetDownloadByName(name)
-	for i, download in ipairs(downloads) do
-		if download.name == name then
-			return download, i
-		end
-	end
-	return false, nil
-end
-
 local function GetDownloadByNameSent(nameSent)
 	for i, download in ipairs(downloads) do
 		if download.nameSent == nameSent then
@@ -125,14 +116,6 @@ local function FindNameReceivedInDownloads(nameReceived)
 		end
 	end
 	return false, nil
-end
-
-local function startsWith(targetstring, pattern) 
-	if string.len(pattern) <= string.len(targetstring) and pattern == string.sub(targetstring,1, string.len(pattern)) then
-		return true, string.sub(targetstring, string.len(pattern) + 1)
-	else
-		return false
-	end
 end
 
 local SkippingFile_PREFIX = "Skipping "

@@ -54,18 +54,6 @@ local function MakeCircuitDisableString(unlockedUnits)
 	return disabled
 end
 
-local function AddToList(list, inclusionMap, listToAppend)
-	if listToAppend then
-		for i = 1, #listToAppend do
-			if not inclusionMap[listToAppend[i]] then
-				list[#list + 1] = listToAppend[i]
-			end
-		end
-	end
-
-	return list
-end
-
 local function AddStartUnits(teamTable, unitList, prefix)
 	if not (unitList and unitList[1]) then
 		return
@@ -80,41 +68,6 @@ local function AddStartUnits(teamTable, unitList, prefix)
 		teamTable[prefix .. block] = TableToBase64(unitsTable)
 		block = block + 1
 	end
-end
-
-local function GetPlayerCommWithExtra(playerComm, extraModules)
-	local replaceModules = {}
-	for i = 1, #extraModules do
-		if not extraModules[i].add then
-			replaceModules[extraModules[i].name] = true
-		end
-	end
-
-	local flatModules = {} -- Much simpler
-	local modules = playerComm.modules
-	for level = 0, #modules do
-		for slot = 1, #modules[level] do
-			local entry = modules[level][slot]
-			if not replaceModules[entry] then
-				flatModules[#flatModules + 1] = entry
-			end
-		end
-	end
-
-	for i = 1, #extraModules do
-		local extra = extraModules[i]
-		for j = 1, extra.count do
-			flatModules[#flatModules + 1] = extra.name
-		end
-	end
-
-	return {
-		name = playerComm.name,
-		chassis = playerComm.chassis,
-		modules = {
-			[0] = flatModules,
-		},
-	}
 end
 
 --------------------------------------------------------------------------------

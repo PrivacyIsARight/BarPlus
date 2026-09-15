@@ -748,9 +748,6 @@ end
 Interface.commands["DENIED"] = Interface._OnDenied
 Interface.commandPattern["DENIED"] = "(.+)"
 
-function Interface:_OnS_System_Disconnect(reason)
-	self:_OnDisconnected(reason, false)
-end
 Interface.commands["s.system.disconnect"] = Interface._OnDenied
 Interface.commandPattern["s.system.disconnect"] = "(.+)"
 
