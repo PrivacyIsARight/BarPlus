@@ -1176,6 +1176,69 @@ local function GetLobbyTabControls()
 		},
 	}
 
+	children[#children + 1] = Label:New {
+		x = 20,
+		y = offset + TEXT_OFFSET,
+		width = 110,
+		height = 40,
+		valign = "top",
+		align = "left",
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		caption = "Server Port",
+		tooltip = "Changing this reconnects you to the new lobby server immediately.",
+	}
+
+	local function SwitchPort(obj)
+		local newValue = tonumber(obj.text)
+		if not newValue then
+			obj:SetText(tostring(Configuration.serverPort))
+			return
+		end
+		newValue = math.floor(0.5 + math.max(0, newValue))
+		if newValue ~= Configuration.serverPort then
+			Spring.Echo("Changing lobby server port:", Configuration.serverPort, "->", newValue)
+			Configuration.serverPort = newValue
+			if WG.LibLobby.lobby then
+				WG.LibLobby.lobby:Disconnect("changed lobby server port")
+				if WG.LoginWindowHandler then
+					WG.LoginWindowHandler.TryLogin()
+				end
+			end
+		end
+		obj:SetText(tostring(Configuration.serverPort))
+	end
+
+	children[#children + 1] = EditBox:New {
+		name = "serverPort",
+		x = COMBO_X,
+		y = offset,
+		width = COMBO_WIDTH,
+		height = 30,
+		right = 18,
+		text = tostring(Configuration.serverPort),
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
+		tooltip = "Changing this reconnects you to the new lobby server immediately.",
+		OnKeyPress = {
+			function (obj, key)
+				if freezeSettings then
+					return
+				end
+				if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
+					SwitchPort(obj)
+				end
+			end
+		},
+		OnFocusUpdate = {
+			function (obj)
+				if obj.focused or freezeSettings then
+					return
+				end
+				SwitchPort(obj)
+			end
+		},
+	}
+
 	offset = offset + ITEM_OFFSET
 
 	children[#children + 1] = Label:New {
@@ -1450,46 +1513,6 @@ local function GetVoidTabControls()
 		OnClick = {
 			function (obj)
 				WG.Chobby.ConfirmationPopup(DisableAllWidgets, "This will break everything. Are you sure?", nil, 315, 170, i18n("yes"), i18n("cancel"))
-			end
-		}
-	}
-	offset = offset + ITEM_OFFSET
-
-
-	children[#children + 1] = Label:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		width = 90,
-		height = 40,
-		valign = "top",
-		align = "left",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		caption = "Server Port",
-	}
-	children[#children + 1] = EditBox:New {
-		x = COMBO_X,
-		y = offset,
-		width = COMBO_WIDTH,
-		height = 30,
-		right = 18,
-		text = tostring(Configuration.serverPort),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
-		OnFocusUpdate = {
-			function (obj)
-				if obj.focused then
-					return
-				end
-
-				local newValue = tonumber(obj.text)
-
-				if not newValue then
-					obj:SetText(tostring(Configuration.serverPort))
-					return
-				end
-
-				Configuration.serverPort = math.floor(0.5 + math.max(0, newValue))
-				obj:SetText(tostring(Configuration.serverPort))
 			end
 		}
 	}
