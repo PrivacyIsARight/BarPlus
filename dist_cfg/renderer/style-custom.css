@@ -47,6 +47,25 @@ body,button,input,select,textarea {
 	transition: opacity 0.35s;
 }
 
+#config-select__div .select select {
+	background: #14181d;
+	color: #fff;
+	border-color: #3a4046;
+}
+
+#config-select__div .select select:hover {
+	border-color: #5c6670;
+}
+
+#config-select__div .select select:focus {
+	border-color: #1abc9c;
+	box-shadow: 0 0 0 0.125em rgba(26, 188, 156, 0.25);
+}
+
+#config-select__div .select:not(.is-multiple):not(.is-loading)::after {
+	border-color: #62d0bc;
+}
+
 #btn-progress {
 	background: rgb(24,126,86);
 	background: linear-gradient(180deg, rgba(24,126,86,1) 0%, rgba(20,106,72,1) 100%);
