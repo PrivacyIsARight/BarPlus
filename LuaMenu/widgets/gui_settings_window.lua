@@ -592,6 +592,250 @@ local function AddNumberSetting(offset, caption, desc, key, default, minVal, max
 	return label, numberInput, offset + ITEM_OFFSET
 end
 
+local function GetGraphicsTabControls()
+	local freezeSettings = true
+
+	local Configuration = WG.Chobby.Configuration
+
+	local offset = 5
+
+	local children = {}
+
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Aggressive Set Borderless", "agressivelySetBorderlessWindowed", false, nil, "Force the borderless window mode when switching display modes.")
+
+	freezeSettings = false
+
+	return children
+end
+
+local function GetGameTabControls()
+	local freezeSettings = true
+
+	local Configuration = WG.Chobby.Configuration
+
+	local offset = 5
+
+	local children = {}
+
+	children[#children + 1] = Label:New {
+		x = 20,
+		y = offset + TEXT_OFFSET,
+		width = 90,
+		height = 30,
+		valign = "top",
+		align = "left",
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		caption = "Game mode",
+	}
+
+	local singleplayerSelectedName = Configuration.gameConfigName
+	local singleplayerSelected = 1
+	for i = 1, #Configuration.gameConfigOptions do
+		if Configuration.gameConfigOptions[i] == singleplayerSelectedName then
+			singleplayerSelected = i
+			break
+		end
+	end
+
+	children[#children + 1] = ComboBox:New {
+		name = "gameSelection",
+		x = COMBO_X,
+		y = offset,
+		width = COMBO_WIDTH,
+		height = 30,
+		right = 18,
+		items = Configuration.gameConfigHumanNames,
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		selected = singleplayerSelected,
+		OnSelect = {
+			function (obj)
+				if freezeSettings then
+					return
+				end
+				Configuration:SetConfigValue("gameConfigName", Configuration.gameConfigOptions[obj.selected])
+			end
+		},
+	}
+	offset = offset + ITEM_OFFSET
+
+	children[#children + 1] = Label:New {
+		x = 20,
+		y = offset + TEXT_OFFSET,
+		width = 90,
+		height = 40,
+		valign = "top",
+		align = "left",
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		caption = "Start position type",
+		tooltip = "Default start position type for singleplayer skirmish.",
+	}
+	local startPosTypeOptions = {"Fixed", "Random", "Choose In Game", "Choose Before Game"}
+	local startPosTypeSelected = (Configuration.singleplayerStartPosType ~= nil and Configuration.singleplayerStartPosType + 1) or 3
+	children[#children + 1] = ComboBox:New {
+		x = COMBO_X,
+		y = offset,
+		width = COMBO_WIDTH,
+		height = 30,
+		right = 18,
+		items = startPosTypeOptions,
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		selected = startPosTypeSelected,
+		OnSelect = {
+			function(obj)
+				if freezeSettings then
+					return
+				end
+				local idx = obj.selected
+				if idx and idx >= 1 and idx <= 4 then
+					Configuration:SetConfigValue("singleplayerStartPosType", idx - 1)
+				end
+			end
+		},
+	}
+	offset = offset + ITEM_OFFSET
+
+	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("ShowhiddenModopions"), "ShowhiddenModopions", false, WG.ModoptionsPanel.RefreshModoptions, i18n("ShowhiddenTooltip"))
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Debug Auto Win", "debugAutoWin", false)
+
+	freezeSettings = false
+
+	return children
+end
+
+local function GetAiTabControls()
+	local freezeSettings = true
+
+	local Configuration = WG.Chobby.Configuration
+
+	local offset = 5
+
+	local children = {}
+
+	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("simple_ai_list"), "simpleAiList", true, nil, i18n("simple_ai_list_tooltip"))
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Show old AI versions", "showOldAiVersions", false)
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Show AIOptions", "showAiOptions", true)
+
+	freezeSettings = false
+
+	return children
+end
+
+local function GetLobbyDevTabControls()
+	local freezeSettings = true
+
+	local Configuration = WG.Chobby.Configuration
+
+	local offset = 5
+
+	local children = {}
+
+	local function EnableProfilerFunc(newState)
+		if newState then
+			WG.WidgetProfiler.Enable()
+		else
+			WG.WidgetProfiler.Disable()
+		end
+	end
+
+	local function EnableInspectorFunc(newState)
+		if newState then
+			widgetHandler:EnableWidget("ChiliInspector")
+		else
+			widgetHandler:DisableWidget("ChiliInspector")
+		end
+	end
+
+	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("debugMode"), "debugMode", false)
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Debug server messages", "activeDebugConsole", false)
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Hide interface", "hideInterface", false)
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Use wrong engine", "useWrongEngine", false)
+	if Configuration.gameConfig.filterEmptyRegionalAutohosts then
+		children[#children + 1], offset = AddCheckboxSetting(offset, "Filter redundant battles", "battleFilterRedundant", true, nil, "Hides redundant empty regional autohosts.")
+	end
+
+	children[#children + 1] = Label:New {
+		x = 20,
+		y = offset + TEXT_OFFSET,
+		width = 90,
+		height = 40,
+		valign = "top",
+		align = "left",
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		caption = "Coop Connection Delay",
+		tooltip = "Hosts with poor internet may require their clients to add a delay in order to connect. This is not used by BAR",
+	}
+	children[#children + 1] = Trackbar:New {
+		x = COMBO_X,
+		y = offset,
+		width  = COMBO_WIDTH,
+		height = 30,
+		right = 18,
+		value  = Configuration.coopConnectDelay or 0,
+		min    = 0,
+		max    = 100,
+		step   = 1,
+		OnChange = {
+			function(obj, value)
+				if freezeSettings then
+					return
+				end
+				Configuration:SetConfigValue("coopConnectDelay", value)
+			end
+		}
+	}
+	offset = offset + ITEM_OFFSET
+
+	children[#children + 1], offset = AddCheckboxSetting(offset, "Enable Profiler", "enableProfiler", false, EnableProfilerFunc)
+	local cbInspector
+	cbInspector, offset = AddCheckboxSetting(offset, "Enable Inspector", "enableInspector", false, EnableInspectorFunc)
+	children[#children + 1] = cbInspector
+
+	children[#children + 1] = Label:New {
+		x = 20,
+		y = offset + TEXT_OFFSET,
+		width = 90,
+		height = 40,
+		valign = "top",
+		align = "left",
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		caption = "Disable Lobby",
+	}
+	children[#children + 1] = Button:New {
+		x = COMBO_X,
+		y = offset,
+		width = COMBO_WIDTH,
+		height = 30,
+		right = 18,
+		caption = "Disable",
+		classname = "negative_button",
+		tooltip = "Disables the entire lobby and menu.",
+		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
+		OnClick = {
+			function (obj)
+				WG.Chobby.ConfirmationPopup(DisableAllWidgets, "This will break everything. Are you sure?", nil, 315, 170, i18n("yes"), i18n("cancel"))
+			end
+		}
+	}
+	offset = offset + ITEM_OFFSET
+
+	local function onConfigurationChange(listener, key, value)
+		if freezeSettings then
+			return
+		end
+		if key == "enableInspector" and cbInspector.checked ~= value then
+			cbInspector.checked = value
+			cbInspector.state.checked = cbInspector.checked
+			cbInspector:Invalidate()
+		end
+	end
+
+	freezeSettings = false
+
+	Configuration:AddListener("OnConfigurationChange", onConfigurationChange)
+
+	return children
+end
+
 local function GetLobbyTabControls()
 	local freezeSettings = true
 
@@ -1300,6 +1544,13 @@ local function GetLobbyTabControls()
 	}
 	offset = offset + ITEM_OFFSET
 
+	if Configuration.devMode then
+		local lobbyDevChildren = GetLobbyDevTabControls()
+		for i = 1, #lobbyDevChildren do
+			children[#children + 1] = lobbyDevChildren[i]
+		end
+	end
+
 	local function onConfigurationChange(listener, key, value)
 		if freezeSettings then
 			return
@@ -1339,280 +1590,6 @@ local function GetLobbyTabControls()
 	return children
 end
 
-local function GetVoidTabControls()
-	local freezeSettings = true
-
-	local Configuration = WG.Chobby.Configuration
-
-	local offset = 5
-
-	local children = {}
-
-	children[#children + 1] = TextBox:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		right = 10,
-		height = 40,
-		valign = "top",
-		align = "left",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(3),
-		text = "Warning: These settings are experimental and not officially supported, proceed at your own risk.",
-	}
-	offset = offset + 65
-
-	local function EnableProfilerFunc(newState)
-		if newState then
-			WG.WidgetProfiler.Enable()
-		else
-			WG.WidgetProfiler.Disable()
-		end
-	end
-
-	local function EnableInspectorFunc(newState)
-		if newState then
-			widgetHandler:EnableWidget("ChiliInspector")
-		else
-			widgetHandler:DisableWidget("ChiliInspector")
-		end
-
-	end
-
-
-	local function toggleCampaignFunc(newState)
-		Spring.Echo("Enabling Campaign", newState)
-		WG.Chobby.Configuration.showCampaignButton = newState
-	end
-
-	children[#children + 1] = Label:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		width = 90,
-		height = 30,
-		valign = "top",
-		align = "left",
-		parent = window,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		caption = "Singleplayer",
-	}
-
-	local singleplayerSelectedName = Configuration.gameConfigName
-	local singleplayerSelected = 1
-	for i = 1, #Configuration.gameConfigOptions do
-		if Configuration.gameConfigOptions[i] == singleplayerSelectedName then
-			singleplayerSelected = i
-			break
-		end
-	end
-
-	children[#children + 1] = ComboBox:New {
-		name = "gameSelection",
-		x = COMBO_X,
-		y = offset,
-		width = COMBO_WIDTH,
-		height = 30,
-		right = 18,
-		parent = window,
-		items = Configuration.gameConfigHumanNames,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		selected = singleplayerSelected,
-		OnSelect = {
-			function (obj)
-				if freezeSettings then
-					return
-				end
-				Configuration:SetConfigValue("gameConfigName", Configuration.gameConfigOptions[obj.selected])
-			end
-		},
-	}
-	offset = offset + ITEM_OFFSET
-
-	children[#children + 1] = Label:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		width = 90,
-		height = 40,
-		valign = "top",
-		align = "left",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		caption = "Start position type",
-		tooltip = "Default start position type for singleplayer skirmish.",
-	}
-	local startPosTypeOptions = {"Fixed", "Random", "Choose In Game", "Choose Before Game"}
-	local startPosTypeSelected = (Configuration.singleplayerStartPosType ~= nil and Configuration.singleplayerStartPosType + 1) or 3
-	children[#children + 1] = ComboBox:New {
-		x = COMBO_X,
-		y = offset,
-		width = COMBO_WIDTH,
-		height = 30,
-		right = 18,
-		items = startPosTypeOptions,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		selected = startPosTypeSelected,
-		OnSelect = {
-			function(obj)
-				if freezeSettings then
-					return
-				end
-				local idx = obj.selected
-				if idx and idx >= 1 and idx <= 4 then
-					Configuration:SetConfigValue("singleplayerStartPosType", idx - 1)
-				end
-			end
-		},
-	}
-	offset = offset + ITEM_OFFSET
-
-	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("debugMode"), "debugMode", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("ShowhiddenModopions"), "ShowhiddenModopions", false, WG.ModoptionsPanel.RefreshModoptions, i18n("ShowhiddenTooltip"))
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Debug Auto Win", "debugAutoWin", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Enable Profiler", "enableProfiler", false, EnableProfilerFunc)
-	local cbInspector
-	cbInspector, offset = AddCheckboxSetting(offset, "Enable Inspector", "enableInspector", false, EnableInspectorFunc)
-	children[#children + 1] = cbInspector
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Show Campaign button", "showCampaignButton", false, toggleCampaignFunc)
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Show Planet Unlocks", "showPlanetUnlocks", false)
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Show Planet Enemy Units", "showPlanetEnemyUnits", false)
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Campaign Spawn Debug", "campaignSpawnDebug", false)
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Edit Campaign", "editCampaign", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Debug server messages", "activeDebugConsole", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Show channel bots", "displayBots", false)
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Show wrong engines", "displayBadEngines2", false) -- moved to regular
-	-- children[#children + 1], offset = AddCheckboxSetting(offset, "Debug for MatchMaker", "showMatchMakerBattles", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Hide interface", "hideInterface", false)
-	--children[#children + 1], offset = AddCheckboxSetting(offset, "Neuter Settings", "doNotSetAnySpringSettings", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Aggressive Set Borderless", "agressivelySetBorderlessWindowed", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Use wrong engine", "useWrongEngine", false)
-
-	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("simple_ai_list"), "simpleAiList", true, nil,  i18n("simple_ai_list_tooltip")) -- should be default on, no need for configuration?
-
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Show old AI versions", "showOldAiVersions", false)
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Show AIOptions", "showAiOptions", true)
-	if Configuration.gameConfig.filterEmptyRegionalAutohosts then
-		children[#children + 1], offset = AddCheckboxSetting(offset, "Filter redundant battles", "battleFilterRedundant", true, nil, "Hides redundant empty regional autohosts.")
-	end
-
-	children[#children + 1] = Label:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		width = 90,
-		height = 40,
-		valign = "top",
-		align = "left",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		caption = "Disable Lobby",
-	}
-	children[#children + 1] = Button:New {
-		x = COMBO_X,
-		y = offset,
-		width = COMBO_WIDTH,
-		height = 30,
-		right = 18,
-		caption = "Disable",
-		classname = "negative_button",
-		tooltip = "Disables the entire lobby and menu.",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		OnClick = {
-			function (obj)
-				WG.Chobby.ConfirmationPopup(DisableAllWidgets, "This will break everything. Are you sure?", nil, 315, 170, i18n("yes"), i18n("cancel"))
-			end
-		}
-	}
-	offset = offset + ITEM_OFFSET
-
-
-	--children[#children + 1] = Label:New {
-	--	x = 20,
-	--	y = offset + TEXT_OFFSET,
-	--	width = 90,
-	--	height = 30,
-	--	valign = "top",
-	--	align = "left",
-	--	parent = window,
-	--	objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-	--	caption = "Campaign",
-	--}
---
-	--local campaignSelectedName = Configuration.campaignConfigName
-	--local campaignSelected = 1
-	--for i = 1, #Configuration.campaignConfigOptions do
-	--	if Configuration.campaignConfigOptions[i] == campaignSelectedName then
-	--		campaignSelected = i
-	--		break
-	--	end
-	--end
---
-	--children[#children + 1] = ComboBox:New {
-	--	name = "campaignSelection",
-	--	x = COMBO_X,
-	--	y = offset,
-	--	width = COMBO_WIDTH,
-	--	height = 30,
-	--	right = 18,
-	--	parent = window,
-	--	items = Configuration.campaignConfigHumanNames,
-	--	objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-	--	selected = campaignSelected,
-	--	OnSelect = {
-	--		function (obj)
-	--			if freezeSettings then
-	--				return
-	--			end
-	--			Configuration:SetConfigValue("campaignConfigName", Configuration.campaignConfigOptions[obj.selected])
-	--		end
-	--	},
-	--}
-	--offset = offset + ITEM_OFFSET
-
-	children[#children + 1] = Label:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		width = 90,
-		height = 40,
-		valign = "top",
-		align = "left",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		caption = "Coop Connection Delay",
-		tooltip = "Hosts with poor internet may require their clients to add a delay in order to connect. This is not used by BAR",
-	}
-	children[#children + 1] = Trackbar:New {
-		x = COMBO_X,
-		y = offset,
-		width  = COMBO_WIDTH,
-		height = 30,
-		right = 18,
-		value  = Configuration.coopConnectDelay or 0,
-		min    = 0,
-		max    = 100,
-		step   = 1,
-		OnChange = {
-			function(obj, value)
-				if freezeSettings then
-					return
-				end
-				Configuration:SetConfigValue("coopConnectDelay", value)
-			end
-		}
-	}
-	offset = offset + ITEM_OFFSET
-
-	local function onConfigurationChange(listener, key, value)
-		if freezeSettings then
-			return
-		end
-		if key == "enableInspector" and cbInspector.checked ~= value then
-			cbInspector.checked = value
-			cbInspector.state.checked = cbInspector.checked
-			cbInspector:Invalidate()
-		end
-	end
-
-	freezeSettings = false
-
-	Configuration:AddListener("OnConfigurationChange", onConfigurationChange)
-
-	return children
-end
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -1998,11 +1975,19 @@ local function InitializeControls(window)
 
 	for i = 1, #settingsFile do
 		local data = settingsFile[i]
-		tabs[#tabs + 1] = MakeTab(data.name, PopulateTab(data.presets, data.settings, settingsDefault))
+		local children = PopulateTab(data.presets, data.settings, settingsDefault)
+		if Configuration.devMode and data.name == "Graphics" then
+			local graphicsDevChildren = GetGraphicsTabControls()
+			for j = 1, #graphicsDevChildren do
+				children[#children + 1] = graphicsDevChildren[j]
+			end
+		end
+		tabs[#tabs + 1] = MakeTab(data.name, children)
 	end
 
-	if WG.Chobby.Configuration.devMode then
-		tabs[#tabs + 1] = MakeTab("Developer", GetVoidTabControls())
+	if Configuration.devMode then
+		tabs[#tabs + 1] = MakeTab("Game", GetGameTabControls())
+		tabs[#tabs + 1] = MakeTab("AIs", GetAiTabControls())
 	end
 
 	local tabPanel = Chili.DetachableTabPanel:New {
