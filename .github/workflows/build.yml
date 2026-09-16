@@ -1,0 +1,160 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+jobs:
+  launcher:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+      id-token: write
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            build_cmd: "build-linux"
+            arch: "--x64"
+
+          - os: windows-latest
+            build_cmd: "build-win"
+            arch: "--x64"
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          path: BYAR-Chobby
+
+      - uses: actions/checkout@v3
+        with:
+          repository: beyond-all-reason/spring-launcher
+          path: launcher
+
+      - name: Setup NodeJs
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: launcher/package-lock.json
+
+      - name: Patch launcher with dist_cfg
+        run: |
+          cp -r BYAR-Chobby/dist_cfg/* launcher/src/
+          for dir in bin files build; do
+            mkdir -p launcher/$dir
+            if [ -d launcher/src/$dir/ ]; then
+              mv launcher/src/$dir/* launcher/$dir/
+              rm -rf launcher/src/$dir
+            fi
+          done
+          exit 0
+
+      - name: Make package.json
+        run: |
+          cd BYAR-Chobby
+          export PACKAGE_VERSION=1.$(git rev-list --count HEAD).0
+          echo "Making build for version: $PACKAGE_VERSION"
+          node build/make_package_json.js ../launcher/package.json dist_cfg/config.json $GITHUB_REPOSITORY $PACKAGE_VERSION
+
+      - name: Cache electron
+        uses: actions/cache@v3
+        with:
+          path: .electron-cache
+          key: ${{ runner.os }}-electron-cache-${{ hashFiles('launcher/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-cache-
+
+      - name: Build
+        run: |
+          cd launcher
+          npm ci
+          npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EP_DRAFT: false
+          ELECTRON_CACHE: ${{ github.workspace }}/.electron-cache/main
+          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.electron-cache/builder
+
+  menu:
+    runs-on: ubuntu-latest
+    needs: launcher
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute build numbers
+        run: |
+          FULL_COUNT=$(git rev-list --count HEAD)
+          MENU_COUNT=$(git rev-list --count HEAD -- ':(exclude)dist_cfg/config.json')
+          SHA7=${GITHUB_SHA:0:7}
+          echo "MENU_COUNT=$MENU_COUNT" >> "$GITHUB_ENV"
+          echo "TAG=v1.$FULL_COUNT.0-$SHA7" >> "$GITHUB_ENV"
+          echo "ASSET=BYAR-Chobby-$MENU_COUNT.sdd.7z" >> "$GITHUB_ENV"
+          echo "MENU_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/v1.$FULL_COUNT.0-$SHA7/BYAR-Chobby-$MENU_COUNT.sdd.7z" >> "$GITHUB_ENV"
+          echo "Menu build: $MENU_COUNT  Release tag: v1.$FULL_COUNT.0-$SHA7"
+
+      - name: Install archiver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Stage and pack the menu
+        run: |
+          set -euo pipefail
+          STAGE="$RUNNER_TEMP/BYAR-Chobby-$MENU_COUNT.sdd"
+          mkdir -p "$STAGE" "$GITHUB_WORKSPACE/artifacts"
+          cp -a . "$STAGE/"
+          rm -rf "$STAGE/.git" "$STAGE/.github"
+          sed -i "s/version = '\$VERSION'/version = '$MENU_COUNT'/" "$STAGE/modinfo.lua"
+          cd "$STAGE"
+          7z a -bd -mx=9 "$GITHUB_WORKSPACE/artifacts/$ASSET" . >/dev/null
+          cd "$GITHUB_WORKSPACE"
+
+      - name: Attach menu to the release for this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "release $TAG does not exist; cannot attach menu" >&2
+            exit 1
+          fi
+          if curl -fsI -o /dev/null "$MENU_URL"; then
+            echo "$ASSET already attached to $TAG; skipping upload"
+          else
+            gh release upload "$TAG" "$GITHUB_WORKSPACE/artifacts/$ASSET" --repo "$GITHUB_REPOSITORY" --clobber
+          fi
+
+      - name: Repoint launcher config at the new menu
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node build/update_launcher_config.js dist_cfg/config.json "$MENU_URL" "$MENU_COUNT"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dist_cfg/config.json
+          if git diff --cached --quiet; then
+            echo "config unchanged"
+          else
+            git commit -m "Update menu target to build $MENU_COUNT"
+            git pull --rebase --autostash
+            git push
+          fi
