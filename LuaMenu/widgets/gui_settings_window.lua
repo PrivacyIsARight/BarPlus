@@ -1176,6 +1176,8 @@ local function GetLobbyTabControls()
 		},
 	}
 
+	offset = offset + ITEM_OFFSET
+
 	children[#children + 1] = Label:New {
 		x = 20,
 		y = offset + TEXT_OFFSET,
