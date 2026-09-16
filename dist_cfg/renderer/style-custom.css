@@ -39,12 +39,6 @@ body,button,input,select,textarea {
 
 #config-select__div {
 	right: 20px;
-	opacity: 0.33;
-}
-
-#config-select__div:hover {
-	opacity: 1;
-	transition: opacity 0.35s;
 }
 
 #config-select__div .select select {
