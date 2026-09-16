@@ -66,6 +66,15 @@ body,button,input,select,textarea {
 	border-color: #62d0bc;
 }
 
+.status-button, .status-button:hover {
+	background: #14181d;
+	border-color: #3a4046;
+}
+
+.status-button:hover {
+	border-color: #5c6670;
+}
+
 #btn-progress {
 	background: rgb(24,126,86);
 	background: linear-gradient(180deg, rgba(24,126,86,1) 0%, rgba(20,106,72,1) 100%);
