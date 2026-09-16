@@ -1122,54 +1122,58 @@ local function GetLobbyTabControls()
 		align = "left",
 		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
 		caption = "Server Address",
-		tooltip = "Changing this will log you out of the current server, click 'Login' in the top right to reconnect. Current live server: server4.beyondallreason.info",
+		tooltip = "Changing this reconnects you to the new lobby server immediately. Current live server: server4.beyondallreason.info",
 	}
 
-	local barservers = {"server4.beyondallreason.info",}
-	local defaultServerAddress = WG.Server.address -- = address from chobby_config.json
-	if not table.ifind(barservers, defaultServerAddress) then
-		table.insert(barservers, defaultServerAddress)
-	end
-	if WG.Chobby.Configuration.devMode then
-		table.insert(barservers, "localhost")
-		table.insert(barservers, "server5.beyondallreason.info") -- Integration server
+	local function SwitchServer(newserveraddress)
+		if freezeSettings then
+			return
+		end
+		newserveraddress = newserveraddress ~= nil and newserveraddress:gsub("%s+", "") or ""
+		if newserveraddress == "" or newserveraddress == Configuration:GetServerAddress() then
+			return
+		end
+
+		Spring.Echo("Changing lobby server:", Configuration:GetServerAddress(), "->", newserveraddress)
+		Configuration.serverAddress = newserveraddress
+
+		if WG.LibLobby.lobby then
+			WG.LibLobby.lobby.host = newserveraddress
+			WG.LibLobby.lobby:Disconnect("changed lobby server")
+			if WG.LoginWindowHandler then
+				WG.LoginWindowHandler.TryLogin()
+			end
+		end
 	end
 
-	children[#children + 1] = ComboBox:New {
-		--name = data.name .. "_combo",
+	children[#children + 1] = EditBox:New {
+		name = "serverAddress",
 		x = COMBO_X,
 		y = offset,
 		width = COMBO_WIDTH,
 		height = 30,
 		right = 18,
-		items = barservers,
+		text = Configuration:GetServerAddress(),
 		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		selected = Configuration:GetServerAddress(),
-		tooltip = "Changing this will log you out of the current server, click 'Login' in the top right to reconnect. Current live server: server4.beyondallreason.info",
-		OnSelect = {
-			function (obj, num)
-				if freezeSettings then -- so that it doesnt run when started, fucking yay
-					return
-				end
-				local oldserveraddress = Configuration:GetServerAddress()
-				local newserveraddress = barservers[num]
-
-				Spring.Echo("Choosing a server in settings:", num, oldserveraddress,newserveraddress)
-
-				if oldserveraddress ~= newserveraddress then
-					Configuration.serverAddress = newserveraddress
-
-					if WG.LibLobby.lobby then -- force set the new one so that lobby:safeupdate doesnt fuck up
-						--Spring.Echo("FORCE SET",obj,num, barservers[num])
-						WG.LibLobby.lobby.host = newserveraddress
-						WG.LibLobby.lobby:Disconnect("changed lobby server")
-						if WG.LoginWindowHandler then
-							WG.LoginWindowHandler.TryLogin()
-						end
-					end
+		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
+		tooltip = "Changing this reconnects you to the new lobby server immediately. Known servers: server4.beyondallreason.info (live), server5.beyondallreason.info (integration), localhost",
+		OnKeyPress = {
+			function (obj, key)
+				if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
+					SwitchServer(obj.text)
+					obj:SetText(Configuration:GetServerAddress())
 				end
 			end
-		}
+		},
+		OnFocusUpdate = {
+			function (obj)
+				if obj.focused then
+					return
+				end
+				SwitchServer(obj.text)
+				obj:SetText(Configuration:GetServerAddress())
+			end
+		},
 	}
 
 	offset = offset + ITEM_OFFSET
@@ -1451,38 +1455,6 @@ local function GetVoidTabControls()
 	}
 	offset = offset + ITEM_OFFSET
 
-
-	children[#children + 1] = Label:New {
-		x = 20,
-		y = offset + TEXT_OFFSET,
-		width = 90,
-		height = 40,
-		valign = "top",
-		align = "left",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		caption = "Server Address",
-	}
-	children[#children + 1] = EditBox:New {
-		x = COMBO_X,
-		y = offset,
-		width = COMBO_WIDTH,
-		height = 30,
-		right = 18,
-		text = Configuration:GetServerAddress(),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
-		tooltip = "Requires a lobby restart for changes to take effect. Current live server: server4.beyondallreason.info",
-		OnFocusUpdate = {
-			function (obj)
-				if obj.focused then
-					return
-				end
-				Configuration.serverAddress = obj.text
-				obj:SetText(Configuration:GetServerAddress())
-			end
-		}
-	}
-	offset = offset + ITEM_OFFSET
 
 	children[#children + 1] = Label:New {
 		x = 20,
