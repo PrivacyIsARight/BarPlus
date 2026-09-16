@@ -592,16 +592,18 @@ local function AddNumberSetting(offset, caption, desc, key, default, minVal, max
 	return label, numberInput, offset + ITEM_OFFSET
 end
 
-local function GetGraphicsTabControls()
+local function GetGraphicsTabControls(offset)
 	local freezeSettings = true
 
 	local Configuration = WG.Chobby.Configuration
 
-	local offset = 5
+	offset = offset or 5
 
 	local children = {}
 
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Aggressive Set Borderless", "agressivelySetBorderlessWindowed", false, nil, "Force the borderless window mode when switching display modes.")
+	local checkbox
+	checkbox, offset = AddCheckboxSetting(offset, "Aggressive Set Borderless", "agressivelySetBorderlessWindowed", false, nil, "Force the borderless window mode when switching display modes.")
+	children[#children + 1] = checkbox
 
 	freezeSettings = false
 
@@ -720,12 +722,12 @@ local function GetAiTabControls()
 	return children
 end
 
-local function GetLobbyDevTabControls()
+local function GetLobbyDevTabControls(offset)
 	local freezeSettings = true
 
 	local Configuration = WG.Chobby.Configuration
 
-	local offset = 5
+	offset = offset or 5
 
 	local children = {}
 
@@ -1545,7 +1547,7 @@ local function GetLobbyTabControls()
 	offset = offset + ITEM_OFFSET
 
 	if Configuration.devMode then
-		local lobbyDevChildren = GetLobbyDevTabControls()
+		local lobbyDevChildren = GetLobbyDevTabControls(offset)
 		for i = 1, #lobbyDevChildren do
 			children[#children + 1] = lobbyDevChildren[i]
 		end
@@ -1935,7 +1937,7 @@ local function PopulateTab(settingPresets, settingOptions, settingsDefault)
 		children[#children + 1] = list
 	end
 
-	return children
+	return children, offset
 end
 
 --------------------------------------------------------------------------------
@@ -1975,9 +1977,9 @@ local function InitializeControls(window)
 
 	for i = 1, #settingsFile do
 		local data = settingsFile[i]
-		local children = PopulateTab(data.presets, data.settings, settingsDefault)
+		local children, nextOffset = PopulateTab(data.presets, data.settings, settingsDefault)
 		if Configuration.devMode and data.name == "Graphics" then
-			local graphicsDevChildren = GetGraphicsTabControls()
+			local graphicsDevChildren = GetGraphicsTabControls(nextOffset)
 			for j = 1, #graphicsDevChildren do
 				children[#children + 1] = graphicsDevChildren[j]
 			end
