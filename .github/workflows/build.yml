@@ -23,6 +23,9 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    env:
+      ELECTRON_CACHE: ${{ github.workspace }}/.electron-cache/main
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.electron-cache/builder
     strategy:
       matrix:
         include:
@@ -83,12 +86,126 @@ jobs:
         run: |
           cd launcher
           npm ci
-          npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish always
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          EP_DRAFT: false
-          ELECTRON_CACHE: ${{ github.workspace }}/.electron-cache/main
-          ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.electron-cache/builder
+          npm run ${{ matrix.build_cmd }} -- ${{ matrix.arch }} --publish never
+
+      - name: Upload launcher
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-${{ matrix.build_cmd }}
+          path: launcher/dist
+          if-no-files-found: error
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [launcher, menu]
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute version and tag
+        run: |
+          FULL_COUNT=$(git rev-list --count HEAD)
+          SHA7=${GITHUB_SHA:0:7}
+          echo "VERSION=1.$FULL_COUNT.0-$SHA7" >> "$GITHUB_ENV"
+          echo "TAG=v1.$FULL_COUNT.0-$SHA7" >> "$GITHUB_ENV"
+
+      - name: Download launcher artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: launcher-*
+          path: launcher-dist
+          merge-multiple: true
+
+      - name: Download menu archive
+        uses: actions/download-artifact@v4
+        with:
+          name: menu-archive
+          path: launcher-dist
+
+      - name: Generate update manifests
+        run: |
+          python3 - <<'PYEOF'
+          import base64
+          import hashlib
+          import os
+          from datetime import datetime, timezone
+
+          root = "launcher-dist"
+          version = os.environ["VERSION"]
+
+          def sha512_b64(path):
+              h = hashlib.sha512()
+              with open(path, "rb") as f:
+                  for chunk in iter(lambda: f.read(1 << 20), b""):
+                      h.update(chunk)
+              return base64.b64encode(h.digest()).decode()
+
+          def write_manifest(channel, main_path):
+              entries = [{"url": os.path.basename(main_path), "sha512": sha512_b64(main_path), "size": os.path.getsize(main_path)}]
+              block_path = main_path + ".blockmap"
+              if os.path.exists(block_path):
+                  entries.append({"url": os.path.basename(block_path), "sha512": sha512_b64(block_path), "size": os.path.getsize(block_path)})
+              body = "version: " + version + "\n"
+              body += "files:\n"
+              for e in entries:
+                  body += "  - url: " + e["url"] + "\n"
+                  body += "    sha512: '" + e["sha512"] + "'\n"
+                  body += "    size: " + str(e["size"]) + "\n"
+              body += "path: " + os.path.basename(main_path) + "\n"
+              body += "sha512: '" + entries[0]["sha512"] + "'\n"
+              body += "releaseDate: '" + datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z") + "'\n"
+              with open(os.path.join(root, channel), "w") as f:
+                  f.write(body)
+
+          for f in os.listdir(root):
+              full = os.path.join(root, f)
+              if not os.path.isfile(full):
+                  continue
+              if f.endswith(".exe"):
+                  write_manifest("latest.yml", full)
+              elif f.endswith(".AppImage"):
+                  write_manifest("latest-linux.yml", full)
+          PYEOF
+
+      - name: Publish release
+        id: publish1
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY"
+          fi
+          while IFS= read -r f; do
+            gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber
+          done < <(find launcher-dist -type f ! -path '*unpacked*')
+
+      - name: Publish release (retry 1)
+        id: publish2
+        if: steps.publish1.outcome == 'failure'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY"
+          fi
+          while IFS= read -r f; do
+            gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber
+          done < <(find launcher-dist -type f ! -path '*unpacked*')
+
+      - name: Publish release (retry 2)
+        if: steps.publish2.outcome == 'failure'
+        run: |
+          set -euo pipefail
+          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$GITHUB_REPOSITORY"
+          fi
+          while IFS= read -r f; do
+            gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber
+          done < <(find launcher-dist -type f ! -path '*unpacked*')
 
   menu:
     runs-on: ubuntu-latest
@@ -127,20 +244,12 @@ jobs:
           7z a -bd -mx=9 "$GITHUB_WORKSPACE/artifacts/$ASSET" . >/dev/null
           cd "$GITHUB_WORKSPACE"
 
-      - name: Attach menu to the release for this commit
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if ! gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "release $TAG does not exist; cannot attach menu" >&2
-            exit 1
-          fi
-          if curl -fsI -o /dev/null "$MENU_URL"; then
-            echo "$ASSET already attached to $TAG; skipping upload"
-          else
-            gh release upload "$TAG" "$GITHUB_WORKSPACE/artifacts/$ASSET" --repo "$GITHUB_REPOSITORY" --clobber
-          fi
+      - name: Upload menu archive
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-archive
+          path: artifacts
+          if-no-files-found: error
 
       - name: Repoint launcher config at the new menu
         env:

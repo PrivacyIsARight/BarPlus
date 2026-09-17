@@ -1,4 +1,4 @@
-local versionNumber = "v1.0"
+local versionNumber = "v2.0"
 
 function widget:GetInfo()
 	return {
@@ -13,14 +13,14 @@ function widget:GetInfo()
 	}
 end
 
-local currentTime = 0
 local calls = {}
 local callCount = 0
 local ids = 0
 
--- delay in seconds (os.clock units)
+local GetTimer = Spring.GetTimer
+
 local function DelayCall(f, delay)
-	local executeTime = currentTime + delay
+	local executeTime = GetTimer() + delay
 	local id = ids
 	calls[id] = {f, executeTime}
 	callCount = callCount + 1
@@ -31,7 +31,7 @@ function widget:Update()
 	if callCount == 0 then
 		return
 	end
-	currentTime = os.clock()
+	local currentTime = GetTimer()
 	for i, call in pairs(calls) do
 		if currentTime >= call[2] then
 			local success, err = pcall(call[1])
