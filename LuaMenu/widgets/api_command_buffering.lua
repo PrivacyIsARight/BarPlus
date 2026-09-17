@@ -162,7 +162,7 @@ end
 
 function widget:Update()
 	local lobby = WG.LibLobby.lobby
-	local isLobbyVisible = WG.Chobby.interfaceRoot.GetLobbyInterfaceHolder().visible
+	local isLobbyVisible = WG.Chobby and WG.Chobby.interfaceRoot and WG.Chobby.interfaceRoot.GetLobbyInterfaceHolder().visible
 	if not isLobbyVisible then
 		if not lobby.bufferCommandsEnabled then
 			lobby.bufferBypass = bufferBypass

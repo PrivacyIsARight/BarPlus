@@ -253,11 +253,13 @@ function widget:Update()
 	local newStatus = lobby:GetConnectionStatus()
 	if newStatus ~= oldStatus then
 		if newStatus == "disconnected" or newStatus == "offline" then
-			btnLogout:SetCaption(i18n("login"))
-			connectivityText:SetText("\255\180\180\180" .. i18n("offline") .. "\b")
-			connectivityImage.file = IMAGE_OFFLINE
-			connectivityImage:Invalidate()
-			SetOnlineCountVisible(false)
+			if btnLogout and connectivityText and connectivityImage then
+				btnLogout:SetCaption(i18n("login"))
+				connectivityText:SetText("\255\180\180\180" .. i18n("offline") .. "\b")
+				connectivityImage.file = IMAGE_OFFLINE
+				connectivityImage:Invalidate()
+				SetOnlineCountVisible(false)
+			end
 		else
 			if WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration.gameConfig and WG.Chobby.Configuration.gameConfig.logoutOpensLoginPanel then
 				btnLogout:SetCaption(i18n("account"))

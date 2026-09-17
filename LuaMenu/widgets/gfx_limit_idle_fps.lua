@@ -286,7 +286,7 @@ end
 
 -- Enables Draw{Genesis,Screen,ScreenPost} callins if true is returned, otherwise they are called once every 30 seconds. Only active when a game isn't running.
 function widget:AllowDraw()
-	if WG.Chobby.Configuration.fixFlicker then
+	if WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration.fixFlicker then
 		return true
 	end
 	if msaaLevel == 0 then	-- msaaLevel 0 will induce the lobby flicker glitch
