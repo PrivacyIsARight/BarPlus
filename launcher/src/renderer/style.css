@@ -1,0 +1,217 @@
+:root {
+  /* Those variables are set in renderer_misc.js. */
+  --window-height: 0;
+  --window-width: 0;
+  --infobox-height: 0;
+}
+
+body {
+  text-shadow: 1px 1px 0px #000;
+  position: relative;
+  overflow-x: hidden;
+}
+
+#main-content {
+  padding-top: 10px;
+  padding-right: 40px;
+  padding-bottom: 10px;
+  padding-left: 40px;
+
+  background-image: url(./images/background.png);
+  /* background-attachment: fixed; */
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: calc(min(100vh, var(--window-height)));
+  overflow: hidden;
+}
+
+.header {
+  grid-area: header;
+}
+
+.config {
+  grid-area: config;
+}
+
+.control-buttons {
+  grid-area: controls;
+}
+
+.status {
+  grid-area: status;
+  align-self: end;
+}
+
+.mainbtn {
+  grid-area: mainbtn;
+}
+
+#lbl-check-for-updates {
+  grid-area: checkupdates;
+  align-self: end;
+  top: 4px;
+}
+
+#cb-check-for-updates {
+  margin-right: 6px;
+}
+
+.progress-area {
+  grid-area: prog;
+  align-self: end;
+}
+
+#footerLinks {
+  grid-area: links;
+  text-align: right;
+  font-size: 11px;
+  margin-right: -23px;
+  text-shadow: 1px 1px 1px rgba(0, 0, 0, 1),
+}
+
+#footerLinks a {
+  color: white;
+  opacity: 0.7;
+  display: inline-block;
+  margin-left: 7px;
+  margin-top: 8px;
+}
+
+#footerLinks a:hover {
+  opacity: 1;
+  transition: opacity 0.1s;
+}
+
+.grid-container {
+  display: grid;
+  grid-template-areas:
+    'header header config'
+    'controls controls mainbtn'
+    'status status mainbtn'
+    'prog prog mainbtn'
+    'prog prog checkupdates'
+    'links links links';
+  grid-template-columns: 1fr 4fr 1fr;
+  grid-template-rows: 50fr 1fr 1fr 1fr 1fr 1fr;
+  column-gap: 30px;
+  row-gap: 15px;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+#title {
+  text-shadow: 2px 2px 5px #000;
+  font-size: 200%;
+  padding-top: 18px;
+}
+
+.button {
+  text-shadow: 1px 1px 5px #000
+}
+
+#btn-progress {
+  min-height: 80px;
+  max-height: 80px;
+  min-width: 135px;
+  max-width: 135px;
+  /* font-size: 100%; */
+  white-space: normal;
+  top: -10px;
+}
+
+#btn-progress:disabled {
+  animation: none
+}
+
+p.error {
+  color: red;
+}
+
+label.error {
+  color: red;
+}
+
+p.warn {
+  color: orange;
+}
+
+#current_config {
+  text-align: center;
+  font-size: 80%;
+}
+
+.infobox {
+  overflow: scroll;
+  display: none;
+  width: 100%;
+  padding-right: 10px;
+  padding-bottom: 0px;
+  height: calc(min(100vh - var(--window-height), var(--infobox-height)));
+  border-radius: 0;
+}
+
+.infobox p {
+  white-space: pre;
+}
+
+.open {
+  display: block;
+}
+
+.status:hover:has(label.error) {
+  z-index: 1000;
+  background-color: rgba(0, 0, 0, 0.4);
+  -webkit-line-clamp: unset;
+  backdrop-filter: blur(10px);
+  word-break: normal;
+  border-radius: 6px;
+  padding: 5px 8px 8px 8px;
+  margin-bottom: -13px;
+}
+
+.status {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  line-height: 1.0;
+  margin-bottom: 0;
+}
+
+.progress-label {
+  font-size: 80%;
+}
+
+.progress {
+  box-shadow: 2px 2px 5px #000;
+}
+
+/**
+ *   MAKE ELECTRON APP FEEL MORE NATIVE
+ *
+ *   * Prevent dragging all HTML elements, specially:
+ *   	- images
+ *   	- links (anchors)
+ *
+ *   * Prevent text selection
+ */
+
+*,
+*::after,
+*::before {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-app-region: no-drag;
+  cursor: default;
+}
+
+/* But enable text selection for the log, and error messages */
+#note-content>p,
+#lbl-progress-full.error,
+#lbl-progress-full.error * {
+  user-select: text;
+}

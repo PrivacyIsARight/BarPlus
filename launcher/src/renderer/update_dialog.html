@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Launcher Update</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
+    <link href="./bulmaswatch.min.css" rel="stylesheet">
+    <link href="./update_dialog_style.css" rel="stylesheet">
+    <link href="./style-custom.css" rel="stylesheet">
+    <script src="./update_dialog.js"></script>
+  </head>
+  <body>
+    <div id="dialog-container">
+      <div id="dialog-top-text">
+        <h3>A new version of the launcher is available!</h3>
+        <p>
+          Version <span id="new-version"><!-- 1111.1 --></span> was
+          released on <span id="new-version-date"><!-- January 4, 2024 --></span>.
+        </p>
+      </div>
+      <div id="dialog-release-notes">
+        <b>Release Notes:</b>
+        <div id="dialog-release-notes-text">
+          <!-- Here JS will instantiate the #markdown-block-template in a shadow DOM -->
+        </div>
+      </div>
+      <div id="dialog-bottom-text">
+        <p>
+          Please update to ensure you have the latest features and bug fixes.
+        </p>
+      </div>
+      <div id="dialog-buttons">
+        <button id="btn-update" class="button is-primary" tabindex="-1">Update Now</button>
+        <button id="btn-skip" class="button" tabindex="-1">Remind Me Later</button>
+      </div>
+    </div>
+    <template id="markdown-block-template">
+      <link href="./github-markdown-dark.css" rel="stylesheet">
+      <div class="markdown-body"></div>
+    </template>
+  </body>
+</html>
