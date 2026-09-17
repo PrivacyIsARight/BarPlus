@@ -201,9 +201,37 @@ jobs:
             timeout 600 gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber
           done < <(find launcher-dist -type f ! -path '*unpacked*')
 
+      - name: Repoint launcher config at the new menu
+        env:
+          MENU_COUNT: ${{ needs.menu.outputs.menu_count }}
+          MENU_URL: ${{ needs.menu.outputs.menu_url }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3; do
+            git fetch origin
+            git checkout -B master origin/master
+            node build/update_launcher_config.js dist_cfg/config.json "$MENU_URL" "$MENU_COUNT"
+            git add dist_cfg/config.json
+            if git diff --cached --quiet; then
+              echo "config unchanged"
+              exit 0
+            fi
+            git commit -m "Update menu target to build $MENU_COUNT"
+            if git push origin master; then
+              echo "menu target updated"
+              exit 0
+            fi
+          done
+          exit 1
+
   menu:
     runs-on: ubuntu-latest
     needs: launcher
+    outputs:
+      menu_count: ${{ steps.numbers.outputs.menu_count }}
+      menu_url: ${{ steps.numbers.outputs.menu_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -211,6 +239,7 @@ jobs:
           fetch-depth: 0
 
       - name: Compute build numbers
+        id: numbers
         run: |
           FULL_COUNT=$(git rev-list --count HEAD)
           MENU_COUNT=$(git rev-list --count HEAD -- ':(exclude)dist_cfg/config.json')
@@ -218,7 +247,10 @@ jobs:
           echo "MENU_COUNT=$MENU_COUNT" >> "$GITHUB_ENV"
           echo "TAG=v1.$FULL_COUNT.0-$SHA7" >> "$GITHUB_ENV"
           echo "ASSET=BYAR-Chobby-$MENU_COUNT.sdd.7z" >> "$GITHUB_ENV"
-          echo "MENU_URL=https://github.com/$GITHUB_REPOSITORY/releases/download/v1.$FULL_COUNT.0-$SHA7/BYAR-Chobby-$MENU_COUNT.sdd.7z" >> "$GITHUB_ENV"
+          MENU_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/v1.$FULL_COUNT.0-$SHA7/BYAR-Chobby-$MENU_COUNT.sdd.7z"
+          echo "MENU_URL=$MENU_URL" >> "$GITHUB_ENV"
+          echo "menu_count=$MENU_COUNT" >> "$GITHUB_OUTPUT"
+          echo "menu_url=$MENU_URL" >> "$GITHUB_OUTPUT"
           echo "Menu build: $MENU_COUNT  Release tag: v1.$FULL_COUNT.0-$SHA7"
 
       - name: Install archiver
@@ -244,20 +276,3 @@ jobs:
           name: menu-archive
           path: artifacts
           if-no-files-found: error
-
-      - name: Repoint launcher config at the new menu
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          node build/update_launcher_config.js dist_cfg/config.json "$MENU_URL" "$MENU_COUNT"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add dist_cfg/config.json
-          if git diff --cached --quiet; then
-            echo "config unchanged"
-          else
-            git commit -m "Update menu target to build $MENU_COUNT"
-            git pull --rebase --autostash
-            git push
-          fi
