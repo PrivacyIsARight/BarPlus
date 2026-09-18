@@ -127,22 +127,30 @@ class Launcher extends EventEmitter {
 		}
 
 		if (config.no_start_script) {
-			fs.writeFileSync(`${springPlatform.writePath}/sl-connection.json`, JSON.stringify({
-				_sl_address: address,
-				_sl_port: port,
-				_sl_write_path: springPlatform.writePath,
-				_sl_launcher_version: app.getVersion()
-			}));
+			this.writeConnectionInfo();
 			this.launchSpring(enginePath, opts);
 		} else {
 			const scriptTXT = generateScriptTXT();
 			const scriptTxtPath = `${springPlatform.writePath}/script.txt`;
 			opts = [];
 			fs.writeFile(scriptTxtPath, scriptTXT, 'utf8', () => {
+				this.writeConnectionInfo();
 				opts.push(scriptTxtPath);
 				this.launchSpring(enginePath, opts);
 			});
 		}
+	}
+
+	writeConnectionInfo() {
+		const filePath = `${springPlatform.writePath}/sl-connection.json`;
+		const data = JSON.stringify({
+			_sl_address: address,
+			_sl_port: port,
+			_sl_write_path: springPlatform.writePath,
+			_sl_launcher_version: app.getVersion()
+		});
+		fs.writeFileSync(filePath, data, { mode: 0o600 });
+		fs.chmodSync(filePath, 0o600);
 	}
 
 	launchSpring(enginePath, extraArgs) {

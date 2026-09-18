@@ -7,10 +7,11 @@ const { renameSyncWithRetry } = require('./fs_utils');
 const extractZip = require('extract-zip');
 
 const path7za = require('./path_7za');
-const { extractFull: extract7z } = require('node-7z');
+const { extractFull: extract7z, list: list7z } = require('node-7z');
 
 const { log } = require('./spring_log');
 
+const { archiveEntryInside } = require('./path_utils');
 const { getTemporaryFileName } = require('./fs_utils');
 
 const TOTAL_EXTRACT_ATTEMPTS = 5;
@@ -102,27 +103,59 @@ class Extractor7Zip extends EventEmitter {
 		log.info(`Extracting ${source} to ${destination}...`);
 		let hasFailed = false;
 
-		const stream7z = extract7z(source, destination, {
-			$bin: path7za,
-			$progress: true
-		});
-
-		// NB: This is called even when failing
-		stream7z.on('end', () => {
-			if (hasFailed) {
-				return;
+		const fail = (err) => {
+			if (!hasFailed) {
+				hasFailed = true;
+				this.emit('failed', err);
 			}
-			this.emit('finished');
-		});
+		};
 
-		this.currentProgress = null;
-		stream7z.on('progress', (progress) => {
-			this.currentProgress = progress;
-		});
+		this.validateArchive(source, destination)
+			.catch(fail)
+			.then(() => {
+				if (hasFailed) {
+					return;
+				}
+				log.info(`Extracting ${source} to ${destination}...`);
 
-		stream7z.on('error', (err) => {
-			hasFailed = true;
-			this.emit('failed', err);
+				const stream7z = extract7z(source, destination, {
+					$bin: path7za,
+					$progress: true
+				});
+
+				stream7z.on('end', () => {
+					if (!hasFailed) {
+						this.emit('finished');
+					}
+				});
+
+				this.currentProgress = null;
+				stream7z.on('progress', (progress) => {
+					this.currentProgress = progress;
+				});
+
+				stream7z.on('error', fail);
+			});
+	}
+
+	validateArchive(source, destination) {
+		return new Promise((resolve, reject) => {
+			const list = list7z(source, { $bin: path7za });
+			let invalid = null;
+			list.on('data', (data) => {
+				const name = data && data.file;
+				if (name && !archiveEntryInside(destination, name)) {
+					invalid = new Error(`Archive entry escapes the destination directory: ${name}`);
+				}
+			});
+			list.on('error', reject);
+			list.on('end', () => {
+				if (invalid) {
+					reject(invalid);
+				} else {
+					resolve();
+				}
+			});
 		});
 	}
 }

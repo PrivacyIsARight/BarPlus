@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "test": "jest",
+    "test:path": "node --test test/path_utils.test.js",
     "lint": "eslint \"./src/**/*.js\"",
     "start": "electron .",
     "start-dev": "electron . --dev",

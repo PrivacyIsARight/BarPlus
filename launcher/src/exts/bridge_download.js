@@ -9,7 +9,7 @@ const { wizard } = require('../launcher_wizard');
 let downloadQueue = [];
 let isDownloading = false;
 
-bridge.on('Download', (command) => {
+bridge.register('Download', (command) => {
 	for (const dl of downloadQueue) {
 		if (dl.name === command.name) {
 			return;
@@ -72,7 +72,7 @@ function RemoveElement(name) {
 	return null;
 }
 
-bridge.on('AbortDownload', command => {
+bridge.register('AbortDownload', command => {
 	log.info('Abort download', command.name, command.type);
 	const dl = RemoveElement(command.name);
 	if (dl == null) {

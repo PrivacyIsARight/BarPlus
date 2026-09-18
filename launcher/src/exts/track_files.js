@@ -1,4 +1,7 @@
 const { bridge } = require('../spring_api');
+const springPlatform = require('../spring_platform');
+const { log } = require('../spring_log');
+const { resolveInside } = require('../fs_utils');
 
 const chokidar = require('chokidar');
 
@@ -37,7 +40,11 @@ watcher.on('unlinkDir', (path) => {
 	Notify(path, 'unlinkDir');
 });
 
-bridge.on('WatchFile', command => {
-	const path = command.path;
+bridge.register('WatchFile', command => {
+	const path = resolveInside(springPlatform.writePath, command.path);
+	if (path == null) {
+		log.error(`WatchFile: rejecting path outside the game directory: ${command.path}`);
+		return;
+	}
 	watcher.add(path);
 });

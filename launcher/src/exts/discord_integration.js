@@ -30,7 +30,7 @@ async function tryToLogin() {
 	}
 }
 
-bridge.on('DiscordSetActivity', async command => {
+bridge.register('DiscordSetActivity', async command => {
 	// command
 	// https://discord.com/developers/docs/rich-presence/how-to#updating-presence-update-presence-payload-fields
 	// {

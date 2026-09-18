@@ -30,7 +30,7 @@ function loadDevExtension(extensionPath) {
 	log.info(`Development extension: ${extensionPath}.`);
 }
 
-bridge.on('LoadArchiveExtensions', (command) => {
+bridge.register('LoadArchiveExtensions', (command) => {
 	const archivePath = command.archivePath;
 	if (archivePath == null) {
 		log.error('No archive path specified for LoadArchiveExtensions command');
@@ -59,7 +59,7 @@ bridge.on('LoadArchiveExtensions', (command) => {
 	m_enabled = false; // Only load dev extensions once.
 });
 
-bridge.on('LoadExtension', (command) => {
+bridge.register('LoadExtension', (command) => {
 	if (!m_enabled) {
 		return false;
 	}

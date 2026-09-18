@@ -7,6 +7,8 @@ const springPlatform = require('./spring_platform');
 
 const log = require('electron-log');
 
+const { resolveInside } = require('./path_utils');
+
 const TMP_DIR = path.join(springPlatform.writePath, 'tmp');
 
 function makeParentDir(filepath) {
@@ -63,6 +65,7 @@ module.exports = {
 	removeTemporaryFiles: removeTemporaryFiles,
 	makeParentDir: makeParentDir,
 	makeDir: makeDir,
+	resolveInside: resolveInside,
 	TMP_DIR: TMP_DIR,
 	renameSyncWithRetry: renameSyncWithRetry,
 };

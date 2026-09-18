@@ -3,7 +3,7 @@ const springPlatform = require('../spring_platform');
 const { log } = require('../spring_log');
 const { parseReplay } = require('../replay_utils');
 
-bridge.on('ReadReplayInfo', async command => {
+bridge.register('ReadReplayInfo', async command => {
 	try {
 		const info = await parseReplay(
 			springPlatform.writePath, command.relativePath

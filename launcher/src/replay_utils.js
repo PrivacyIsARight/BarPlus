@@ -1,16 +1,19 @@
 'use strict';
 
 const fs = require('fs').promises;
-const path = require('path');
 
 const { DemoParser } = require('sdfz-demo-parser');
+const { resolveInside } = require('./fs_utils');
 
 const REPLAY_CACHE_VERSION = 2;  // Increment when adding new fields etc
 
 // Parse a replay and create the needed info structure. If there is a correct
 // cache file for this replay, use it.
 async function parseReplay(springPath, replayPath) {
-	const fullReplayPath = path.join(springPath, replayPath);
+	const fullReplayPath = resolveInside(springPath, replayPath);
+	if (fullReplayPath == null) {
+		throw new Error(`Replay path escapes the spring directory: ${replayPath}`);
+	}
 	const demoCachePath = `${fullReplayPath}.cache`;
 	try {
 		// Check if there is a cache file and load it

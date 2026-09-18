@@ -14,6 +14,7 @@ const {
 	getTemporaryFileName,
 	removeTemporaryFiles,
 	renameSyncWithRetry,
+	resolveInside,
 } = require('./fs_utils');
 
 class HttpDownloader extends EventEmitter {
@@ -42,9 +43,26 @@ class HttpDownloader extends EventEmitter {
 	}
 
 	downloadResource(resource) {
-		const url = new URL(resource['url']);
+		let url;
+		try {
+			url = new URL(resource['url']);
+		} catch (e) {
+			log.error(`Download ${resource['destination']}: invalid URL: ${resource['url']}`);
+			this.emit('failed', resource['destination'], 'invalid URL');
+			return;
+		}
+		if (url.protocol !== 'https:') {
+			log.error(`Download ${resource['destination']}: only https is allowed, got ${url.protocol}`);
+			this.emit('failed', resource['destination'], 'only https is allowed');
+			return;
+		}
 		const name = resource['destination'];
-		const destination = path.join(springPlatform.writePath, name);
+		const destination = resolveInside(springPlatform.writePath, name);
+		if (destination == null) {
+			log.error(`Download ${name}: destination escapes the game directory`);
+			this.emit('failed', name, 'invalid destination');
+			return;
+		}
 		if (fs.existsSync(destination)) {
 			this.emit('finished', name);
 			log.info(`Skipping ${destination}: already exists.`);

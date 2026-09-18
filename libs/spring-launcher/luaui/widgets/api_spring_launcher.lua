@@ -122,7 +122,7 @@ function widget:Initialize()
 		end)
 	end
 	if port == nil or host == nil then
-		Spring.Log(LOG_SECTION, LOG.NOTICE, "Disabling spring-launcher due to missing connection detalis.")
+		Spring.Log(LOG_SECTION, LOG.NOTICE, "Disabling spring-launcher due to missing connection details.")
 		WG.Connector.enabled = false -- TODO: maybe better way to toggle this (e.g. when this widget errors)
 		widgetHandler:RemoveWidget(self)
 		return

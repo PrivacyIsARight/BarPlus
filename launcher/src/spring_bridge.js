@@ -8,6 +8,8 @@ const log = require('electron-log');
 const HOST = '127.0.0.1';
 var port;
 
+const ALLOWED_CHANNELS = new Set();
+
 class Bridge extends EventEmitter {
 	constructor() {
 		super();
@@ -35,6 +37,12 @@ class Bridge extends EventEmitter {
 
 					const name = obj.name;
 					const command = obj.command;
+
+					if (!ALLOWED_CHANNELS.has(name)) {
+						log.error(`bridge: ignoring unknown command '${name}'`);
+						return;
+					}
+
 					this._executeCommand(name, command);
 				});
 			});
@@ -66,6 +74,11 @@ class Bridge extends EventEmitter {
 
 		server.listen(0, HOST);
 		this.server = server;
+	}
+
+	register(name, listener) {
+		ALLOWED_CHANNELS.add(name);
+		this.on(name, listener);
 	}
 
 	send(name, command) {
