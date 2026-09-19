@@ -92,3 +92,11 @@ test('archive entry containment', () => {
 	assert.equal(archiveEntryInside(base, ''), false);
 	assert.equal(archiveEntryInside(base, 42), false);
 });
+
+test('edge case archive entries and sanitization', () => {
+	assert.equal(archiveEntryInside(base, '/file.txt'), false);
+	assert.equal(archiveEntryInside(base, '\\file.txt'), false);
+	assert.equal(archiveEntryInside(base, 'foo/bar/../../baz'), true);
+	assert.equal(archiveEntryInside(base, 'foo/bar/../../../baz'), false);
+	assert.equal(archiveEntryInside(base, './foo/bar'), true);
+});

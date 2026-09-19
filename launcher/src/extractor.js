@@ -20,7 +20,6 @@ const TIME_BETWEEN_ATTEMPTS_MS = 3000;
 class Extractor extends EventEmitter {
 	constructor() {
 		super();
-
 		this.attemptNumber = 1;
 	}
 
@@ -97,10 +96,45 @@ class Extractor extends EventEmitter {
 	}
 }
 
+class BaseArchiveExtractor extends EventEmitter {
+	validateArchive(source, destination) {
+		return new Promise((resolve, reject) => {
+			const list = list7z(source, { $bin: path7za });
+			let settled = false;
+			list.on('data', (data) => {
+				if (settled) {
+					return;
+				}
+				const name = data && data.file;
+				if (name && !archiveEntryInside(destination, name)) {
+					settled = true;
+					if (typeof list.destroy === 'function') {
+						list.destroy();
+					}
+					reject(new Error(`Archive entry escapes the destination directory: ${name}`));
+				}
+			});
+			list.on('error', (err) => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				reject(err);
+			});
+			list.on('end', () => {
+				if (settled) {
+					return;
+				}
+				settled = true;
+				resolve();
+			});
+		});
+	}
+}
 
-class Extractor7Zip extends EventEmitter {
+class Extractor7Zip extends BaseArchiveExtractor {
 	extract(source, destination) {
-		log.info(`Extracting ${source} to ${destination}...`);
+		log.info(`Extracting 7z ${source} to ${destination}...`);
 		let hasFailed = false;
 
 		const fail = (err) => {
@@ -116,7 +150,7 @@ class Extractor7Zip extends EventEmitter {
 				if (hasFailed) {
 					return;
 				}
-				log.info(`Extracting ${source} to ${destination}...`);
+				log.info(`Extracting 7z ${source} to ${destination}...`);
 
 				const stream7z = extract7z(source, destination, {
 					$bin: path7za,
@@ -137,36 +171,34 @@ class Extractor7Zip extends EventEmitter {
 				stream7z.on('error', fail);
 			});
 	}
-
-	validateArchive(source, destination) {
-		return new Promise((resolve, reject) => {
-			const list = list7z(source, { $bin: path7za });
-			let invalid = null;
-			list.on('data', (data) => {
-				const name = data && data.file;
-				if (name && !archiveEntryInside(destination, name)) {
-					invalid = new Error(`Archive entry escapes the destination directory: ${name}`);
-				}
-			});
-			list.on('error', reject);
-			list.on('end', () => {
-				if (invalid) {
-					reject(invalid);
-				} else {
-					resolve();
-				}
-			});
-		});
-	}
 }
 
-class ExtractorZip extends EventEmitter {
+class ExtractorZip extends BaseArchiveExtractor {
 	extract(source, destination) {
-		extractZip(source, { dir: destination }).then(() => {
-			this.emit('finished');
-		}).catch(err => {
-			this.emit('failed', err);
-		});
+		log.info(`Extracting zip ${source} to ${destination}...`);
+		let hasFailed = false;
+
+		const fail = (err) => {
+			if (!hasFailed) {
+				hasFailed = true;
+				this.emit('failed', err);
+			}
+		};
+
+		this.validateArchive(source, destination)
+			.catch(fail)
+			.then(() => {
+				if (hasFailed) {
+					return;
+				}
+				log.info(`Extracting zip ${source} to ${destination}...`);
+
+				extractZip(source, { dir: destination }).then(() => {
+					if (!hasFailed) {
+						this.emit('finished');
+					}
+				}).catch(fail);
+			});
 	}
 }
 
