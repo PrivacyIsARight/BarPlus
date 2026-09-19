@@ -18,6 +18,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup NodeJs
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install 7z
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+
+      - name: Smoke tests
+        run: |
+          node --test launcher/test/smoke.test.js
+
   launcher:
     runs-on: ${{ matrix.os }}
     permissions:
@@ -91,7 +110,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     timeout-minutes: 60
-    needs: [launcher, menu]
+    needs: [launcher, menu, smoke]
     env:
       GH_TOKEN: ${{ github.token }}
     steps:

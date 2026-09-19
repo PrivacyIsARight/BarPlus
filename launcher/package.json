@@ -6,6 +6,7 @@
   "scripts": {
     "test": "jest",
     "test:path": "node --test test/path_utils.test.js",
+    "test:smoke": "node --test test/smoke.test.js",
     "lint": "eslint \"./src/**/*.js\"",
     "start": "electron .",
     "start-dev": "electron . --dev",
