@@ -201,6 +201,42 @@ jobs:
             timeout 600 gh release upload "$TAG" "$f" --repo "$GITHUB_REPOSITORY" --clobber
           done < <(find launcher-dist -type f ! -path '*unpacked*')
 
+      - name: Verify release assets
+        id: verify
+        run: |
+          set -euo pipefail
+          mapfile -t EXPECTED < <(find launcher-dist -type f ! -path '*unpacked*' -printf '%f\n' | sort -u)
+          mapfile -t PRESENT < <(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.assets[].name' | sort -u)
+          missing=()
+          for f in "${EXPECTED[@]}"; do
+            if ! printf '%s\n' "${PRESENT[@]}" | grep -qx "$f"; then
+              missing+=("$f")
+            fi
+          done
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Release $TAG is missing ${#missing[@]} asset(s):"
+            printf '  - %s\n' "${missing[@]}"
+            exit 1
+          fi
+          echo "All ${#EXPECTED[@]} release assets verified on $TAG"
+
+      - name: Prune old releases and tags
+        if: steps.verify.outcome == 'success'
+        run: |
+          set -euo pipefail
+          mapfile -t ALL < <(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=100" --paginate --jq 'sort_by(.published_at) | reverse | .[] | .tag_name')
+          TOTAL=${#ALL[@]}
+          if [ "$TOTAL" -le 1 ]; then
+            echo "Only $TOTAL release(s), nothing to prune"
+            exit 0
+          fi
+          echo "Pruning oldest $((TOTAL - 1)) of $TOTAL release(s)"
+          for ((i=1; i<TOTAL; i++)); do
+            t="${ALL[$i]}"
+            echo "Pruning release + tag: $t"
+            gh release delete "$t" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag
+          done
+
       - name: Repoint launcher config at the new menu
         env:
           MENU_COUNT: ${{ needs.menu.outputs.menu_count }}
