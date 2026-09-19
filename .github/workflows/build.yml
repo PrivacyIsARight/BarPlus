@@ -138,18 +138,21 @@ jobs:
                       h.update(chunk)
               return base64.b64encode(h.digest()).decode()
 
+          def asset_name(path):
+              return os.path.basename(path).replace(" ", ".")
+
           def write_manifest(channel, main_path):
-              entries = [{"url": os.path.basename(main_path), "sha512": sha512_b64(main_path), "size": os.path.getsize(main_path)}]
+              entries = [{"url": asset_name(main_path), "sha512": sha512_b64(main_path), "size": os.path.getsize(main_path)}]
               block_path = main_path + ".blockmap"
               if os.path.exists(block_path):
-                  entries.append({"url": os.path.basename(block_path), "sha512": sha512_b64(block_path), "size": os.path.getsize(block_path)})
+                  entries.append({"url": asset_name(block_path), "sha512": sha512_b64(block_path), "size": os.path.getsize(block_path)})
               body = "version: " + version + "\n"
               body += "files:\n"
               for e in entries:
                   body += "  - url: " + e["url"] + "\n"
                   body += "    sha512: '" + e["sha512"] + "'\n"
                   body += "    size: " + str(e["size"]) + "\n"
-              body += "path: " + os.path.basename(main_path) + "\n"
+              body += "path: " + asset_name(main_path) + "\n"
               body += "sha512: '" + entries[0]["sha512"] + "'\n"
               body += "releaseDate: '" + datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z") + "'\n"
               with open(os.path.join(root, channel), "w") as f:
@@ -206,10 +209,11 @@ jobs:
         run: |
           set -euo pipefail
           mapfile -t EXPECTED < <(find launcher-dist -type f ! -path '*unpacked*' -printf '%f\n' | sort -u)
-          mapfile -t PRESENT < <(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.assets[].name' | sort -u)
+          mapfile -t PRESENT < <(gh api "repos/$GITHUB_REPOSITORY/releases/tags/$TAG" --jq '.assets[].name')
           missing=()
           for f in "${EXPECTED[@]}"; do
-            if ! printf '%s\n' "${PRESENT[@]}" | grep -qx "$f"; then
+            folded="${f// /.}"
+            if ! printf '%s\n' "${PRESENT[@]}" | grep -qx "$f" && ! printf '%s\n' "${PRESENT[@]}" | grep -qx "$folded"; then
               missing+=("$f")
             fi
           done
