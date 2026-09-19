@@ -8,25 +8,25 @@ local scenariodata = {
 	imagepath		= "scenario018.jpg", -- placed next to lua file, should be 3:1 ratio banner style
 	imageflavor		= "Gunslingers heal and gain experience quickly.", -- This text will be drawn over image
     summary         = [[You are left with a rogue force of a handful of units, and no base to take on the dreadful Cortex. Fatboy, Gunslinger, Welder and a minor foray of supporting units are your last hope.]],
-	briefing 		= [[After a lost battle, your base is left crippled beyond repair, and you only have a few units remaining to take out the Cortex stronghold. Destroy the Cortex Commander with what you have left, while trying to keep all of your units alive. 
- 
-You start the game with Fatboy, Gunslinger, Welder, a Compass radar bot, some Ghost spies, and two Lazarus resurrections bots, and just enough energy to keep the spies cloaked, and the radar in working condition. 
- 
-The Cortex Commander also has his technology crippled, and does not have access to Tier 2 units, but if left to his devices, could amass a critical force of T1 units capable of overpowering your ragtag band. 
- 
+	briefing 		= [[After a lost battle, your base is left crippled beyond repair, and you only have a few units remaining to take out the Cortex stronghold. Destroy the Cortex Commander with what you have left, while trying to keep all of your units alive.
+
+You start the game with Fatboy, Gunslinger, Welder, a Compass radar bot, some Ghost spies, and two Lazarus resurrections bots, and just enough energy to keep the spies cloaked, and the radar in working condition.
+
+The Cortex Commander also has his technology crippled, and does not have access to Tier 2 units, but if left to his devices, could amass a critical force of T1 units capable of overpowering your ragtag band.
+
 Tips:
  - Ghosts are cloakable, stealthy spies, that can be issued an Attack order to self-destruct for a large EMP blast to stun groups of units.
- - Fatboy has a very large range, and a huge area of effect, but a is slow and hard to maneuver. Use Gunslinger to keep any smaller Tier 1 units away from him. 
- - Gunslinger will heal himself quickly after taking damage, and will gain extra HP and a faster reload time with experience gained from damaging enemy units. 
- - Welder is quite tanky, and can be used to absorb damage from any defenses. 
+ - Fatboy has a very large range, and a huge area of effect, but a is slow and hard to maneuver. Use Gunslinger to keep any smaller Tier 1 units away from him.
+ - Gunslinger will heal himself quickly after taking damage, and will gain extra HP and a faster reload time with experience gained from damaging enemy units.
+ - Welder is quite tanky, and can be used to absorb damage from any defenses.
  - Compass has a very long line-of-sight, but is extremely fragile.
  - Lazarus can resurrect wrecked units, however, wrecks can be reduced to useless heaps by area-of-effect damage.
  - All mobile units can be ordered to Hold Position, to prevent them from moving to engage targets in their vision.
- 
+
 Scoring:
  - Time taken to complete the scenario
  - Resources spent to destroy all enemy units.
- 
+
 The difficulty modifier will change the amount of resources you and the enemy receive from metal and energy production structures:
  - Beginner: You +50%, enemy -50%
  - Novice: You +25%, enemy -25%
@@ -370,7 +370,7 @@ The difficulty modifier will change the amount of resources you and the enemy re
 			{name = 'corrad', x = 5088, y = 177, z = 720, rot = 32767 , team = 1},
 			{name = 'mission_command_tower', x = 5500, y = 200, z = 2302, rot = 0 , team = 1},
 		},
-			
+
 		featureloadout = {
 			--{name = 'cormlv_dead', x = 274, y = 199, z = 140, rot = 0 , scale = 1.0, resurrectas = "cormlv"},
 		}

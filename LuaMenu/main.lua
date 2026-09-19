@@ -43,11 +43,11 @@ end
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
--- 
+--
 -- Check if Tracy is present
 --
 
-if tracy == nil then 
+if tracy == nil then
 	tracy = {}
 	tracy.ZoneBeginN = function() return end
 	tracy.ZoneBegin = function() return end

@@ -216,7 +216,7 @@ end
 function playlistMerge(t1, t2)
 	for k,v in ipairs(t2) do
 	   table.insert(t1, v)
-	end 
+	end
 	return t1
 end
 
@@ -300,7 +300,7 @@ function playlistBuild()
 
 	tableshuffle(introTrackList)
 	tableshuffle(peaceTrackList)
-	
+
 	--[[
 	Spring.Echo("Intro Tracks")
 	for _, file in pairs(introTrackList) do

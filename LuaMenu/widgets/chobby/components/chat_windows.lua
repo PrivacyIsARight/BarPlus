@@ -373,7 +373,7 @@ function ChatWindows:init()
 			-- self.window:AddChild(self.loginButton)
 			-- Instead of showing this, how about disabling the text entry boxen with "Login required for chat"
 			-- The point being that they need to be enabled again :D
-			
+
 			for chanName, channelConsole in pairs(self.channelConsoles) do
 				if channelConsole.ebInputText then
 					channelConsole.ebInputText.hint = "Login required for chat."
@@ -462,7 +462,7 @@ function ChatWindows:ProcessChat(chanName, userName, message, msgDate, notifyCol
 
 	-- When we attempt to process messages that happen while we are disconnected:
 	local lobbyUserName = lobby and lobby:GetMyUserName()
-	if not lobbyUserName then 
+	if not lobbyUserName then
 		lobbyUserName = userName
 	end
 	local iAmMentioned = (message and lobbyUserName and string.find(message, lobbyUserName, 1, true) and userName ~= lobbyUserName) -- needs 1, true or brackets will screw it up
@@ -919,7 +919,7 @@ function ChatWindows:GetPrivateChatConsole(userName, switchTo)
 		local function Resize(obj)
 			self:UpdateOldChatLinePosition(obj)
 		end
-		
+
 		local monospaced = userName ~= "Coordinator" and lobby.users[userName] and lobby.users[userName].isBot
 		privateChatConsole = Console(chanName, MessageListener, nil, Resize, false, monospaced)
 		self.privateChatConsoles[chanName] = privateChatConsole

@@ -73,7 +73,7 @@ local function ChobbyReady()
 end
 
 local IMAGE_DIR            = LUA_DIRNAME .. "images/"
-  
+
 local IMAGE_AFK            = IMAGE_DIR .. "away.png"
 local IMAGE_BATTLE         = IMAGE_DIR .. "battle.png"
 local IMAGE_INGAME         = IMAGE_DIR .. "ingame.png"
@@ -628,7 +628,7 @@ local function GetUserSkillFont(userName, userControl)
 			skill = "??"
 		end
 	end
-	
+
 	if config.showSkillOpt == 3 and userInfo.skillUncertainty then
 		sigma = tonumber(userInfo.skillUncertainty)
 		if sigma >= config.skillUncertaintyDistribution[3] then
@@ -812,7 +812,7 @@ end
 local function getUserStatusImage(userName, userControls)
 	local bs = userControls.replayUserInfo or userControls.lobby:GetUserBattleStatus(userName) or {}
 	local userInfo = userControls.replayUserInfo or userControls.lobby:GetUser(userName) or {}
-	
+
 	-- 1. Check if someone is ingame - If yes, swords, if not, go to point 2.
 	-- 2. Check if someone is synced - If not, red download arrow, if yes, go to point 3.
 	-- 3. Check if someone is ready - if not, red cross, if yes, green checkmark
@@ -1070,7 +1070,7 @@ local function UpdateBattleInfo(listener, battleID, battleInfo)
 	end
 
 	if battleInfo.mapName ~= nil then
-		for userName, userControls in pairs(friendUsers) do	
+		for userName, userControls in pairs(friendUsers) do
 			local userInfo = userControls.lobby:TryGetUser(userName)
 			if userControls.minimapImage and userInfo.battleID and userInfo.battleID == battleID then
 				if battleInfo.mapName then
@@ -1081,7 +1081,7 @@ local function UpdateBattleInfo(listener, battleID, battleInfo)
 				else
 					userControls.minimapImage:Hide()
 				end
-			end	
+			end
 		end
 	end
 end
@@ -1106,7 +1106,7 @@ local function UpdateUserBattle(listener, battleID, userName)
 		else
 			userControls.minimapImage:Hide()
 		end
-	end	
+	end
 end
 
 --[[ ZK only
@@ -1231,7 +1231,7 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 					end
 				end
 
-				local displayReady = userControls.isPlaying and not displaySync	
+				local displayReady = userControls.isPlaying and not displaySync
 				if userControls.imReadyStatus and not isSingleplayer then
 					userControls.imReadyStatus:SetVisibility(displayReady)
 					if displayReady then
@@ -1244,10 +1244,10 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 				--]]
 
 				if not userControls.isSingleplayer then
-					
+
 					if userControls.showCountry then
 						userControls.imCountry:SetVisibility(Configuration.showCountry)
-						if Configuration.showCountry then	
+						if Configuration.showCountry then
 							offset = offset + 1
 							userControls.imCountry:SetPos(offset + 2)
 							offset = offset + 21
@@ -1304,7 +1304,7 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 				local displayName = GetPlayerDisplayName(userName, userControls)
 				local truncatedName = StringUtilities.TruncateStringIfRequiredAndDotDot(displayName, userControls.tbName.font, userControls.maxNameLength and (userControls.maxNameLength - offset))
 				userControls.nameStartY = offset
-				
+
 				userControls.tbName.font = GetUserNameColorFont(userName, userControls)
 				userControls.tbName:Invalidate()
 				if truncatedName then
@@ -1368,14 +1368,14 @@ local function OnUserVoted(listener, userName, voteOption)
 	end
 
 	if not userName then
-		
+
 		if voteOption == "default" then -- revert all changed username colors to default after vote
 			usersAllowedToVote = {}
 			for _, userName2 in pairs(votedUsers) do
 				OnUserVoted(_, userName2, voteOption)
 			end
 			votedUsers = {}
-			
+
 		elseif voteOption == "initVote" --[[and next(votedUsers) == nil]] then -- set all playing battleUsers colors to white on vote start
 			OnUserVoted(_, _, "default") -- 1. revert any changed colors (could be spectator by now, too, or left battle)
 			for userName2, userControls2 in pairs(battleUsers) do -- 2. set all users that are allowed to vote to grey (allowed are only users that were "isPlaying" on time of vote start)
@@ -1387,7 +1387,7 @@ local function OnUserVoted(listener, userName, voteOption)
 		end
 		return
 	end
-	
+
 	local userControls = battleUsers[userName]
 	if not userControls then
 		return
@@ -1929,7 +1929,7 @@ local function GetUserControls(userName, opts)
 			offset = offset - 2
 		end
 	end
-	
+
 	if not isSingleplayer then
 		if userControls.showCountry then
 			offset = offset + 1
@@ -2041,7 +2041,7 @@ local function GetUserControls(userName, opts)
 	offset = offset + 2
 
 	-- This is also used for top name tag
-	userControls.tbName = TextBox:New { 
+	userControls.tbName = TextBox:New {
 		name = "tbName",
 		x = offset,
 		y = offsetY + 4,
@@ -2111,7 +2111,7 @@ local function GetUserControls(userName, opts)
 		}
 	end
 
-	--Spring.Utilities.TraceEcho(userName,"hide", hideStatus == true,"large",large == true) 
+	--Spring.Utilities.TraceEcho(userName,"hide", hideStatus == true,"large",large == true)
 	if not hideStatus then
 		userControls.statusImages = {}
 		UpdateUserControlStatus(userName, userControls)
@@ -2175,7 +2175,7 @@ local function GetUserControls(userName, opts)
 		userControls.mainControl.OnResize = userControls.mainControl.OnResize or {}
 		userControls.mainControl.OnResize[#userControls.mainControl.OnResize + 1] = function (obj, sizeX, sizeY)
 			local maxWidth = sizeX - userControls.nameStartY - 40
-			
+
 			local truncatedName = StringUtilities.GetTruncatedStringWithDotDot(GetPlayerDisplayName(userName, userControls), userControls.tbName.font, maxWidth)
 			userControls.tbName:SetText(truncatedName)
 
@@ -2508,7 +2508,7 @@ local function AddListeners()
 	lobby:AddListener("OnUpdateUserStatus", UpdateUserActivity)
 
 	lobby:AddListener("OnFriend", UpdateUserActivity)
-	
+
 	-- little dirty here. this one is meant to exist temporarily until api_user_handler is switched to use accountID as primary anchor
 	lobby:AddListener("OnUnfriendByID", function(listener, userID, userName)
 		UpdateUserActivity(_, userName)
@@ -2536,7 +2536,7 @@ local function AddListeners()
 
 	lobby:AddListener("OnUserVoted", OnUserVoted)
 	lobby:AddListener("OnUpdateBattleInfo", UpdateBattleInfo)
-	
+
 	lobby:AddListener("OnBattleOpened", function(listener, battleID)
 		if not ChobbyReady() then
 			return

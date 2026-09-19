@@ -9,27 +9,27 @@ local scenariodata = {
 	imageflavor		= "Its cold and lonely up here", -- This text will be drawn over image
     summary         = [[7 enemy Commanders are allied against you, at the top of Throne. Destroy all of them to keep your crown.]],
 	briefing 		= [[The seven outcroppings on the edge of Throne all occupied by enemy Commanders. They will send early scouting forces, and if left to expand too much, will advance in technology rapidly. The third level is secured for you with the most basic defences, and some light anti-air.
- 
- 
+
+
 Tips:
- 
- ‣  Secure at least the third level as soon as possible, and expand very quickly to claim all the metal on it. 
- 
+
+ ‣  Secure at least the third level as soon as possible, and expand very quickly to claim all the metal on it.
+
  ‣  Wind is an excellent source of energy on this map.
- 
- ‣  The enemies arent the sharpest knife in the drawer, but will pose a threat if left to expand to the second level. 
- 
- ‣  Reduce the difficulty of the scenario if you find it too hard. 
- 
- 
+
+ ‣  The enemies arent the sharpest knife in the drawer, but will pose a threat if left to expand to the second level.
+
+ ‣  Reduce the difficulty of the scenario if you find it too hard.
+
+
 Scoring:
- 
+
  ‣  Time taken to complete the scenario
  ‣  Resources spent to destroy all enemy units.
-  
- 
+
+
 The difficulty modifier will change the amount of resources you and the enemy can use:
- 
+
  ‣  Beginner: You +50%, enemy -50%
  ‣  Novice: You +25%, enemy -25%
  ‣  Normal: Regular resources for both sides
@@ -60,7 +60,7 @@ The difficulty modifier will change the amount of resources you and the enemy ca
         --armavp = 0,
         --coravp = 0,
     } ,
-	
+
 
     scenariooptions = { -- this will get lua->json->base64 and passed to scenariooptions in game
         myoption = "dostuff",
@@ -275,27 +275,27 @@ The difficulty modifier will change the amount of resources you and the enemy ca
 		teamleader=7;
 		handicap=__ENEMYHANDICAP__;
 	}
-	
+
 	[modoptions]
 	{
 		scenariooptions = __SCENARIOOPTIONS__;
 	}
-	
+
 	[mapoptions]
 	{
 		roads=1;
 		waterlevel=0;
 		waterdamage=0;
 	}
-	
-	
+
+
 	NumRestrictions=__NUMRESTRICTIONS__;
 
 	[RESTRICT]
 	{
         __RESTRICTEDUNITS__
 	}
-	
+
 	numplayers=1;
 	myplayername=__PLAYERNAME__;
 	gametype=__BARVERSION__;

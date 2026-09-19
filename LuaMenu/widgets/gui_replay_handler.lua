@@ -88,7 +88,7 @@ end
 
 --	From the flat array of players, build an array of teams
 local function buildTeams(players)
-	local Configuration = WG.Chobby.Configuration	
+	local Configuration = WG.Chobby.Configuration
 	local teams = {}
 	local myAllyID, myTeamID
 	for _, player in pairs(players) do
@@ -179,7 +179,7 @@ local function CreateReplayEntry(
 	end
 	-- Spring.Echo("winningAllyTeamIds exists ?:", winningAllyTeamIds ~= nil)
 	-- Spring.Echo("winningAllyTeamId:", winningAllyTeamId)
-	
+
 	if string.sub(fileName, 0, 4) == "hide" then
 		return
 	end
@@ -524,7 +524,7 @@ local function SortReplays(replays)
 			Spring.Echo("ReplayHandler: Replay[" .. i .. "]", replay)
 		end
 	end
-	
+
 	local oldReplays = {}
 	local done = false
 	repeat

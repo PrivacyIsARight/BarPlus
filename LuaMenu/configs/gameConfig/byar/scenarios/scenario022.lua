@@ -9,26 +9,26 @@ local scenariodata = {
 	imageflavor		= "River Assault", -- This text will be drawn over image
     summary         = [[After a ferocious battle, a Cortex Commander decided to join Armada forces. Unfortunately, other Cortex commanders discovered the intent of the treacherous plan and sent a mighty force to prevent it.]],
 	briefing 		= [[You will start with some Lazarus Bots, that can resurrect units from their wrecks. Your only hope is to hide your position and build a mighty army to crush all opposing forces.
-       
+
 	!!! DO NOT UNDERESTIMATE YOUR ENEMY !!!
-      
-  While you will be fighting for your life, don't forget to fortify your ally too, since we can't lose the Cortex Command Tower. 
-  
+
+  While you will be fighting for your life, don't forget to fortify your ally too, since we can't lose the Cortex Command Tower.
+
 Reinforcements:
  - You and your ally will receive the first contingency around the 9th minute from the beginning of the mission.
  - The enemy will be getting reinforcements every 8 and 20 minutes.
-    
+
 Tips:
- - To gain access to your ally's units, build a Decoy Commander and capture one of your ally's constructor units. 
+ - To gain access to your ally's units, build a Decoy Commander and capture one of your ally's constructor units.
  - Use radar jamming units and structures to hide your presence from enemy radar.
  - Resurrection bots will use Energy to resurrect units, at a flat cost of 75e per second while resurrecting.
  - You can issue Resurrect Area and Reclaim Area commands by left-click dragging after selecting the corresponding command (either through the menu in the lower left or the key assigned to the action).
  - Repairing units does not cost any resources.
-     
+
 Scoring:
  - Time taken to finish the scenario
  - Resources spent to complete the victory condition
-     
+
 											     IMPORTANT CHANGE!!
 	Beginner: Your Resources = +50%, Enemy Resources = -20%
 	Novice:   Your Resources  = +25%, Enemy Resources= -10%
@@ -479,7 +479,7 @@ Scoring:
 		{
 			numallies = 0;
 		}
-	
+
 		[ai3]
 		{
 			Host = 0;
@@ -532,7 +532,7 @@ Scoring:
 			Team = 2;
 			Version = stable;
 		}
-	
+
 		[team1]
 		{
 			Side = Cortex;
@@ -543,17 +543,17 @@ Scoring:
 			StartPosX = 4888;
 			StartPosZ = 3712;
 		}
-	
+
 		[allyTeam2]
 		{
 			numallies = 0;
 		}
-	
+
 		[allyTeam1]
 		{
 			numallies = 0;
 		}
-	
+
 		[team3]
 		{
 			Side = Cortex;
@@ -564,7 +564,7 @@ Scoring:
 			StartPosX = 846;
 			StartPosZ = 4430;
 		}
-	
+
 		[team0]
 		{
 			Side = __PLAYERSIDE__;
@@ -575,7 +575,7 @@ Scoring:
 			StartPosX = 1176;
 			StartPosZ = 1414;
 		}
-	
+
 		[team2]
 		{
 			Side = Cortex;
@@ -586,7 +586,7 @@ Scoring:
 			StartPosX = 5164;
 			StartPosZ = 615;
 		}
-	
+
 		[modoptions]
 		{
 			deathmode = builders;
@@ -596,7 +596,7 @@ Scoring:
 			startmetal = 500;
 			scenariooptions = __SCENARIOOPTIONS__;
 		}
-	
+
 		[ai2]
 		{
 			Host = 0;
@@ -606,7 +606,7 @@ Scoring:
 			Team = 3;
 			Version = stable;
 		}
-	
+
 		[ai0]
 		{
 			Host = 0;
@@ -616,7 +616,7 @@ Scoring:
 			Team = 1;
 			Version = stable;
 		}
-	
+
 		[player0]
 		{
 			IsFromDemo = 0;
@@ -624,14 +624,14 @@ Scoring:
 			Team = 0;
 			rank = 0;
 		}
-	
+
 		NumRestrictions=__NUMRESTRICTIONS__;
-	
+
 		[RESTRICT]
 		{
 			__RESTRICTEDUNITS__
 		}
-	
+
 		hostip = 127.0.0.1;
 		hostport = 0;
 		numplayers = 1;

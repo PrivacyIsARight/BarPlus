@@ -49,7 +49,7 @@ local function GetNewLoginWindow(failFunc, callerInfo)
 	local Configuration = WG.Chobby.Configuration
 	local steamMode = Configuration.canAuthenticateWithSteam and Configuration.wantAuthenticateWithSteam
 	Spring.Echo("GetNewLoginWindow:caller", callerInfo)
-	if Configuration.activeDebugConsole then 
+	if Configuration.activeDebugConsole then
 		Spring.Utilities.TraceFullEcho(30,30,30)
 	end
 	emailRequired = (WG.Server.protocol == "spring")
@@ -216,14 +216,14 @@ local function InitializeListeners()
 
 	function OnLoginInfoEnd()
 		-- Activate the multiplayer battle tab when login data is done
-		if WG and WG.Chobby and WG.Chobby.interfaceRoot and WG.Chobby.interfaceRoot.OpenMultiplayerTabByName then 
+		if WG and WG.Chobby and WG.Chobby.interfaceRoot and WG.Chobby.interfaceRoot.OpenMultiplayerTabByName then
 			-- Pass the name of the tab
 			WG.Chobby.interfaceRoot.OpenMultiplayerTabByName("multiplayer")
 			lobby:RemoveListener("OnLoginInfoEnd", OnLoginInfoEnd)
 		end
 
 	end
-	
+
 
 	lobby:AddListener("OnRegistrationAccepted", OnRegistrationAccepted)
 	lobby:AddListener("OnRegistrationDenied", OnRegistrationDenied)

@@ -725,7 +725,7 @@ Commander...intel report that it is cortex ba... ,it is...functio...,seek and de
 		ShortName = BARb;
 		Team = 1;
 		Version = stable;
-		
+
 	}
 
 	[player0]

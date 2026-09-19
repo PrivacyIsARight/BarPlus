@@ -67,7 +67,7 @@ end
 --// Returns the texture width and height from the texInfoCache to avoid gl.TextureInfo calls
 
 function TextureHandler.LoadTexture(activeTexID, filename, obj)
-	if placeholderDL == nil then 
+	if placeholderDL == nil then
 		gl.Texture(placeholderFilename)
 		gl.Texture(false)
 		placeholderDL = gl.CreateList(gl.Texture, placeholderFilename)

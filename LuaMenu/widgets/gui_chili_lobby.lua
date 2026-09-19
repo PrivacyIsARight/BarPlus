@@ -82,7 +82,7 @@ function widget:ActivateGame()
 end
 
 function widget:Initialize()
-	if WG.LimitFps then 
+	if WG.LimitFps then
 		WG.LimitFps.ForceRedrawPeriod(5) -- High FPS for the first few seconds to shorten the initial white flash.
 	end
 	if not WG.LibLobby then

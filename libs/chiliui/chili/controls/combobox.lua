@@ -172,7 +172,7 @@ function ComboBox:MouseDown(x, y)
 
 				labels[#labels + 1] = newBtn
 				height = height + self.itemHeight
-				width = math.max(width, self.font:GetTextWidth(item) + 
+				width = math.max(width, self.font:GetTextWidth(item) +
 					(self.itemImages[i] and (imageWidth + imagePadding + 6) or 0))
 			else
 				labels[#labels + 1] = item

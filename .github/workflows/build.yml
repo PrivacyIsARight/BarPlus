@@ -50,12 +50,9 @@ jobs:
 
       - name: Sanity tests
         run: |
+          set -o pipefail
           node --test launcher/test/path_utils.test.js
-          bash autotest.sh 2>&1 | tee "${RUNNER_TEMP}/autotest.log" || true
-          if grep -q "client digest mismatch" "${RUNNER_TEMP}/autotest.log"; then
-            echo "LuaMenu client digest mismatch" >&2
-            exit 1
-          fi
+          bash autotest.sh 2>&1 | tee "${RUNNER_TEMP}/autotest.log"
 
   regression:
     runs-on: ubuntu-latest

@@ -164,9 +164,9 @@ end
 Spring.Utilities.TableEcho = TableEcho
 
 local function TraceFullEcho(maxdepth, maxwidth, maxtableelements, ...)
-    -- Call it at any point, and it will give you the name of each function on the stack (up to maxdepth), 
+    -- Call it at any point, and it will give you the name of each function on the stack (up to maxdepth),
 	-- all arguments and first #maxwidth local variables of that function
-	-- if any of the values of the locals are tables, then it will try to shallow print + count them up to maxtablelements numbers. 
+	-- if any of the values of the locals are tables, then it will try to shallow print + count them up to maxtablelements numbers.
 	-- It will also just print any args after the first 3. (the ... part)
 	-- It will also try to print the source file+line of each function
 	local tracedebug = false -- to debug itself
@@ -181,7 +181,7 @@ local function TraceFullEcho(maxdepth, maxwidth, maxtableelements, ...)
         for k,v in pairs(t) do
             count = count + 1
             if count < maxtableelements then
-				if tracedebug then Spring.Echo(count, k) end 
+				if tracedebug then Spring.Echo(count, k) end
 				if type(k) == "number" and type(v) == "function" then -- try to get function lists?
 					if tracedebug then Spring.Echo(k,v, debug.getinfo(v), debug.getinfo(v).name) end  --debug.getinfo(v).short_src)?
                 	res = res .. tostring(k) .. ':' .. ((debug.getinfo(v) and debug.getinfo(v).name) or "<function>") ..', '
@@ -199,7 +199,7 @@ local function TraceFullEcho(maxdepth, maxwidth, maxtableelements, ...)
 	for i,v in ipairs(myargs) do
 		infostr = infostr .. tostring(v) .. "\t"
 	end
-	if infostr ~= "" then infostr = "Trace:[" .. infostr .. "]\n" end 
+	if infostr ~= "" then infostr = "Trace:[" .. infostr .. "]\n" end
 	local functionstr = "" -- "Trace:["
 	for i = 2, maxdepth do
 		local info = debug.getinfo(i)
@@ -209,31 +209,31 @@ local function TraceFullEcho(maxdepth, maxwidth, maxtableelements, ...)
 				functionstr = functionstr .. tostring(i-1) .. ": " .. tostring(funcName) .. " "
 				local arguments = ""
 				if funcName ~= "??" then
-					if functionsource and info.source then 
-						local source = info.source 
+					if functionsource and info.source then
+						local source = info.source
 						if string.len(source) > 128 then source = "sourcetoolong" end
 						functionstr = functionstr .. " @" .. source
-					end 
-					if functionsource and info.linedefined then 
-						functionstr = functionstr .. ":" .. tostring(info.linedefined) 
-					end 
+					end
+					if functionsource and info.linedefined then
+						functionstr = functionstr .. ":" .. tostring(info.linedefined)
+					end
 					for j = 1, maxwidth do
 						local name, value = debug.getlocal(i, j)
 						if not name then break end
-						if tracedebug then Spring.Echo(i,j, funcName,name) end 
+						if tracedebug then Spring.Echo(i,j, funcName,name) end
 						local sep = ((arguments == "") and "") or  "; "
                         if tostring(name) == 'self'  then
     						arguments = arguments .. sep .. ((name and tostring(name)) or "name?") .. "=" ..
 								(((type(value) == "table" and (value.name or value.classname))) or tostring("??"))
                         else
                             local newvalue
-                            if maxtableelements > 0 and type(value) == "table" then newvalue = dbgt(value, maxtableelements) else newvalue = value end 
+                            if maxtableelements > 0 and type(value) == "table" then newvalue = dbgt(value, maxtableelements) else newvalue = value end
     						arguments = arguments .. sep .. ((name and tostring(name)) or "name?") .. "=" .. tostring(newvalue)
                         end
 					end
 				end
 				functionstr  = functionstr .. " Locals:(" .. arguments .. ")" .. "\n"
-			else 
+			else
 				functionstr = functionstr .. tostring(i-1) .. ": ??\n"
 			end
 		else break end
@@ -250,7 +250,7 @@ local function TraceEcho(...)
 	for i,v in ipairs(myargs) do
 		infostr = infostr .. tostring(v) .. "\t"
 	end
-	if infostr ~= "" then infostr = infostr .. " " end 
+	if infostr ~= "" then infostr = infostr .. " " end
 	local functionstr = "Trace:["
 	for i = 2, 10 do
 		if debug.getinfo(i) then
@@ -263,7 +263,7 @@ local function TraceEcho(...)
 	functionstr = functionstr .. "]"
 	local arguments = ""
 	local funcName1 = (debug and debug.getinfo(2) and debug.getinfo(2).name) or "??"
-	if funcName1 ~= "??" then 
+	if funcName1 ~= "??" then
 		for i = 1, 10 do
 			local name, value = debug.getlocal(2, i)
 			if not name then break end
@@ -283,24 +283,24 @@ local function TraceEchoStr(...)
 	for i,v in ipairs(myargs) do
 		infostr = infostr .. tostring(v) .. "\t"
 	end
-	if infostr ~= "" then infostr = infostr .. " " end 
+	if infostr ~= "" then infostr = infostr .. " " end
 	local functionstr = "Trace:["
 	for i = 2, 15 do
 		if debug.getinfo(i) then
 			local funcName = (debug and debug.getinfo(i) and debug.getinfo(i).name)
 			if funcName then
 				functionstr = functionstr .. tostring(funcName) .. " <- "
-			else 
-				--break 
+			else
+				--break
 			end
-		else 
-			break 
+		else
+			break
 		end
 	end
 	functionstr = functionstr .. "]"
 	local arguments = ""
 	local funcName1 = (debug and debug.getinfo(2) and debug.getinfo(2).name) or "??"
-	if funcName1 ~= "??" then 
+	if funcName1 ~= "??" then
 		for i = 1, 10 do
 			local name, value = debug.getlocal(2, i)
 			if not name then break end
@@ -316,7 +316,7 @@ Spring.Utilities.TraceEchoStr = TraceEchoStr
 
 -- Ok some notes on this StartCallHook
 -- When you enable StartCallHook, it will hook into every function call and return until you EndCallHook
--- Printing the name of the function and the arguments on the top of the stack. 
+-- Printing the name of the function and the arguments on the top of the stack.
 -- Goes maxdepth calls deep
 -- Prints maxwidth local variables
 -- DO NOT NEST THESE
@@ -330,33 +330,33 @@ local function StartCallHook(maxdepth, maxwidth, hidereturns)
 	Spring.Utilities.HookDepthMax = maxdepth
 
 	local function enterhook(event, line)
-		if event == 'call' and Spring and Spring.Utilities then 
+		if event == 'call' and Spring and Spring.Utilities then
 			Spring.Utilities.HookDepth = Spring.Utilities.HookDepth + 1
-			if Spring and Spring.Utilities and Spring.Utilities.HookDepth and Spring.Utilities.HookDepthMax and debug and debug.getlocal and debug.getinfo and (Spring.Utilities.HookDepth < Spring.Utilities.HookDepthMax) then 
+			if Spring and Spring.Utilities and Spring.Utilities.HookDepth and Spring.Utilities.HookDepthMax and debug and debug.getlocal and debug.getinfo and (Spring.Utilities.HookDepth < Spring.Utilities.HookDepthMax) then
 				local locals = ''
 				local fname = (debug.getinfo(2, 'n') and debug.getinfo(2, 'n').name) or "???"
-				for i = 1, maxwidth do 
+				for i = 1, maxwidth do
 					--Spring.Echo(fname,i,locals)
 					local name, value = debug.getlocal(2,i)
 					--Spring.Echo(name, value )
-					if not name then 
-						break 
+					if not name then
+						break
 					else
 						if name == 'self' then -- as this triggers a c stack overflow on tostring(value)
 							locals = locals .. "self, "
 						else
-							locals = locals .. ((name and tostring(name)) or "name?") .. "=" .. tostring(value) .. ", " 
+							locals = locals .. ((name and tostring(name)) or "name?") .. "=" .. tostring(value) .. ", "
 						end
 					end
 				end
-				local fmt = string.format("+%s %s (%s)", 
-						string.rep('>', Spring.Utilities.HookDepth), 
-						fname, 
+				local fmt = string.format("+%s %s (%s)",
+						string.rep('>', Spring.Utilities.HookDepth),
+						fname,
 						locals)
 				Spring.Echo(fmt)
 			end
-		elseif event == 'return' then  
-			if not hidereturns and Spring.Utilities.HookDepth < Spring.Utilities.HookDepthMax then 
+		elseif event == 'return' then
+			if not hidereturns and Spring.Utilities.HookDepth < Spring.Utilities.HookDepthMax then
 				-- attempt to get name, value of last local (retval)
 				local i = 1
 				local penultimate = '?'
@@ -364,8 +364,8 @@ local function StartCallHook(maxdepth, maxwidth, hidereturns)
 				while (true) do
 					local name, value = debug.getlocal(2,i)
 					if name then
-						penultimate = retval 
-						if name == 'self' then 
+						penultimate = retval
+						if name == 'self' then
 							retval = 'self'
 						else
 							retval = tostring(value)
@@ -376,8 +376,8 @@ local function StartCallHook(maxdepth, maxwidth, hidereturns)
 					i = i + 1
 				end
 
-				local fmt = string.format('-%s %s returns( %s or %s )', 
-					string.rep('<', Spring.Utilities.HookDepth), 
+				local fmt = string.format('-%s %s returns( %s or %s )',
+					string.rep('<', Spring.Utilities.HookDepth),
 					(debug.getinfo(2, 'n') and debug.getinfo(2, 'n').name) or "???", penultimate, retval)
 				Spring.Echo(fmt)
 
@@ -430,8 +430,8 @@ end
 
 -- Because Luas built in table.sort function is by default mergesort, which is always N*logN
 -- Insertion sort, however has a best case N, worst case N*N/2
--- Very often, we are dealing with almost sorted tables, in which case insertion sort is 
--- N*K, where K is the number of out-of-order elements. 
+-- Very often, we are dealing with almost sorted tables, in which case insertion sort is
+-- N*K, where K is the number of out-of-order elements.
 function Spring.Utilities.insertionSort(array, a_gt_b, inplace, reverse)
 	if a_gt_b == nil then
 		a_gt_b = function(a,b) return a>b end
@@ -451,10 +451,10 @@ function Spring.Utilities.insertionSort(array, a_gt_b, inplace, reverse)
 	if len <= 1 then return sorted, 0 end -- single element or less tables are already sorted
 
 	-- validation:
-	local biggestkey = 0 
+	local biggestkey = 0
 	local numkeys = 0
 	local max = math.max
-	for k,v in pairs(array) do 
+	for k,v in pairs(array) do
 		numkeys = numkeys+1
 		biggestkey = max(biggestkey, k)
 	end

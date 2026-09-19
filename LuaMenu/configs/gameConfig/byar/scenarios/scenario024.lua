@@ -8,17 +8,17 @@ local scenariodata = {
 	imagepath		= "scenario023.jpg", -- placed next to lua file, should be 3:1 ratio banner style
 	imageflavor		= "Units will act automatically during the benchmark", -- This text will be drawn over image
     summary         = [[Pathfinding benchmark.]],
-	briefing 		= [[Pathfinding benchmark. The average Sim, Draw and Update times are shown on screen. The game will automatically center the camera over the units, do not move the camera while the benchmark is running, and do not interact with the units. The game will return after printing the results to screen and infolog, and submitting them to the server. Amount of units at the end of testing depends of setting: 
-	1 unit spawn rate ~700 units; 
-	3 unit spawn rate ~2000 units; 
-	10 unit spawn rate ~7000 units; 
+	briefing 		= [[Pathfinding benchmark. The average Sim, Draw and Update times are shown on screen. The game will automatically center the camera over the units, do not move the camera while the benchmark is running, and do not interact with the units. The game will return after printing the results to screen and infolog, and submitting them to the server. Amount of units at the end of testing depends of setting:
+	1 unit spawn rate ~700 units;
+	3 unit spawn rate ~2000 units;
+	10 unit spawn rate ~7000 units;
 	15 unit spawn rate ~10000 units
-		
-	A total of 2000 simulation frames are tested. 
-	
+
+	A total of 2000 simulation frames are tested.
+
 	The internal command to run a benchmark of various units against each other needs cheating enabled, and is the following:
 
-	/luarules benchmark [unitname1] [unitname2] [maxunits] [spawnstep] [spawnradius] 
+	/luarules benchmark [unitname1] [unitname2] [maxunits] [spawnstep] [spawnradius]
 	For this benchmark, it is
 
 	/luarules armcv armck 11000 1 12000
@@ -48,8 +48,8 @@ local scenariodata = {
 		disablefactionpicker = true, -- this is needed to prevent faction picking outside of the allowedsides
 		benchmarkcommand = "luarules benchmark armcv armck 11000 1 12000", -- make sure the matches the debugcommands identically named modoption's info
 		benchmarkframes = 2000,
-		-- quiteforce sucks, does not end the game. 
-		--unitloadout = {},	
+		-- quiteforce sucks, does not end the game.
+		--unitloadout = {},
 		--featureloadout = {},
     },
     -- https://github.com/spring/spring/blob/105.0/doc/StartScriptFormat.txt
@@ -94,7 +94,7 @@ local scenariodata = {
 		maxunits = 11000;
 		debugcommands = 1:cheat|15:luarules benchmark __PLAYERHANDICAP__|25:deselect|2015:screenshot|2016:luarules benchmark;
 	}
-	
+
 	[allyTeam1]
 	{
 		startrectright = 1;
@@ -121,7 +121,7 @@ local scenariodata = {
 		Team = 0;
 		rank = 0;
 	}
-	
+
 	NumRestrictions=__NUMRESTRICTIONS__;
 
 	[RESTRICT]

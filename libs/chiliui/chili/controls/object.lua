@@ -42,22 +42,22 @@ Object = {
 	OnClick         = {}, -- used frequently so also not optimized out
 
 	-- The following tables eat a lot of memory, and 99% of the time are empty, so are only left here as comments to know which ones can be used
-	-- Ensure to check that the table is not nil before inserting into them. 
+	-- Ensure to check that the table is not nil before inserting into them.
 	--[[
 	OnDblClick      = {},
 	OnMouseDown     = {},
 	OnMouseUp       = {},
 	OnMouseMove     = {},
 	OnMouseWheel    = {},
-	OnKeyPress      = {}, 
-	OnTextInput     = {}, 
+	OnKeyPress      = {},
+	OnTextInput     = {},
 
 	OnMouseOver     = {},
 	OnMouseOut      = {},
 	OnTextModified  = {},
 	OnTextEditing   = {},
 	OnFocusUpdate   = {},
-	
+
 	OnHide          = {},
 	OnShow          = {},
 	OnOrphan        = {},

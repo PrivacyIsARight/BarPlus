@@ -9,7 +9,7 @@ function PartyWrapper:init(parent, partyID)
     self.rowCount = 0
     self.inviteRowCount = 0
     self.actionButtonCount = 0
-    
+
     self.parent = parent
     self.partyID = partyID
 

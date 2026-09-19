@@ -41,14 +41,14 @@ end
 
 local function GetLobbyName()
 	local byarchobbyrapidTag = "unknown"
-	for i,v in ipairs(VFS.GetLoadedArchives()) do 
+	for i,v in ipairs(VFS.GetLoadedArchives()) do
 		if string.find(v,"BYAR Chobby ", nil, true) then
 			byarchobbyrapidTag = string.gsub(string.gsub(v,"test%-", ""), "BYAR Chobby ", "")
 			byarchobbyrapidTag = string.gsub(byarchobbyrapidTag, "[^%w]", " ")
 			break
 		end
 	end
-	local lobbyname = 'BarPlus Version '..byarchobbyrapidTag 
+	local lobbyname = 'BarPlus Version '..byarchobbyrapidTag
 	--Spring.Utilities.TraceFullEcho()
 	return lobbyname
 end
@@ -1098,7 +1098,7 @@ function LoginWindow:tryLogin()
 		local function FollowRedirect()
 			lobby:Connect(Configuration:GetServerAddress(), Configuration:GetServerPort(), username, password, 3, nil, GetLobbyName())
 		end
-			
+
 		self.onRedirect = function(listener, newaddress)
 			lobby:Disconnect()
 			Configuration:SetConfigValue("serverAddress", newaddress)
@@ -1128,7 +1128,7 @@ function isInValidUserName(username)
 		if blacklisted then
 			return "Username contains banned word/phrase: "..blacklisted
 		end
-		if string.lower(string.sub(username,1,5)) == 'host[' then 
+		if string.lower(string.sub(username,1,5)) == 'host[' then
 			return "Username Host[...  is reserved internally."
 		end
 		return false
@@ -1142,15 +1142,15 @@ function isInValidEmail(email)
 	if not email or email == '' then
 		return false -- Let other validation handle empty email
 	end
-	
+
 	-- Extract domain from email
 	local domain = string.match(email, "@(.+)$")
 	if not domain then
 		return false -- Invalid email format, let other validation handle
 	end
-	
+
 	domain = string.lower(domain)
-	
+
 	-- Common email providers and their frequent typos
 	local commonProviders = {
 		["gmail.com"] = {"gmai.com", "gmail.co", "gmial.com", "gmail.cm", "gmail.om", "gmail.con", "gmal.com", "gamil.com"},
@@ -1172,7 +1172,7 @@ function isInValidEmail(email)
 		["pm.me"] = {"pmme.com", "pm.me.com", "pn.me", "pm.ne", "pm.ms", "pm.mr", "pm-me.me"},
 		["protonmail.ch"] = {"protonmail.c", "protonmail.h", "protonmai.ch", "protonmial.ch", "protomail.ch", "protronmail.ch", "prontonmail.ch"}
 	}
-	
+
 	-- Check if the domain is a known typo
 	for correctDomain, typos in pairs(commonProviders) do
 		for _, typo in ipairs(typos) do
@@ -1181,7 +1181,7 @@ function isInValidEmail(email)
 			end
 		end
 	end
-	
+
 	return false
 end
 

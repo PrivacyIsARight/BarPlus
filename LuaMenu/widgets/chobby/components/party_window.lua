@@ -258,7 +258,7 @@ end
 
 function PartyWindow:LeaveMyCurrentParty()
     local myPartyID = lobby.myPartyID
-    lobby:LeaveMyCurrentParty(nil, 
+    lobby:LeaveMyCurrentParty(nil,
     function(errorMessage)
         ErrorPopup(i18n("error_party_leave_failed", { error_message = errorMessage }))
     end)
@@ -290,10 +290,10 @@ function PartyWindow:JoinedParty(partyID, username)
         partyWrapper.wrapper:Show()
         self.yourPartyLabel:Show()
     end
-    
+
     partyWrapper:RemoveInvite(username)
     partyWrapper:AddMember(username)
-    
+
     self.partyWrappers[partyID] = partyWrapper
 
     if partyID == lobby.myPartyID and username ~= lobby.myUserName and wasInvited then
@@ -308,13 +308,13 @@ function PartyWindow:InvitedToParty(partyID, username)
         -- Invite targeted at us: show actions (accept/decline) and notification.
         self:NotifyIncomingInvite(partyID)
         self.partyWrappers[partyID] = PartyWrapper(self.contentScrollPanel, partyID)
-        self.partyWrappers[partyID]:AddActionButton(i18n("accept_party_invite"), "positive_button", function() 
+        self.partyWrappers[partyID]:AddActionButton(i18n("accept_party_invite"), "positive_button", function()
             if lobby.myPartyID then
                 self:LeaveMyCurrentParty()
             end
             lobby:AcceptInviteToParty(
                 partyID,
-                nil, 
+                nil,
                 function(errorMessage)
                     ErrorPopup(i18n("error_party_accept_invite_failed", { error_message = errorMessage }))
                 end
@@ -322,10 +322,10 @@ function PartyWindow:InvitedToParty(partyID, username)
         end)
 
         self.partyWrappers[partyID]:AddActionButton(i18n("decline_party_invite"), "negative_button",
-            function() 
+            function()
                 lobby:DeclineInviteToParty(
                     partyID,
-                    nil, 
+                    nil,
                     function(errorMessage)
                         ErrorPopup(i18n("error_party_decline_invite_failed", { error_message = errorMessage }))
                     end

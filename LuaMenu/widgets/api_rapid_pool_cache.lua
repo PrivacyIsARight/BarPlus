@@ -27,7 +27,7 @@ local poolbasepath = "pool/"
 local poolDirs = {} -- ordered list of pool dirs
 local poolDirContents = {} -- table of pooldir to file contents, true for already managed, false for fresh
 local hexchars = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'}
-local thresholdHDD = 80 -- in MB/s 
+local thresholdHDD = 80 -- in MB/s
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -51,8 +51,8 @@ local localLobby
 function widget:Initialize()
 	Spring.Echo("Initializing Rapid Pool Cache")
 	local i = 0
-	for _,c1 in ipairs(hexchars) do 
-		for _,c2 in ipairs(hexchars) do 
+	for _,c1 in ipairs(hexchars) do
+		for _,c2 in ipairs(hexchars) do
 			i = i + 1
 			local pooldir = poolbasepath .. c1 ..c2 ..'/'
 			poolDirs[i] = pooldir
@@ -70,11 +70,11 @@ end
 
 
 function widget:Update()
-	if lobby == nil and WG.LibLobby then 
+	if lobby == nil and WG.LibLobby then
 		lobby = WG.LibLobby.lobby
 		lobby:AddListener("OnBattleAboutToStart", OnBattleAboutToStart)
 	end
-	if localLobby == nil and WG.LibLobby then 
+	if localLobby == nil and WG.LibLobby then
 		localLobby = WG.LibLobby.localLobby
 		localLobby:AddListener("OnBattleAboutToStart", OnBattleAboutToStart)
 	end
@@ -84,7 +84,7 @@ function widget:Update()
 		--cachingImage = interfaceRoot.GetCachingImage()
 		cachingLabel = interfaceRoot.GetCachingLabel()
 	end
-	if cachingLabel then 
+	if cachingLabel then
 		cachingLabel:SetCaption(string.format("\255\185\185\185" .. "Caching % 2d%% % 3dMB/s", (100* current_index)/maxpools, cachingSpeed))
 		cachingLabel:Invalidate()
 	end
@@ -94,12 +94,12 @@ function widget:Update()
 
 	local thisframetime = (firstrun and firsttime) or worktime
 	while (Spring.DiffTimers(Spring.GetTimer(), startTime) < thisframetime) do
-		if poolDirContents[current_pool] == false then -- fresh pool to work on	
+		if poolDirContents[current_pool] == false then -- fresh pool to work on
 			poolDirContents[current_pool] = VFS.DirList(current_pool, '*.gz',VFS_RAW)
 			--Spring.Echo("Adding dir to work", current_pool, #poolDirContents[current_pool])
 		else
 			local nextfile = next(poolDirContents[current_pool])
-			if nextfile then 
+			if nextfile then
 				loaded = loaded + 1
 				local data = VFS.LoadFile(poolDirContents[current_pool][nextfile], VFS_RAW)
 				nowKB = nowKB + string.len(data) / 1024
@@ -109,7 +109,7 @@ function widget:Update()
 			else
 				poolDirContents[current_pool] = true -- clears the table
 				-- increment pool counter
-				if current_index < maxpools then 
+				if current_index < maxpools then
 					current_index = current_index + 1
 					current_pool = poolDirs[current_index]
 				else

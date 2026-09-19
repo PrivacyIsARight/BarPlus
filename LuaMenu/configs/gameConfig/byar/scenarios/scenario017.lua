@@ -8,18 +8,18 @@ local scenariodata = {
 	imagepath		= "scenario017.jpg", -- placed next to lua file, should be 3:1 ratio banner style
 	imageflavor		= "Construction units and Nano turrets can assist in building anything.", -- This text will be drawn over image
     summary         = [[You and a team of two other Commanders are tasked with destroying all other Commanders on the enemy team.]],
-	briefing 		= [[Three enemy Commanders are also gaining a foothold in this area. The map is made up of three main lanes, you must push through your lane to destroy all of them. Two friendly Commanders have joined in the fight with you, and while they arent the brightest bulbs, they will make holding your portion of the map easier. 
- 
+	briefing 		= [[Three enemy Commanders are also gaining a foothold in this area. The map is made up of three main lanes, you must push through your lane to destroy all of them. Two friendly Commanders have joined in the fight with you, and while they arent the brightest bulbs, they will make holding your portion of the map easier.
+
 Tips:
- - Almost all units can pass the shallow water separating the lanes on the map. 
- - Wind on this map is both tempting and treacherous, as it can attain high velocites, but can also die down at a moments notice. 
- - You can buffer the variable energy production from wind generators with energy storage structures, or augment them with Solar generators. 
- - The enemy may send aircraft against you early on, so make sure to make some light anti-air defense in your base. 
- 
+ - Almost all units can pass the shallow water separating the lanes on the map.
+ - Wind on this map is both tempting and treacherous, as it can attain high velocites, but can also die down at a moments notice.
+ - You can buffer the variable energy production from wind generators with energy storage structures, or augment them with Solar generators.
+ - The enemy may send aircraft against you early on, so make sure to make some light anti-air defense in your base.
+
 Scoring:
  - Time taken to complete the scenario
  - Resources spent to destroy all enemy units.
- 
+
 The difficulty modifier will change the amount of resources you and the enemy receive from metal and energy structures:
  - Beginner: You +50%, enemy -50%
  - Novice: You +25%, enemy -25%
@@ -182,7 +182,7 @@ The difficulty modifier will change the amount of resources you and the enemy re
 		ShortName = SimpleAI;
 		Team = 1;
 	}
-	
+
 
 	[player0]
 	{
@@ -191,26 +191,26 @@ The difficulty modifier will change the amount of resources you and the enemy re
 		Team = 0;
 		rank = 0;
 	}
-	
+
 	[modoptions]
 	{
 		scenariooptions = __SCENARIOOPTIONS__;
 	}
-	
+
 	[mapoptions]
 	{
 		waterlevel=0;
 	}
-	
-	
+
+
 	NumRestrictions=__NUMRESTRICTIONS__;
 
 	[RESTRICT]
 	{
         __RESTRICTEDUNITS__
 	}
-	
-	
+
+
 	hostip = 127.0.0.1;
 	hostport = 0;
 	numplayers = 1;

@@ -140,8 +140,8 @@ end
 
 local function GetBestScores(scenarioID,scenarioVersion,difficulty)
 	--Spring.Echo("GetBestScores",scenarioID,scenarioVersion,difficulty)
-	if scoreData[scenarioID] 
-	and	scoreData[scenarioID][scenarioVersion] 
+	if scoreData[scenarioID]
+	and	scoreData[scenarioID][scenarioVersion]
 	and	scoreData[scenarioID][scenarioVersion][difficulty] then
 		Spring.Echo(scoreData[scenarioID][scenarioVersion][difficulty])
 		return scoreData[scenarioID][scenarioVersion][difficulty]
@@ -156,9 +156,9 @@ local function RefreshScores(scenarioID,scenarioVersion,difficulty)
 	if myscores == nil then
 		myscores = {time = "0", resources = "0"}
 	end
-	
-	if scoreLabels[scenarioID] 
-	and scoreLabels[scenarioID][scenarioVersion] 
+
+	if scoreLabels[scenarioID]
+	and scoreLabels[scenarioID][scenarioVersion]
 	and scoreLabels[scenarioID][scenarioVersion][difficulty] then
 		local labels = scoreLabels[scenarioID][scenarioVersion][difficulty]
 		labels.time:SetCaption(SecondsToTimeString(myscores.time))
@@ -202,7 +202,7 @@ local function CreateScenarioPanel(shortname, sPanel)
 			scen = s
 		end
 	end
-	
+
 	MaybeDownloadMap(scen.mapfilename)
 
 	local difficulties = {}
@@ -248,15 +248,15 @@ local function CreateScenarioPanel(shortname, sPanel)
 				Spring.Log("gui_scenario_window", LOG.ERROR, "Error No human name for: " .. unitid)
 				humanName = "human name missing"
 			end
-	
+
 			additionalText = additionalText .. "\n  - " .. humanName .. " (" .. unitid .. "): "
-	
+
 			if count == 0 then
 				additionalText = additionalText .. "Disabled"
 			else
 				additionalText = additionalText .. tostring(count)
 			end
-	
+
 			numdisabledunits = numdisabledunits + 1
 		end
 	end
@@ -630,8 +630,8 @@ local function CreateScenarioPanel(shortname, sPanel)
 
 	local function UpdateDifficulty(newdifficultyname)
 		for i, diff in pairs(scen.difficulties) do
-			if diff.name == newdifficultyname then 
-				mydifficulty = diff 
+			if diff.name == newdifficultyname then
+				mydifficulty = diff
 			end
 		end
 
@@ -671,7 +671,7 @@ local function CreateScenarioPanel(shortname, sPanel)
 			resources = myresources
 		}
 	end
-	
+
 	for _, diff in pairs(scen.difficulties) do
 		SaveScoreLabels(scen.scenarioid, scen.version, diff.name)
 	end
@@ -732,7 +732,7 @@ local function CreateScenarioPanel(shortname, sPanel)
 						return
 					end
 
-					if WG and WG.Chobby and WG.Chobby.localLobby then 
+					if WG and WG.Chobby and WG.Chobby.localLobby then
 						--Spring.Echo("Stop the music")
 						WG.LibLobby.localLobby:StartGameFromString(scriptTxt, "scenario")
 					else

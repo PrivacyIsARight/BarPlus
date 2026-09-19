@@ -50,7 +50,7 @@ local tooltipOverride = nil
 local function sortfunc(t)
 	local st = {}
 	for k,v in pairs(t) do
-		if type(v) ~= "table" then 
+		if type(v) ~= "table" then
 			table.insert(st, { k, v })
 		end
 	end
@@ -454,7 +454,7 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		)
 		battleTooltip.isRunning.UpdatePosition(offset)
 		offset = offset + 20
-	elseif battleTooltip.isRunning then 
+	elseif battleTooltip.isRunning then
 		battleTooltip.isRunning.Hide()
 	end
 
@@ -591,7 +591,7 @@ local function GetMinimapTooltip(mapName, title)
 		if not Configuration then
 			return nil
 		end
-	
+
 		local width = MAX_WINDOW_WIDTH
 		local height = width
 
@@ -609,7 +609,7 @@ local function GetMinimapTooltip(mapName, title)
 		if not minimapTooltip.title then
 			minimapTooltip.title = GetTooltipLine(minimapTooltip.mainControl, nil, 2)
 		end
-		
+
 		local mapImageFile, needDownload = Configuration:GetMinimapImage(mapName)
 		if minimapTooltip.mainControl:GetChildByName("minimapImageLarge") then
 			local minimapImage = minimapTooltip.mainControl:GetChildByName("minimapImageLarge")
@@ -634,7 +634,7 @@ local function GetMinimapTooltip(mapName, title)
 		minimapTooltip.title.Update(7, mapName.. "\n" .. title)
 		-- Set tooltip sizes
 		minimapTooltip.mainControl:SetPos(nil, nil, width, height)
-	
+
 		return minimapTooltip.mainControl
 end
 
@@ -678,7 +678,7 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 	-- 	if not userTooltip.clan then
 	-- 		userTooltip.clan = GetTooltipLine(userTooltip.mainControl, true)
 	-- 	end
-	-- 
+	--
 	-- 	local clanFile, needDownload = WG.UserHandler.GetClanImage(userInfo.clan)
 	-- 	userTooltip.clan.Update(offset, "Clan: " .. userInfo.clan, clanFile, nil, nil, needDownload)
 	-- 	offset = offset + 20
@@ -919,7 +919,7 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		-- 	}
 		-- end
 		-- userTooltip.runningImage:SetVisibility(battle.isRunning == true)
--- 
+--
 		-- local mapImageFile, needDownload = Configuration:GetMinimapSmallImage(battle.mapName)
 		-- if not userTooltip.minimapImage then
 		-- 	userTooltip.minimapImage = Image:New {
@@ -942,7 +942,7 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		-- userTooltip.minimapImage:Invalidate()
 		-- offset = offset + 25
 		-- battleOffset = battleOffset + 25
--- 
+--
 		-- if not userTooltip.lblMap then
 		-- 	userTooltip.lblMap = Label:New {
 		-- 		name = "mapCaption",
@@ -1101,7 +1101,7 @@ local function getReplayPlayerListTooltip(teamList)
 
 	local showTeams = true
 	if #teamList > 2 then
-		showTeams = false -- assume ffa 
+		showTeams = false -- assume ffa
 		for i = 1, #teamList do
 			if #teamList[i] > 1 then -- no, it's teamFFA
 				showTeams = true
@@ -1324,7 +1324,7 @@ local function UpdateTooltip(inputText)
 		local tooltiptext = ""
 		if mapName:find("|",1, true) then
 			tooltiptext = string.sub(mapName, mapName:find("|", 1, true) + 1) or ""
-			mapName = string.sub(mapName, 1, mapName:find("|", 1, true) -1) 
+			mapName = string.sub(mapName, 1, mapName:find("|", 1, true) -1)
 		end
 		if mapName then
 			local tooltipcontrol = GetMinimapTooltip(mapName,tooltiptext)

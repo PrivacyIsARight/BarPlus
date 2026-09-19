@@ -8,23 +8,23 @@ local scenariodata = {
 	imagepath		= "scenario019.jpg", -- placed next to lua file, should be 3:1 ratio banner style
 	imageflavor		= "Scour the map for hidden treasures", -- This text will be drawn over image
     summary         = [[Only a few units remain, Tzar, Tiger, Negotiator and a few supporting roles. Navigate your way through this glacier pass without building a base, and destroy the waves of Armada Tier 1 units to get to their Commander.]],
-	briefing 		= [[You only have a couple of vehicles to navigate the treacherous Glacer Pass, straight through an Armada base. Luckily this Armada Commander does not have much useful technology at his disposal, but will attempt to 
- 
+	briefing 		= [[You only have a couple of vehicles to navigate the treacherous Glacer Pass, straight through an Armada base. Luckily this Armada Commander does not have much useful technology at his disposal, but will attempt to
+
 Intelligence reports mines around the walled entrance to the main Armada base, enter cautiously, or use the massive area of effect damage of the Tzar to clear mines.
- 
-You will not be able to construct a base in this mission at all.  
- 
+
+You will not be able to construct a base in this mission at all.
+
 Tips:
  - Spectre are cloakable, stealthy spies, that can be issued an Attack order to self-destruct for a large EMP blast to stun groups of units.
- - Tzar has a very large range, and a huge area of effect, but a is slow and hard to maneuver. Use the Tiger to keep any smaller Tier 1 units away from him. 
+ - Tzar has a very large range, and a huge area of effect, but a is slow and hard to maneuver. Use the Tiger to keep any smaller Tier 1 units away from him.
  - Negotiator, while slow, has an enormous range, and can take out anything foolish enough to stand still.
  - Graverobbers can resurrect wrecked units, however, wrecks can be reduced to useless heaps by area-of-effect damage.
  - There may be useful wrecks on different areas of the map, that can assist you in your mission.
- 
+
 Scoring:
  - Time taken to complete the scenario
  - Resources spent to destroy all enemy units.
- 
+
 The difficulty modifier will change the amount of resources you and the enemy receive from metal and energy production structures:
  - Beginner: You +50%, enemy -50%
  - Novice: You +25%, enemy -25%
@@ -490,9 +490,9 @@ The difficulty modifier will change the amount of resources you and the enemy re
 			{name = 'armllt', x = 4800, y = 996, z = 2448, rot = 16384 , team = 1},
 			{name = 'armllt', x = 4608, y = 1069, z = 2464, rot = 16384 , team = 1},
 			{name = 'armgeo', x = 1488, y = 1048, z = 2448, rot = 16384 , team = 1},
-					
+
 		},
-			
+
 		featureloadout = {
 			{name = 'armrectr_dead', x = 5000, y = 815, z = 2444, rot = 0 , scale = 1.0, resurrectas = "armrectr"},
 			{name = 'armflea_dead', x = 4982, y = 834, z = 2413, rot = 0 , scale = 1.0, resurrectas = "armflea"},

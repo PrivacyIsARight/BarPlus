@@ -203,7 +203,7 @@ local function GetMapAge(LastUpdate)
   local twoWeeksAgo = now - 60*60*24*14
   local mapAge = 999999999
   if ( LastUpdate == nil ) then LastUpdate = 1 end --some maps can  have lastUpdate = nil
-  if ( LastUpdate >= twoWeeksAgo ) then 
+  if ( LastUpdate >= twoWeeksAgo ) then
 	mapAge = now - LastUpdate end
   return mapAge--if it's older then two weeks don't sort by age
 end
@@ -1779,7 +1779,7 @@ local function InitializeControls()
 		if not mapListWindow.visible then
 			mapListWindow:Show()
 		end
-      
+
 		WG.Chobby.PriorityPopup(mapListWindow, CloseFunc)
 		if zoomToMap then
 			if mapFuncs[zoomToMap] then

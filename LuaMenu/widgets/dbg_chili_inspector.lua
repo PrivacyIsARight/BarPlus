@@ -64,7 +64,7 @@ local objects = 0
 local fonts = 0
 
 local function tracePerWidget(node)
-	
+
 	objects = 0
 	fonts = 0
 	collectgarbage("collect")
@@ -73,20 +73,20 @@ local function tracePerWidget(node)
 			local caption = ("%s"):format(w.whInfo.name)
 			local nodec = node:Add(caption)
 			for i,obj in pairs(t) do
-				objects = objects + 1 
+				objects = objects + 1
 				local fontinfo = ""
 				if obj.font then
 					fonts = fonts + 1
 					--local fontname = string.match(obj.font.font or "", "(%d+)/?$") -- remove all before trailing slash
 					local fontname = string.sub(obj.font.font or "nil", -10) -- remove all before trailing slash
-					
+
 					fontinfo = ("Font:(%s[%i])"):format(fontname, obj.font.size or "0")
 				end
 
 				local positioninfo = ""
 				if obj.x and obj.y then
 					positioninfo = ("Pos(%i:%i)"):format(obj.x  or 0, obj.y or 0)
-				end 
+				end
 
 				local caption = ("%s->%s: %s; \"%s\" %s %s"):format(
 					(obj.parent and obj.parent.name) or "orph",
@@ -134,7 +134,7 @@ function widget:Initialize()
 				align = "right", valign = "bottom",
 				caption = "Lua MemUsage: 0MB",
 
-			},			
+			},
 			Chili.Label:New{
 				name = "lbl_inspector_memdelta",
 				x=0, right = 50,
@@ -192,7 +192,7 @@ function widget:Initialize()
 							for i, child in pairs(tree0.root.children) do
 								child:Dispose()
 							end
-							
+
 							trace(Chili.Screen0.children, tree0.root) end},
 					},
 					Chili.Button:New{
@@ -243,7 +243,7 @@ function widget:Update()
 	local caption = ("O/F: %d/%d Frame:%i Lua MemUsage: %.2fMB"):format(objects, fonts,updatecount, curUsage / 1024)
 	label0:SetCaption(caption)
 
-	if Spring.DiffTimers(Spring.GetTimer(), lastupdatetime) > 1 then 
+	if Spring.DiffTimers(Spring.GetTimer(), lastupdatetime) > 1 then
 		memdelta = curUsage - lastmemusagesec
 		lastmemusagesec = curUsage
 		lastupdatetime = Spring.GetTimer()

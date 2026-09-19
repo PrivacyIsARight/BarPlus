@@ -35,7 +35,7 @@ end
 
 local function GetLobbyRapidTag()
 	local byarchobbyrapidTag = "unknown"
-	for i,v in ipairs(VFS.GetLoadedArchives()) do 
+	for i,v in ipairs(VFS.GetLoadedArchives()) do
 			if string.find(v,"BYAR Chobby ", nil, true) then
 			byarchobbyrapidTag = string.gsub(string.gsub(v,"test%-", ""), "BYAR Chobby ", "")
 			byarchobbyrapidTag = string.gsub(byarchobbyrapidTag, "[^%w]", " ")
@@ -68,7 +68,7 @@ function Interface:Login(user, password, cpu, localIP, lobbyVersion)
 		localIP = "*"
 	end
 
-	if self.buffer then self.buffer = "" end 
+	if self.buffer then self.buffer = "" end
 	password = VFS.CalculateHash(password, 0)
 	sentence = "LuaLobby " .. GetServerLobbyName() .. "\t" .. self.agent .. "\t" .. "b sp"
 	cmd = concat("LOGIN", user, password, "0", localIP, sentence)
@@ -222,7 +222,7 @@ function Interface:Whois(userID)
 	if whoisQueueActive then
 		return self
 	end
-	
+
 	whoisQueueActive = true
 	WG.Delay(ProcessWhoisQueue, 0.4)
 	return self
@@ -401,7 +401,7 @@ local function EncodeBattleStatus(battleStatus)
 	local msb16 =
 		math.floor((lshift(battleStatus.sync, 6) + --Because sync actually has 3 values, 0, 1, 2 (unknown, synced, unsynced)
 		lshift(battleStatus.side, 8))) +
-		lshift(rshift(battleStatus.teamNumber, 4), 2) + 
+		lshift(rshift(battleStatus.teamNumber, 4), 2) +
 		lshift(rshift(battleStatus.allyNumber, 4), 12)
 
 	return lsbmsb16tostring(lsb16, msb16)
@@ -500,7 +500,7 @@ function Interface:SayBattle(message)
 	else
 		self:super("SayBattle", message):_SendCommand(concat("SAYBATTLE", message))
 	end
-	
+
 	-- Prevent crash for tweakdef referencing "legcomlvl" (NuttyB)
 	if message:find("tweakdef") and message:find("bGVnY29tbHZsM") then
 		self:SetModOptions({experimentallegionfaction = 1}):SayBattleEx("enabled legion faction since it is referenced in the tweakdef")
@@ -1282,15 +1282,15 @@ local function testEncodeDecode()
 								error = true
 								Spring.Log(LOG_SECTION, LOG.NOTICE,
 									bStatus.isReady,
-									bStatus.teamNumber, 
-									bStatus.allyNumber, 
+									bStatus.teamNumber,
+									bStatus.allyNumber,
 									bStatus.isSpectator,
 									bStatus.sync,
 									bStatus.side)
 								Spring.Log(LOG_SECTION, LOG.NOTICE,
 									retBStatus.isReady,
-									retBStatus.teamNumber, 
-									retBStatus.allyNumber, 
+									retBStatus.teamNumber,
+									retBStatus.allyNumber,
 									retBStatus.isSpectator,
 									retBStatus.sync,
 									retBStatus.side)
@@ -1315,7 +1315,7 @@ local function testEncodeDecode()
 	end
 
 	-- iterate once over all possible teamNumbers
-	for teamNumber=0, 255, 1 do 
+	for teamNumber=0, 255, 1 do
 		bStatus.teamNumber = teamNumber
 		bStatusStr = EncodeBattleStatus(bStatus)
 		retBStatus = WG.LibLobby.lobby:ParseBattleStatus(bStatusStr)
@@ -2073,11 +2073,11 @@ function Interface:_OnRequestBattleStatus()
 	self._requestedBattleStatus = true -- allow SetBattleStatus again
 
 	local defaultSpec = true
-	if forcePlayer then -- 2023/04/04 Fireball: forcePlayer is set by Interface:JoinBattle; the only use case is forcing player while hosting a battle	
+	if forcePlayer then -- 2023/04/04 Fireball: forcePlayer is set by Interface:JoinBattle; the only use case is forcing player while hosting a battle
 		defaultSpec = false
 		forcePlayer = false -- 2023/04/04 set it to false after usage
 	else
-		defaultSpec = WG.Chobby.Configuration.lastGameSpectatorState 
+		defaultSpec = WG.Chobby.Configuration.lastGameSpectatorState
 	end
 
 	self:SetBattleStatus({
@@ -2324,7 +2324,7 @@ function Interface:_On_s_user_list_relationships(data)
 	self:_OnFriendRequestListByID(relationships.incoming_friend_requests)
 	self:_OnOutgoingFriendRequestsByID(relationships.outgoing_friend_requests)
 	self:_OnDisregardListID(buildDisregardListID(relationships.ignores, relationships.avoids, relationships.blocks))
-	
+
 	-- ToDo: relationships.follows > waits until completly implemented at teiserver
 end
 Interface.commands["s.user.list_relationships"] = Interface._On_s_user_list_relationships
@@ -2501,7 +2501,7 @@ function Interface:_OnBattleTeams(data)
 		Spring.Log(LOG_SECTION, LOG.ERROR, "Failed to parse s.battle.teams data: " .. tostring(data))
 		return
 	end
-	
+
 	-- Update each battle with its team data
 	for battleID, teamInfo in pairs(teamsData) do
 		battleID = tonumber(battleID)

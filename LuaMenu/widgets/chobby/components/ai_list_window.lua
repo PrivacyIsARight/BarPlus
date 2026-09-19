@@ -161,7 +161,7 @@ local function PickRandomColor()
 		{math.random(50,255),	0,						0					},
 		{0,						math.random(50,255),	0					},
 		{0,						0,						math.random(50,255)},
-		
+
 		{math.random(50,255),	math.random(0,255),		0					},
 		{math.random(50,255),	0,						math.random(0,255)	},
 		{math.random(50,255),	math.random(0,200),		math.random(0,200)	},
@@ -173,8 +173,8 @@ local function PickRandomColor()
 		{math.random(0,255),	0,						math.random(50,255)},
 		{0,						math.random(0,255),		math.random(50,255)},
 		{math.random(0,200),	math.random(0,200),		math.random(50,255)},
-	}	
-	
+	}
+
 	local r = math.random(1,#colorOptions)
 	return {colorOptions[r][1]/255, colorOptions[r][2]/255, colorOptions[r][3]/255,}
 end

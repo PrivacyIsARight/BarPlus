@@ -631,11 +631,11 @@ function Lobby:_OnAddUser(userName, status)
 		self.users[userName] = userInfo
 
 		-- New user we definitely didnt know about before
-		self.userCount = self.userCount + 1 
+		self.userCount = self.userCount + 1
 	else
 		-- A user we knew about, who went offline, but now has come back online again
-		if userInfo.isOffline == true then 
-			self.userCount = self.userCount + 1 
+		if userInfo.isOffline == true then
+			self.userCount = self.userCount + 1
 		end
 		userInfo.isOffline = false
 	end
@@ -787,10 +787,10 @@ function Lobby:_OnFriendByID(userID)
 				self:_OnFriend(userData.name, userID)
 			end
 		end
-		
+
 		self:AddListener("OnWhois", OnWhois)
 		self:Whois(userID)
-		
+
 		return
 	end
 	self:_OnFriend(userInfo.userName, userID)
@@ -900,10 +900,10 @@ function Lobby:_OnFriendRequestByID(userID, newRequest)
 				end
 			end
 		end
-		
+
 		self:AddListener("OnWhois", OnWhois)
 		self:Whois(userID)
-		
+
 		return
 	end
 	self:_OnFriendRequest(userInfo.userName, userID)
@@ -932,10 +932,10 @@ function Lobby:_OnOutgoingFriendRequestByID(userID)
 				self:_OnOutgoingFriendRequest(userData.name, userID)
 			end
 		end
-		
+
 		self:AddListener("OnWhois", OnWhois)
 		self:Whois(userID)
-		
+
 		return
 	end
 	self:_OnOutgoingFriendRequest(userInfo.userName, userID)
@@ -958,7 +958,7 @@ function Lobby:_OnRemoveFriendRequestByID(userID)
 		return
 	end
 	table.remove(self.friendRequestsByID, i)
-	
+
 	self.hasFriendRequest[user.userName] = false
 	user.hasFriendRequest = false
 	self:_CallListeners("OnRemoveFriendRequestByID", userID, user.userName)
@@ -1104,10 +1104,10 @@ function Lobby:_OnDisregardID(userID, status)
 				self:_CallListeners("OnAddDisregardUser", userInfo.userName)
 			end
 		end
-		
+
 		self:AddListener("OnWhois", OnWhois)
 		self:Whois(userID)
-		
+
 		return
 	end
 	userInfo.isDisregarded = status
@@ -1423,7 +1423,7 @@ local function getDiffAndSetNewValuesToTable(origin, update)
 	for uKey, uVal in pairs(update) do
 		local changedSub = false
 		local oVal = rawget(origin, uKey)
-		
+
 		if type(uVal) == "table" then
 			if type(oVal) == "table" then -- use recursion if value is table and key exists in origin table
 				_, changedSub = getDiffAndSetNewValuesToTable(oVal, uVal)
@@ -1465,7 +1465,7 @@ function Lobby:_OnUpdateUserBattleStatus(userName, status)
 
 	local battleStatus = self.userBattleStatus[userName]
 	-- local debugisReady = battleStatus.isReady
-	
+
 	local oldQueuePos = battleStatus.queuePos
 	local battleStatusDiff, changed = getDiffAndSetNewValuesToTable(battleStatus, statusNew) -- use battleStatusDiff instead of statusNew to only propagate battleStatus properties, that really changed or which are new properties
 
@@ -1485,7 +1485,7 @@ function Lobby:_OnUpdateUserBattleStatus(userName, status)
 		-- so we want listeners of this OnUpdateUserBattleStatus have finished before
 		-- reorder , because we don't necessarily receive an update of queuelist from server
 		if battleStatusDiff.isSpectator ~= nil and battleStatusDiff.isSpectator == false and battleStatusDiff.queuePos and battleStatusDiff.queuePos == 0 then
-			self:ReorderCurrentBattleQueue(userName, oldQueuePos) 
+			self:ReorderCurrentBattleQueue(userName, oldQueuePos)
 		end
 	end
 end
@@ -1534,7 +1534,7 @@ function Lobby:ParseBarManager(battleID, message)
 	if not barManagerSettings['BattleStateChanged'] then
 		return battleInfo
 	end
-	
+
 	for k, v in pairs(barManagerSettings['BattleStateChanged']) do
 		if k == "boss" then
 			if v == "" then
@@ -1551,7 +1551,7 @@ function Lobby:ParseBarManager(battleID, message)
 end
 
 function Lobby:_OnSaidBattleEx(userName, message, sayTime)
-	
+
 	local found, bmMessage = startsWith(message, WG.Chobby.Configuration.BTLEX_BARMANAGER)
 	if found then
 		local battleID = self.users[userName] and self.users[userName].battleID
@@ -1580,7 +1580,7 @@ function Lobby:_OnSaidBattleEx(userName, message, sayTime)
 					self:_OnUpdateUserBattleStatus(battleUserName, {isBoss = bossState})
 				end
 			end
-			
+
 			if battleInfo.mutes ~= nil then
 				local battleMutes = {}
 				for mutedUserName in string.gmatch(battleInfo.mutes, "([^,]+)") do
@@ -1773,7 +1773,7 @@ function Lobby:ParseRPC(json)
 
 	local rpc = JsonDecode(json)
 	local statusRpc = RpcGetGameStatus(rpc) or RpcGetBattleStatus(rpc)
-	
+
 	if statusRpc then
 		if statusRpc.gameTime and statusRpc.gameStatus then -- it's an answer to "status game"
 			thisGameStartedAt = math.floor(os.clock() - statusRpc.gameTime)
@@ -2028,7 +2028,7 @@ function Lobby:_OnDisconnected(reason, intentional)
 	for userName,_ in pairs(self.users) do
 		self:_OnRemoveUser(userName)
 	end
-	
+
 	local battles = ShallowCopy(self.battles) -- needs ShallowCopy because _OnBattleClosed is removing isntances of self.battles
 	for battleID, _ in pairs(battles) do
 		self:_OnBattleClosed(battleID)
@@ -2052,7 +2052,7 @@ function Lobby:SafeUpdate(...)
 
 		-- We must prevent users from immediately reconnecting upon a disconnect!
 		local timeSinceDisconnect
-		if self.disconnectTime then 
+		if self.disconnectTime then
 			timeSinceDisconnect = Spring.DiffTimers(currentTime, self.disconnectTime)
 		end
 
@@ -2060,22 +2060,22 @@ function Lobby:SafeUpdate(...)
 		if self.lastReconnectionAttempt then
 			timeSinceReconnectionAttempt = Spring.DiffTimers(currentTime, self.lastReconnectionAttempt)
 		end
-		
+
 		local totalHideInterface = WG and WG.CheckTotalHideInterface and WG.CheckTotalHideInterface()
 
 		--Spring.Echo("Lobby:SafeUpdate:", string.format("ingame = %s, tDC = %s, tRC = %s, rmul =%s", tostring(totalHideInterface), tostring(timeSinceDisconnect),tostring(timeSinceReconnectionAttempt), tostring(self.disconnectTimeDelay) ))
 
-		-- This needs additional leeway to prevent everyone from hammering back in. 
-		if timeSinceDisconnect then 
-			if totalHideInterface then 
+		-- This needs additional leeway to prevent everyone from hammering back in.
+		if timeSinceDisconnect then
+			if totalHideInterface then
 				-- we are probably ingame, so wait 60 + 240 * random secs to reconnect. (1-5 minutes)
-				if timeSinceDisconnect < 60 + self.disconnectTimeDelay * 240 then 
-					return 
+				if timeSinceDisconnect < 60 + self.disconnectTimeDelay * 240 then
+					return
 				end
 			else
 				-- We are probably just in the lobby, and need to wait at least 20 seconds for the server to flush the cache and allow us back in.
-				if timeSinceDisconnect < 25 + self.disconnectTimeDelay * 35 then 
-					return 
+				if timeSinceDisconnect < 25 + self.disconnectTimeDelay * 35 then
+					return
 				end
 			end
 		end
@@ -2283,7 +2283,7 @@ function Lobby:GetBattlePlayerCount(battleID)
 		-- right now, the number of players cannot ever be more than the number of users - 1 (spads is always a spec)
 		local playerCount = #battle.users - battle.spectatorCount
 		--[[
-			if battle.spectatorCount < 1 or playerCount > 16 or playerCount < 0 then 
+			if battle.spectatorCount < 1 or playerCount > 16 or playerCount < 0 then
 				local users = ""
 				for i, user in ipairs(battle.users) do
 					users = users .. "," .. user

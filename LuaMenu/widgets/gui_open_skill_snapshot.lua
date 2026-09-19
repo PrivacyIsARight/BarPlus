@@ -9,7 +9,7 @@ function widget:GetInfo()
 		enabled = true,
 	}
 end
---taken from the data processing repository in BAR. CSV format is used over parquet 
+--taken from the data processing repository in BAR. CSV format is used over parquet
 -- if download fails, current local csv is used and if there is no local file then snapshot cache is empty. Does not block UI startup
 --.bak used  during refresh since launcher resource downloads are not overwriting
 local SNAPSHOT_URL = "https://data-marts.beyondallreason.dev/player_skill_snapshot.csv"

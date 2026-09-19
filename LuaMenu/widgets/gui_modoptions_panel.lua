@@ -214,7 +214,7 @@ local function ProcessListOption(data, index)
 				localModoptions[data.key] = itemNameToKey[selectedName]
 			end
 		} or
-			{function (obj, selectedName)	
+			{function (obj, selectedName)
 				if itemNameToKey[selectedName] == data.def then
 						label.font = WG.Chobby.Configuration:GetFont(2)
 						list.font = WG.Chobby.Configuration:GetFont(2)
@@ -312,7 +312,7 @@ local function ProcessBoolOption(data, index)
 	if checked then
 		if data.lock then
 			postLock[#postLock+1] = {data.lock, data.bitmask or 1, data.name}
-		end 
+		end
 	elseif data.unlock then
 		postLock[#postLock+1] = {data.unlock, data.bitmask or 1, data.name}
 	end
@@ -1250,7 +1250,7 @@ function ModoptionsPanel.RefreshModoptions()
 			}
 			local options = modoptionStructure.sections[data.section].options
 			options[#options + 1] = data
-		end	
+		end
 	end
 end
 

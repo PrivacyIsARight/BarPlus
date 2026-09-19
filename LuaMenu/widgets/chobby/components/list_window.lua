@@ -118,7 +118,7 @@ function ListWindow:Clear()
 	self.listPanel:ClearChildren()
 	self.scrollChildren = 0
 	self.itemNames = {}
-	self.itemPanelMapping = {} -- {id = panel{Index = placeinlist, id = id, inFilter = bool}}, maps 
+	self.itemPanelMapping = {} -- {id = panel{Index = placeinlist, id = id, inFilter = bool}}, maps
 	self.orderPanelMapping = {} -- {index = panel{Index = placeinlist, id = id, inFilter = bool}}
 end
 
@@ -228,8 +228,8 @@ function ListWindow:SetPosition(panel, index)
 end
 
 function ListWindow:UpdateFilters()
-	-- this updates all the elements	
-	-- should only be really called when filter parameters change, 
+	-- this updates all the elements
+	-- should only be really called when filter parameters change,
 	-- but is now fast enough to not really care about that
 	-- dont even sort filtered out items
 	-- filtered item positions are also set to the end of the list.
@@ -250,7 +250,7 @@ function ListWindow:UpdateFilters()
 			numinvisible = numinvisible + 1
 			invisible[numinvisible] = panel.id
 		end
-		if oldFilter then 
+		if oldFilter then
 			prevfilter = prevfilter + 1
 		end
 		if oldFilter ~= panel.inFilter then -- only update on status change
@@ -260,11 +260,11 @@ function ListWindow:UpdateFilters()
 
 	-- get pre-filter items
 	--[[
-	if self.name == "BattleListWindow" then 
+	if self.name == "BattleListWindow" then
 		local lobby = WG.LibLobby.lobby
-		if lobby then 
+		if lobby then
 			for index, panel in ipairs(self.orderPanelMapping) do
-				if panel.inFilter then 
+				if panel.inFilter then
 					local battle = lobby:GetBattle(panel.id)
 					local playerCount = lobby:GetBattlePlayerCount(panel.id)
 					Spring.Echo("PRE", index, panel.id, battle.founder, battle.isRunning, playerCount, battle.passworded, battle.locked)
@@ -279,7 +279,7 @@ function ListWindow:UpdateFilters()
 	local lambda = function (id1, id2)
 		return listWindow:CompareItems(id1,id2)
 	end
-	
+
 	tracy.ZoneBeginN("ListWindow:UpdateFilters:insertionSort")
 	local comparisons
 	--infilters, comparisons =  Spring.Utilities.insertionSort(infilters, lambda, true,true)
@@ -297,8 +297,8 @@ function ListWindow:UpdateFilters()
 
 
 	tracy.ZoneEnd()
-	
-	
+
+
 	--tracy.ZoneBeginN("ListWindow:UpdateFilters:mergeSort")
 	--table.sort(infilters, lambda)
 	--tracy.ZoneEnd()
@@ -316,17 +316,17 @@ function ListWindow:UpdateFilters()
 			self:SetPosition(panel, newindex)
 			self.orderPanelMapping[newindex] = panel
 			strchanged = strchanged .. panel.index .. '>' .. newindex .. ' '
-			numchanged = numchanged + 1 
+			numchanged = numchanged + 1
 			panel.index = newindex
 		end
 	end
 
 	--[[
-	if self.name == "BattleListWindow" then 
+	if self.name == "BattleListWindow" then
 		local lobby = WG.LibLobby.lobby
-		if lobby then 
+		if lobby then
 			for index, panel in ipairs(self.orderPanelMapping) do
-				if panel.inFilter then 
+				if panel.inFilter then
 					local battle = lobby:GetBattle(panel.id)
 					local playerCount = lobby:GetBattlePlayerCount(panel.id)
 					Spring.Echo("POST", index, panel.id, battle.founder, battle.isRunning, playerCount, battle.passworded, battle.locked)
@@ -335,12 +335,12 @@ function ListWindow:UpdateFilters()
 		end
 	end
 
-	if self.name == "BattleListWindow" then 
+	if self.name == "BattleListWindow" then
 		--Spring.Utilities.TraceEcho(4)
 		Spring.Echo("UpdateFilters:", numchanged, prevfilter,numinfilters, numinvisible, strchanged,comparisons)
 	end
 	--]]
-	
+
 	tracy.ZoneEnd()
 end
 

@@ -96,7 +96,7 @@ local inherited = this.inherited
 function Control:New(obj)
 	--// backward compability
 	BackwardCompa(obj)
-	
+
 	--//minimum size from minimum size table when minWidth & minHeight is not set (backward compatibility)
 	local minimumSize = obj.minimumSize or {}
 	obj.minWidth = obj.minWidth or minimumSize[1]
@@ -133,7 +133,7 @@ function Control:New(obj)
 	if obj.checkFileExists and ((not obj.file) or VFS.FileExists(obj.file)) and ((not obj.file2) or VFS.FileExists(obj.file2)) then
 		obj.checkFileExists = false
 	end
-	
+
 	local p = obj.padding
 	if (obj.clientWidth) then
 		obj.width = obj.clientWidth + p[1] + p[3]
@@ -155,7 +155,7 @@ function Control:New(obj)
 			obj.font = Font:New(obj.font)
 			obj.font:SetParent(obj)
 		end
-		
+
 		if obj.hasDisabledFont then
 			if obj.objectOverrideDisabledFont then
 				obj.disabledFont = obj.objectOverrideDisabledFont
@@ -424,7 +424,7 @@ function Control:UpdateClientArea(dontRedraw, dontRealignParent)
 
 	self.clientWidth  = self.width  - padding[1] - padding[3]
 	self.clientHeight = self.height - padding[2] - padding[4]
-	if self.clientArea then 
+	if self.clientArea then
 		self.clientArea[1] = padding[1]
 		self.clientArea[2] = padding[2]
 		self.clientArea[3] = self.clientWidth
@@ -453,7 +453,7 @@ function Control:UpdateClientArea(dontRedraw, dontRealignParent)
 	if not dontRedraw then --FIXME only when RTT!
 		self:Invalidate()
 	end
-	
+
 	if needResize then
 		self:CallListeners(self.OnResize, self.clientWidth, self.clientHeight)
 	end
@@ -526,7 +526,7 @@ function Control:UpdateLayout()
 			local cminextW, cminextH = self:GetChildrenMinimumExtents()
 			Spring.Echo("Control:UpdateLayout", self.name,
 					"GetChildrenMinimumExtents", cminextW, cminextH,
-					"GetRelativeBox", tw, th, 
+					"GetRelativeBox", tw, th,
 					"savespace", self._savespace)
 		end
 
@@ -1236,7 +1236,7 @@ function Control:_DrawInClientArea(fnc, arg1, arg2, arg3, arg4)
 	if WG.uiScale and WG.uiScale ~= 1 then
 		clientWidth, clientHeight = clientWidth*WG.uiScale, clientHeight*WG.uiScale
 	end
-	
+
 	gl.PushMatrix()
 	gl.Translate(clientX, clientY, 0)
 
@@ -1356,7 +1356,7 @@ function Control:DrawForList()
 	if (not self._in_update and not self._usingRTT and self:_CheckIfRTTisAppreciated()) then
 		self:InvalidateSelf()
 	end
-	
+
 	if self.debugPosition then
 		Spring.Echo("DrawForList non-integer position")
 		self:TraceDebug({"name", "x", "y"})
@@ -1410,7 +1410,7 @@ function Control:DrawForList()
 	if WG.uiScale and WG.uiScale ~= 1 then
 		clientWidth, clientHeight = clientWidth*WG.uiScale, clientHeight*WG.uiScale
 	end
-	
+
 	if (clientWidth > 0) and (clientHeight > 0) then
 		if (self._tex_children) then
 			gl.BlendFuncSeparate(GL.ONE, GL.SRC_ALPHA, GL.ZERO, GL.SRC_ALPHA)
@@ -1452,7 +1452,7 @@ function Control:Draw()
 		Spring.Echo("Draw non-integer position")
 		self:TraceDebug({"name", "x", "y"})
 	end
-	
+
 	if (self._tex_all) then
 		if WG.ChiliRedraw then
 			WG.ChiliRedraw.AddControl(self, "Draw_tex_all")

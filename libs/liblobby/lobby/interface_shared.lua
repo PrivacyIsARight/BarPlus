@@ -141,13 +141,13 @@ function Interface:ProcessBuffer()
 	self.bufferExecutionPos = self.bufferExecutionPos + 1
 	local command = self.commandBuffer[self.bufferExecutionPos]
 	if not self.commandBuffer[self.bufferExecutionPos + 1] then
-		-- This means that there are no further commands to be executed, 
-		-- so we should reset the state of the buffer  
+		-- This means that there are no further commands to be executed,
+		-- so we should reset the state of the buffer
 		self:CommandReceived(command)
 		self.commandBuffer = false
 		self.commandsInBuffer = 0
 		self.bufferExecutionPos = 0
-		
+
 		-- Sending MYBATTLESTATUS is disabled while executing buffer, so send it one time after
 		if self:GetMyBattleID() then -- are we still in a battle ?
 			self:SetBattleStatus(self.userBattleStatus[self:GetMyUserName()], true) -- force
@@ -231,12 +231,12 @@ function Interface:_GetFunArgs(cmdName, arguments)
 	if not commandFunction then
 		return false
 	end
-	
+
 	local pattern = self:_GetCommandPattern(cmdName)
 	if not pattern then
 		return false
 	end
-	
+
 	return {arguments:match(pattern)}
 end
 
@@ -301,7 +301,7 @@ function Interface:_SocketUpdate()
 	local brec, bsent, age = self.client:getstats()
 	if err ~= nil then
 		-- If any error happened, then clear the buffer for sure
-		self.buffer = "" 
+		self.buffer = ""
 		-- some error happened in select
 		if err == "timeout" then
 			-- we've received no data after connecting for a while. assume connection cannot be established
@@ -337,7 +337,7 @@ function Interface:_SocketUpdate()
 				self.status = "disconnected"
 			end
 			-- If any error happened, then clear the buffer for sure
-			self.buffer = "" 
+			self.buffer = ""
 			self:_OnDisconnected()
 		end
 	end

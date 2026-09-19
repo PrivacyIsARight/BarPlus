@@ -457,7 +457,7 @@ end
 
 local function _GetControlFont(obj)
 	-- obj.disabledFont will always have a value, but it will not be a valid font if hasDisabledFont is false
-	if obj.state.enabled or not obj.hasDisabledFont then  
+	if obj.state.enabled or not obj.hasDisabledFont then
 		return obj.font
 	else
 		return obj.disabledFont
@@ -534,7 +534,7 @@ function DrawButton(obj)
 		end
 	end
 	gl.Color(bgcolor)
-	
+
 	local tw, th = TextureHandler.LoadTexture(0, obj.TileImageBK, obj)
 	gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawTiledTexture, 0, 0, w, h, skLeft, skTop, skRight, skBottom, tw, th, 0, obj.disableTiling)
 	--gl.Texture(0, false)
@@ -834,7 +834,7 @@ end
 
 function DrawBackgroundedControl(obj)
 	local tw, th = TextureHandler.LoadTexture(0, obj.BackgroundTileImage, obj)
-	
+
 	local skLeft, skTop, skRight, skBottom = unpack4(obj.bkgndtiles)
 
 	local width = obj.width
@@ -854,7 +854,7 @@ function DrawScrollPanelBorder(self)
 
 	do
 		local tw, th = TextureHandler.LoadTexture(0, self.BorderTileImage, self)
-		
+
 		local skLeft, skTop, skRight, skBottom = unpack4(self.bordertiles)
 
 		local width = self.width
@@ -881,7 +881,7 @@ function DrawScrollPanel(obj)
 
 	if (obj.BackgroundTileImage) then
 		local tw, th = TextureHandler.LoadTexture(0, obj.BackgroundTileImage, obj)
-		
+
 		local skLeft, skTop, skRight, skBottom = unpack4(obj.bkgndtiles)
 
 		local width = obj.width
@@ -1048,7 +1048,7 @@ function DrawProgressbar(obj)
 		x, y = x + obj.fillPadding[1], y + obj.fillPadding[2]
 		w, h = w - (obj.fillPadding[1] + obj.fillPadding[3]), h - (obj.fillPadding[2] + obj.fillPadding[4])
 	end
-	
+
 	if (obj.orientation == "horizontal") then
 		gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawTiledTexture, x, y, w*percent, h, skLeft, skTop, skRight, skBottom, tw, th, 0)
 	else
@@ -1080,7 +1080,7 @@ function DrawTrackbar(self)
 		local tw, th = TextureHandler.LoadTexture(0, self.TileImage, self)
 		gl.BeginEnd(GL.TRIANGLE_STRIP, _DrawTiledTexture, 0, 0, w, h, skLeft, skTop, skRight, skBottom, tw, th, 0)
 	end
-	
+
 	if not self.noDrawStep then
 		local tw, th = TextureHandler.LoadTexture(0, self.StepImage, self)
 
@@ -1124,10 +1124,10 @@ function DrawTrackbar(self)
 	else
 		gl.Color(1, 1, 1, 1)
 	end
-	
+
 	if not self.noDrawThumb then
 		local tw, th = TextureHandler.LoadTexture(0, self.ThumbImage, self)
-		
+
 		--// scale the thumb down if we don't have enough space
 		tw = math.ceil(tw * (h / th))
 		th = h
@@ -1139,7 +1139,7 @@ function DrawTrackbar(self)
 		my = math.floor(my - th * 0.5)
 		gl.TexRect(mx, my, mx + tw, my + th, false, true)
 	end
-	
+
 	gl.Texture(0, false)
 end
 

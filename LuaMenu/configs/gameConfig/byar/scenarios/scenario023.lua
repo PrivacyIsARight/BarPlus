@@ -9,12 +9,12 @@ local scenariodata = {
 	imageflavor		= "Units will act automatically during the benchmark", -- This text will be drawn over image
     summary         = [[This is a quick, ~3 minute benchmark script. You may leave after the benchmark is complete.]],
 	briefing 		= [[This scenario starts a benchmark by spawning 650 units to continously fight against 650 units. Use Bots/Tanks/Aircraft an option for close to a real game's match benchmark and collision an option for synthetic testing multithreading abilities of the game's engine. The average Sim, Draw and Update times are shown on screen. The game will automatically center the camera over the units, do not move the camera while the benchmark is running, and do not interact with the units. The game will return after printing the results to screen and infolog, and submitting them to the server.
-		
-	A total of 2000 simulation frames are tested. 
-	
+
+	A total of 2000 simulation frames are tested.
+
 	The internal command to run a benchmark of various units against each other needs cheating enabled, and is the following:
 
-	/luarules benchmark [unitname1] [unitname2] [maxunits] [spawnstep] [spawnradius] 
+	/luarules benchmark [unitname1] [unitname2] [maxunits] [spawnstep] [spawnradius]
 	For this benchmark, it is
 
 	/luarules benchmark corak armpw 650 10 2040
@@ -44,8 +44,8 @@ local scenariodata = {
 		disablefactionpicker = true, -- this is needed to prevent faction picking outside of the allowedsides
 		benchmarkcommand = "luarules benchmark corak armpw 650 10 2040", -- make sure the matches the debugcommands identically named modoption's info
 		benchmarkframes = 2000,
-		-- quiteforce sucks, does not end the game. 
-		--unitloadout = {},	
+		-- quiteforce sucks, does not end the game.
+		--unitloadout = {},
 		--featureloadout = {},
     },
     -- https://github.com/spring/spring/blob/105.0/doc/StartScriptFormat.txt
@@ -116,7 +116,7 @@ local scenariodata = {
 		Team = 0;
 		rank = 0;
 	}
-	
+
 	NumRestrictions=__NUMRESTRICTIONS__;
 
 	[RESTRICT]

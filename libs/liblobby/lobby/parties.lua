@@ -55,7 +55,7 @@ function Interface:InvitePlayerToMyParty(username, successCallback, errorCallbac
         successCallback = function()
                 self:_OnInvitedToParty(self.myPartyID, username)
                 if successCallback then successCallback() end
-            end, 
+            end,
             errorCallback = errorCallback and function(tags) errorCallback(getTag(tags, "msg")) end
     })
     self:_SendCommand("c.party.invite_to_party " .. username)
@@ -64,7 +64,7 @@ end
 function Interface:CancelInviteToMyParty(username, successCallback, errorCallback)
     table.insert(self.commandsAwaitingResponse, {
         cmd = "c.party.cancel_invite_to_party",
-        successCallback = successCallback and function() successCallback() end, 
+        successCallback = successCallback and function() successCallback() end,
         errorCallback = errorCallback and function(tags) errorCallback(getTag(tags, "msg")) end
     })
     self:_SendCommand("c.party.cancel_invite_to_party " .. username)
@@ -96,7 +96,7 @@ function Interface:_OnPartyInviteCancelled(partyID, username)
     local party = self.parties[partyID]
     if not (party and party.invites[username]) then
         return
-    end 
+    end
 
     if username == self.myUserName then
         self.parties[partyID] = nil

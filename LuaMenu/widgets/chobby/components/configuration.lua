@@ -976,7 +976,7 @@ function Configuration:GetFont(sizeScale, specialName, specialData, rawSize)
 		specialData = specialData or {}
 		specialData.font = specialData.font or self.fontName
 		specialData.size = size
-		
+
 		specialData.color        = specialData.color or {1,1,1,1}
 		specialData.outlineColor = specialData.outlineColor or {0.05,0.05,0.05,0.9}
 		specialData.outline      = specialData.outline or false
@@ -1058,7 +1058,7 @@ function Configuration:GetMinimapSmallImage(mapName)
 		end
 		return filePath, true
 	end ]]
-	
+
 	if found then
 		minimapSmallImageCache[mapName] = filePath
 	end
@@ -1192,8 +1192,8 @@ function Configuration:GetDefaultGameName()
 		Spring.Log(LOG_SECTION, LOG.ERROR, "self.gameConfig not present in Configuration:GetDefaultGameName()")
 		return false
 	end
-	
-	if self.gameConfig and self.gameConfig._defaultGameRapidTag then 
+
+	if self.gameConfig and self.gameConfig._defaultGameRapidTag then
 		rapidTag = self.gameConfig._defaultGameRapidTag
 	else
 		Spring.Log(LOG_SECTION, LOG.ERROR, "self.gameConfig._defaultGameRapidTag not present in Configuration:GetDefaultGameName(), using: Beyond All Reason $VERSION")

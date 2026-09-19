@@ -8,21 +8,21 @@ local scenariodata = {
 	imagepath		= "scenario016.jpg", -- placed next to lua file, should be 3:1 ratio banner style
 	imageflavor		= "Neurope has experienced quite the geological shift", -- This text will be drawn over image
     summary         = [[Multiple allegiances have formed around continental Neurope, and you must retake the entire continental area from the northwest island]],
-	briefing 		= [[One large alliance of three commanders controls the center of the continent, the other is formed between the east, southeast and southwest. The northern and central territories have attempted to remain neutral, but are gearing up for battle. 
- 
-You will start on the northwestern large island, and the northern resource rich island is still unclaimed according to our scouting reports. 
- 
+	briefing 		= [[One large alliance of three commanders controls the center of the continent, the other is formed between the east, southeast and southwest. The northern and central territories have attempted to remain neutral, but are gearing up for battle.
+
+You will start on the northwestern large island, and the northern resource rich island is still unclaimed according to our scouting reports.
+
 Tips:
  - The northwest sea contains abundant metal, and tidal forces are strong for generating energy.
- - The northern island should be occupied as soon as possible, start off with a Vehicle or Bot factory to secure your starting island, then make an Aircraft plant and use transports to ferry constructors to the island. 
- - Initially, the warring factions will be occupied with each other, but may send early aircraft and hovercraft scouts to your location. 
+ - The northern island should be occupied as soon as possible, start off with a Vehicle or Bot factory to secure your starting island, then make an Aircraft plant and use transports to ferry constructors to the island.
+ - Initially, the warring factions will be occupied with each other, but may send early aircraft and hovercraft scouts to your location.
  - Anti-Nuke Systems, either on land or mobile ships, offer protection from nuclear warheads.
- 
- 
+
+
 Scoring:
  - Time taken to complete the scenario
  - Resources spent to destroy all enemy units.
- 
+
 The difficulty modifier will change the amount of resources you and the enemy receive from metal and energy structures:
  - Beginner: You +50%, enemy -50%
  - Novice: You +25%, enemy -25%
@@ -273,7 +273,7 @@ The difficulty modifier will change the amount of resources you and the enemy re
 		Team = 0;
 		rank = 0;
 	}
-	
+
 	[modoptions]
 	{
         scenariooptions = __SCENARIOOPTIONS__;

@@ -1141,7 +1141,7 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 		-- 	playSelected = playSelected,
 		-- 	playCaption  = playCaption,
 		-- }
-		-- 
+		--
 		-- local inputParamsSpec = {
 		-- 	specSelected = specSelected,
 		-- 	specCaption  = specCaption,
@@ -2885,7 +2885,7 @@ local function SetupPlayerPanel(playerParent, spectatorParent, battle, battleID)
 					teamStack.children[i]:Invalidate()
 					position = position + SPACING
 				end
-			
+
 				teamHolder:SetPos(nil, nil, nil, position + 30) -- 35
 				PositionChildren(parentStack, parentScroll.height)
 				teamHolder:Invalidate()
@@ -3013,7 +3013,7 @@ local function SetupPlayerPanel(playerParent, spectatorParent, battle, battleID)
 
 				teamStack:RemoveChild(playerControl)
 				UpdatePlayerPositions()
-				
+
 				if name == battleLobby:GetMyUserName() then
 					local joinTeam = teamHolder:GetChildByName("joinTeamButton")
 					if joinTeam then
@@ -3392,7 +3392,7 @@ local function SetupVotePanel(votePanel, battle, battleID)
 		oldTitle = oldVoteInitiator.. " called a vote for:\n"..voteMessage..timeleft
 
 		voteName:SetCaption(oldTitle)
-		if votesNeeded == -1 then 
+		if votesNeeded == -1 then
 			voteCountLabel:SetCaption(tostring(candidates[1].votes))
 			voteProgressYes:SetValue(0)
 			voteProgressNo:SetValue(0)
@@ -3541,14 +3541,14 @@ local function SetupSpadsStatusPanel(battle, battleID)
 			tooltip = "Start game automatically if target number of players is reached",
 			spadscommand = "!autostart",
 		},
-		autoFixColors = { 
+		autoFixColors = {
 			current = "off",
 			allowed = {"off","on","advanced"},
 			caption = "Autofixcolors",
 			tooltip = "Automatically choose colors based on number of players",
 			spadscommand = "!autofixcolors",
 		},
-		clanMode = { 
+		clanMode = {
 			current = "off",
 			allowed = {"off","on","advanced"},
 			caption = "ClanMode",
@@ -4156,7 +4156,7 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 		backgroundColor = {1,1,1,0.5},
 	}
 
-	--spadsStatusPanel = 
+	--spadsStatusPanel =
 	SetupSpadsStatusPanel() -- git stash for scumbags
 	spadsStatusPanel:SetVisibility(not isSingleplayer) -- start hidden
 
@@ -4747,7 +4747,7 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 		end
 	end
 
-	local function startsWith(targetstring, pattern) 
+	local function startsWith(targetstring, pattern)
 		if string.len(pattern) <= string.len(targetstring) and pattern == string.sub(targetstring,1, string.len(pattern)) then
 		  return true, string.sub(targetstring, string.len(pattern) + 1)
 		else
@@ -4875,7 +4875,7 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 	end
 
 	local function ParseUserMessage(userName,message) -- returns hidemessage bool
-		local mine = userName == battleLobby:GetMyUserName() 
+		local mine = userName == battleLobby:GetMyUserName()
 
 		-- The startbox override is an opaque base64 blob; never show its !bSet in chat.
 		if string.match(message, "^!b[Ss]et mapmetadata_startbox_override") then return true end
@@ -4902,8 +4902,8 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 		-- New vote:
 		-- [teh]BaNa called a vote for command "forcestart" [!vote y, !vote n, !vote b]
 		-- [teh]cluster1[00], * Vote in progress: "set map DSDR 4.0" [y:1/2, n:0/1(2)] (25s remaining)
-		local newlycalledvote = string.match(message, "called a vote for command") 
-		if newlycalledvote or string.match(message,"Vote in progress") then 
+		local newlycalledvote = string.match(message, "called a vote for command")
+		if newlycalledvote or string.match(message,"Vote in progress") then
 			local userwhocalledvote = nil
 			local ismapppoll = false
 			local mapname = ''
@@ -4936,7 +4936,7 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 				userwhocalledvote = string.match(message, vote_whoCalledPattern)
 				WG.LibLobby.lobby:_OnUserVoted(_, "initVote")
 				WG.LibLobby.lobby:_OnUserVoted(userwhocalledvote, "yes")
-			end 
+			end
 			--[teh]Behe_Chobby3 called a vote for command "set map Tetrad_V2" [!vote y, !vote n, !vote b]
 			if string.find(message, ' "set map ', nil, true) then
 				mapname = string.match(message, vote_mapPattern)
@@ -5049,7 +5049,7 @@ local function InitializeControls(battleID, oldLobby, topPoportion, setupData)
 
 		if Configuration.filterbattleroom and hidemessage then -- displayBots
 			--Spring.Echo("Hiding message|"..message)
-			return 
+			return
 		end
 		local myUserName = battleLobby:GetMyUserName()
 		local iAmMentioned = myUserName and userName ~= myUserName and string.find(message, myUserName, 1, true)
@@ -5433,8 +5433,8 @@ function BattleRoomWindow.GetSingleplayerControl(setupData)
 							2, -- random faction
 							GetStarterEnemyAIColorAssignment(i))
 					end
-					if singleplayerDefault.startboxes then 
-						for startboxindex, startboxcoords in pairs(singleplayerDefault.startboxes) do 
+					if singleplayerDefault.startboxes then
+						for startboxindex, startboxcoords in pairs(singleplayerDefault.startboxes) do
 							--Spring.Utilities.TraceFullEcho(100,100,100,"INIT BOXEN", battleWindow, mainWindowFunctions)
 							--Spring.Utilities.TableEcho(mainWindowFunctions)
 							local infoHandler = mainWindowFunctions.GetInfoHandler()

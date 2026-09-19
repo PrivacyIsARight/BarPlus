@@ -98,9 +98,9 @@ function GetInterfaceRoot(optionsParent, mainWindowParent, fontFunction)
 	}
 	lobbyInterfaceHolder.drawTimer = Spring.GetTimer()
 	version_font = WG.Chobby.Configuration:GetFont(1)
-	
+
 	local byarchobbyrapidTag = "unknown"
-	for i,v in ipairs(VFS.GetLoadedArchives()) do 
+	for i,v in ipairs(VFS.GetLoadedArchives()) do
 		if string.find(v,"BYAR Chobby ", nil, true) then
 			byarchobbyrapidTag = string.gsub(string.gsub(v,"test%-", ""), "BYAR Chobby ", "")
 			byarchobbyrapidTag = string.gsub(byarchobbyrapidTag, "[^%w]", " ")

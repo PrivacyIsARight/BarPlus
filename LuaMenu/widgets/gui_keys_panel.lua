@@ -167,7 +167,7 @@ local function InitializeControls()
 	-------------------------
 
 	local externalFunctions = {}
-	-- 
+	--
 	function externalFunctions.Show()
 		if not keysWindow.visible then
 			keysWindow:Show()
