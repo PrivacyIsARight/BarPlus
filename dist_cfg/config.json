@@ -28,7 +28,7 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/latest/download/unrecoil_2026.09.01-unrecoil_amd64-linux.7z",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-linux.7z",
             "destination": "engine/unrecoil_2026.09.01-unrecoil",
             "extract": true
           },
@@ -77,7 +77,7 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/latest/download/unrecoil_2026.09.01-unrecoil_amd64-windows.7z",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-windows.7z",
             "destination": "engine/unrecoil_2026.09.01-unrecoil",
             "extract": true
           },
@@ -126,7 +126,7 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/latest/download/unrecoil_2026.09.01-unrecoil_amd64-linux.7z",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-linux.7z",
             "destination": "engine/unrecoil_2026.09.01-unrecoil",
             "extract": true
           },
@@ -175,7 +175,7 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/latest/download/unrecoil_2026.09.01-unrecoil_amd64-windows.7z",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-windows.7z",
             "destination": "engine/unrecoil_2026.09.01-unrecoil",
             "extract": true
           },
@@ -214,7 +214,7 @@
       "downloads": {
         "resources": [
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/latest/download/unrecoil_2026.09.01-unrecoil_amd64-linux.7z",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-linux.7z",
             "destination": "engine/unrecoil_2026.09.01-unrecoil",
             "extract": true
           }
@@ -246,7 +246,7 @@
       "downloads": {
         "resources": [
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/latest/download/unrecoil_2026.09.01-unrecoil_amd64-windows.7z",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-windows.7z",
             "destination": "engine/unrecoil_2026.09.01-unrecoil",
             "extract": true
           }
