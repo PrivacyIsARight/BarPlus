@@ -50,7 +50,7 @@ jobs:
 
       - name: Sanity tests
         run: |
-          set -o pipefail
+          set -euo pipefail
           node --test launcher/test/path_utils.test.js
           bash autotest.sh 2>&1 | tee "${RUNNER_TEMP}/autotest.log"
 
