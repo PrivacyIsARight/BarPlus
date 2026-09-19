@@ -28,8 +28,8 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-linux.7z",
-            "destination": "engine/unrecoil_2026.09.01-unrecoil",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.02/unrecoil_2026.09.02_amd64-linux.7z",
+            "destination": "engine/unrecoil_2026.09.02-unrecoil",
             "extract": true
           },
           {
@@ -46,7 +46,7 @@
           "--menu",
           "BYAR Chobby 3853"
         ],
-        "engine": "unrecoil_2026.09.01-unrecoil",
+        "engine": "unrecoil_2026.09.02-unrecoil",
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
@@ -77,8 +77,8 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-windows.7z",
-            "destination": "engine/unrecoil_2026.09.01-unrecoil",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.02/unrecoil_2026.09.02_amd64-windows.7z",
+            "destination": "engine/unrecoil_2026.09.02-unrecoil",
             "extract": true
           },
           {
@@ -95,7 +95,7 @@
           "--menu",
           "BYAR Chobby 3853"
         ],
-        "engine": "unrecoil_2026.09.01-unrecoil",
+        "engine": "unrecoil_2026.09.02-unrecoil",
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
@@ -126,8 +126,8 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-linux.7z",
-            "destination": "engine/unrecoil_2026.09.01-unrecoil",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.02/unrecoil_2026.09.02_amd64-linux.7z",
+            "destination": "engine/unrecoil_2026.09.02-unrecoil",
             "extract": true
           },
           {
@@ -144,7 +144,7 @@
           "--menu",
           "BYAR Chobby 3853"
         ],
-        "engine": "unrecoil_2026.09.01-unrecoil",
+        "engine": "unrecoil_2026.09.02-unrecoil",
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
@@ -175,8 +175,8 @@
             "optional": true
           },
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-windows.7z",
-            "destination": "engine/unrecoil_2026.09.01-unrecoil",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.02/unrecoil_2026.09.02_amd64-windows.7z",
+            "destination": "engine/unrecoil_2026.09.02-unrecoil",
             "extract": true
           },
           {
@@ -193,7 +193,7 @@
           "--menu",
           "BYAR Chobby 3853"
         ],
-        "engine": "unrecoil_2026.09.01-unrecoil",
+        "engine": "unrecoil_2026.09.02-unrecoil",
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
@@ -214,8 +214,8 @@
       "downloads": {
         "resources": [
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-linux.7z",
-            "destination": "engine/unrecoil_2026.09.01-unrecoil",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.02/unrecoil_2026.09.02_amd64-linux.7z",
+            "destination": "engine/unrecoil_2026.09.02-unrecoil",
             "extract": true
           }
         ]
@@ -228,7 +228,7 @@
           "--menu",
           "BYAR Chobby $VERSION"
         ],
-        "engine": "unrecoil_2026.09.01-unrecoil"
+        "engine": "unrecoil_2026.09.02-unrecoil"
       }
     },
     {
@@ -246,8 +246,8 @@
       "downloads": {
         "resources": [
           {
-            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.01/unrecoil_2026.09.01_amd64-windows.7z",
-            "destination": "engine/unrecoil_2026.09.01-unrecoil",
+            "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.09.02/unrecoil_2026.09.02_amd64-windows.7z",
+            "destination": "engine/unrecoil_2026.09.02-unrecoil",
             "extract": true
           }
         ]
@@ -260,7 +260,7 @@
           "--menu",
           "BYAR Chobby $VERSION"
         ],
-        "engine": "unrecoil_2026.09.01-unrecoil"
+        "engine": "unrecoil_2026.09.02-unrecoil"
       }
     }
   ],
