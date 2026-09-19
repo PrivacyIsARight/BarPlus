@@ -208,7 +208,7 @@ function Configuration:init()
 	self.doNotSetAnySpringSettings = false
 	self.agressivelySetBorderlessWindowed = false
 
-	self.useWrongEngine = false
+	self.useWrongEngine = true
 	self.multiplayerLaunchNewSpring = false
 	self.myAccountID = false
 	self.lastAddedAiName = false
@@ -1127,11 +1127,7 @@ function Configuration:GetTruncatedEngineVersion()
 end
 
 function Configuration:IsValidEngineVersion(engineVersion)
-	local validengine = (engineVersion == Spring.Utilities.GetEngineVersion() or engineVersion == self:GetTruncatedEngineVersion())
-	--Spring.Echo(" Configuration:IsValidEngineVersion(engineVersion)",engineVersion, validengine)
-	--Spring.Echo(" Spring.Utilities.GetEngineVersion() ",Spring.Utilities.GetEngineVersion() )
-	--Spring.Echo(" self:GetTruncatedEngineVersion()",self:GetTruncatedEngineVersion())
-	return validengine
+	return true
 end
 
 function Configuration:SanitizeEngineVersion(engineVersion)
