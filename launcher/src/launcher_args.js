@@ -14,6 +14,10 @@ const argv = require('yargs') // eslint-disable-line
 		type: 'boolean',
 		description: 'Disables launcher application self update.'
 	})
+	.option('unrecoil', {
+		type: 'boolean',
+		description: 'Enables unrecoil engine.'
+	})
 	.argv;
 
 if (argv.config != null) {

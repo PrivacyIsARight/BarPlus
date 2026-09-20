@@ -9,10 +9,16 @@ function getEngineResources() {
 	return (config.downloads.resources || []).filter((resource) => resource.engine_config_url != null);
 }
 
+const argv = require('./launcher_args');
+
 function applyEngineConfig(resource, engineInfo, platform) {
 	const entry = (engineInfo.resources || []).find((candidate) => candidate.platform === platform);
 	if (entry == null) {
 		log.warn(`No ${platform} resource entry in engine config, keeping pinned engine`);
+		return false;
+	}
+
+	if (engineInfo.display === 'unrecoil' && !argv.unrecoil) {
 		return false;
 	}
 
