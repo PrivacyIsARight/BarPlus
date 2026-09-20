@@ -12,6 +12,7 @@ const updater = require('./updater');
 const springDownloader = require('./spring_downloader');
 const { launcher } = require('./engine_launcher');
 const { handleConfigUpdate, handleConfigReload } = require('./launcher_config_update');
+const { resolveEngineConfig } = require('./engine_config');
 const fs = require('fs');
 const got = require('got');
 
@@ -90,6 +91,31 @@ class Wizard extends EventEmitter {
 				} else {
 					pushConfigFetchActionAtEnd = configFetchAction;
 				}
+			}
+
+			const engineResources = (config.downloads.resources || []).filter((resource) => resource.engine_config_url != null);
+			if (engineResources.length > 0) {
+				const asyncEngineConfig = {
+					promise: null,
+					action: () => {
+						return resolveEngineConfig(config.package.platform);
+					}
+				};
+				asyncSteps.push(asyncEngineConfig);
+
+				steps.push({
+					name: 'engine config',
+					item: engineResources[0].engine_config_url,
+					action: () => {
+						log.info(`Checking for engine update from: ${engineResources[0].engine_config_url}...`);
+						asyncEngineConfig.promise.then(({ error }) => {
+							if (error) {
+								log.warn(`Failed to get engine config. Error: ${error}, keeping pinned engine`);
+							}
+							wizard.nextStep();
+						});
+					}
+				});
 			}
 
 			config.downloads.resources.forEach((resource) => {
@@ -265,19 +291,27 @@ class Wizard extends EventEmitter {
 			}
 		}
 
-		let enginePath;
-		if (config.launch.engine_path != null) {
-			enginePath = config.launch.engine_path;
-		} else {
-			const engineName = config.launch.engine || config.downloads.engines[0];
-			if (engineName != null) {
-				enginePath = path.join(springPlatform.writePath, 'engine', engineName, springPlatform.springBin);
-			}
-		}
-		if (enginePath != null) {
+		const hasEngine = config.launch.engine_path != null || config.launch.engine != null || ((config.downloads.engines || []).length > 0);
+		if (hasEngine) {
 			steps.push({
 				name: 'start',
 				action: (step) => {
+					let enginePath;
+					if (config.launch.engine_path != null) {
+						enginePath = config.launch.engine_path;
+					} else {
+						const engineName = config.launch.engine || (config.downloads.engines || [])[0];
+						if (engineName != null) {
+							enginePath = path.join(springPlatform.writePath, 'engine', engineName, springPlatform.springBin);
+						}
+					}
+
+					if (enginePath == null) {
+						log.error('No engine to launch.');
+						wizard.nextStep();
+						return;
+					}
+
 					setTimeout(() => {
 						if (launcher.state != 'failed') {
 							mainWindow.hide();

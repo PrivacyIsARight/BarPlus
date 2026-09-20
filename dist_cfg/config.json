@@ -30,7 +30,8 @@
           {
             "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.07.04/unrecoil_2026.07.04_amd64-linux.7z",
             "destination": "engine/unrecoil_2026.07.04-unrecoil",
-            "extract": true
+            "extract": true,
+            "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
             "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4784.0-6b3bde6/BYAR-Chobby-3863.sdd.7z",
@@ -79,7 +80,8 @@
           {
             "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.07.04/unrecoil_2026.07.04_amd64-windows.7z",
             "destination": "engine/unrecoil_2026.07.04-unrecoil",
-            "extract": true
+            "extract": true,
+            "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
             "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4784.0-6b3bde6/BYAR-Chobby-3863.sdd.7z",
@@ -128,7 +130,8 @@
           {
             "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.07.04/unrecoil_2026.07.04_amd64-linux.7z",
             "destination": "engine/unrecoil_2026.07.04-unrecoil",
-            "extract": true
+            "extract": true,
+            "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
             "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4784.0-6b3bde6/BYAR-Chobby-3863.sdd.7z",
@@ -177,7 +180,8 @@
           {
             "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.07.04/unrecoil_2026.07.04_amd64-windows.7z",
             "destination": "engine/unrecoil_2026.07.04-unrecoil",
-            "extract": true
+            "extract": true,
+            "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
             "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4784.0-6b3bde6/BYAR-Chobby-3863.sdd.7z",
@@ -216,7 +220,8 @@
           {
             "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.07.04/unrecoil_2026.07.04_amd64-linux.7z",
             "destination": "engine/unrecoil_2026.07.04-unrecoil",
-            "extract": true
+            "extract": true,
+            "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           }
         ]
       },
@@ -248,7 +253,8 @@
           {
             "url": "https://github.com/PrivacyIsARight/unrecoil/releases/download/2026.07.04/unrecoil_2026.07.04_amd64-windows.7z",
             "destination": "engine/unrecoil_2026.07.04-unrecoil",
-            "extract": true
+            "extract": true,
+            "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           }
         ]
       },
