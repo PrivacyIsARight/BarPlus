@@ -10,7 +10,6 @@ const stableStringify = require('json-stable-stringify');
 
 const defaultSetup = {
 	'package': {
-		// Possible values are 'darwin', 'linux', 'win32'
 		'platform': 'all',
 		'portable': false,
 		'display': 'Spring Launcher'
@@ -22,30 +21,18 @@ const defaultSetup = {
 	'no_downloads': false,
 	'no_start_script': false,
 	'load_dev_exts': false,
-	// It can be a single string or array of destinations to try in
-	// sequence for reliability in case first one fails. Can be set globally.
 	'log_upload_url': null,
 	'config_url': null,
 	'silent': true,
-	// String with HTML code (USE WITH CAUTION!) to attach to the error field.
-	// Can be set globally.
 	'error_suffix': null,
 	'disable_win_ascii_install_path_check': false,
 
-	// Orderer list of links to put in the footer of the launcher, e.g.
-	//[{ "title": "Google", "url": "https://google.com" }]
 	'links': undefined,
 
-	// Controls whatever the launcher update dialog is shown when new version
-	// of launcher is available or the update is just started right away.
 	'disable_launcher_update_dialog': false,
 
-	// Whatever the launcher should remove the whole engine folder in case there
-	// is issue with spawning the engine because engine binary is not found.
 	'disable_engine_folder_deletion': false,
 
-	// Default values for environment variables to be set for all the executed
-	// child processes like pr-downloader.
 	'env_variables': {},
 
 	'downloads': {
@@ -55,11 +42,6 @@ const defaultSetup = {
 		'resources': [],
 	},
 
-	// A map from file name to file contents to write in the data directory
-	// Can be used e.g. for chobby_config.json, but really up to imagination.
-	// Setup entry doesn't override the top level entry, but if merged, when
-	// setup file entry overrides the config file entry.
-	// Set value to null to delete file.
 	'json_files': {},
 
 	'launch': {
@@ -70,10 +52,6 @@ const defaultSetup = {
 		'map_options': undefined,
 		'mod_options': undefined,
 		'game_options': undefined,
-		// Key value settings to set in springsettings.cfg. It *overrides*
-		// the existing values, including user specified ones. For setting
-		// defaults for options, there is a top level default_springsettings
-		// property.
 		'springsettings': {}
 	}
 };
@@ -93,20 +71,10 @@ function canUse(config) {
 	return true;
 }
 
-/**
- * Simple object check.
- * @param item
- * @returns {boolean}
- */
 function isObject(item) {
 	return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
-/**
- * Deep merge two objects.
- * @param target
- * @param ...sources
- */
 function mergeDeep(target, ...sources) {
 	if (sources.length === 0) {
 		return target;
@@ -129,32 +97,56 @@ function mergeDeep(target, ...sources) {
 	return mergeDeep(target, ...sources);
 }
 
+function stringifyConfig(conf) {
+	return JSON.stringify(conf, null, 4);
+}
+
+function isSameConfig(configFile, bundled) {
+	if (!fs.existsSync(configFile)) {
+		return false;
+	}
+
+	try {
+		return stringifyConfig(JSON.parse(fs.readFileSync(configFile, 'utf8'))) === bundled;
+	} catch (err) {
+		return false;
+	}
+}
+
+function replaceStoredConfig(conf) {
+	const writePath = resolveWritePath(conf.title);
+	const configFile = path.join(writePath, 'config.json');
+
+	if (!fs.existsSync(writePath)) {
+		return;
+	}
+
+	const bundled = stringifyConfig(conf);
+	if (isSameConfig(configFile, bundled)) {
+		return;
+	}
+
+	console.log(`Replacing stored config file: ${configFile}`);
+	const tmpConfigFile = path.join(writePath, 'config.new.json');
+	fs.writeFileSync(tmpConfigFile, bundled);
+	fs.renameSync(tmpConfigFile, configFile);
+}
+
 function loadConfig() {
-	// 1. argv.config should override any existing setting
 	if (argv.config) {
 		return require(argv.config);
 	}
 
-	// 2. Load config file that comes with the application
 	const conf = require('./config.json');
 
-	// 3. If there's a config.json file use that instead
-	//    but if that fails to parse just ignore it and use the application one
 	try {
-		const writePath = resolveWritePath(conf.title);
-		const configFile = path.join(writePath, 'config.json');
-		if (!fs.existsSync(configFile)) {
-			return conf;
-		}
-
-		console.log(`Loading Config file: ${configFile}`);
-		return JSON.parse(fs.readFileSync(configFile));
+		replaceStoredConfig(conf);
 	} catch (err) {
-		// TODO: Perhaps too early to log at this point? We'll use console instead
-		console.error('Cannot load local config.json. Falling back to default one.');
+		console.error('Cannot replace stored config.json. Using bundled config.');
 		console.error(err);
-		return conf;
 	}
+
+	return conf;
 }
 
 function applyDefaults(conf) {
@@ -162,12 +154,9 @@ function applyDefaults(conf) {
 		const defaultSetupCopy = JSON.parse(JSON.stringify(defaultSetup));
 		const setup = mergeDeep(defaultSetupCopy, conf.setups[i]);
 		setup.title = conf.title;
-		// Properties that need to be accesible from rendering process.
 		if (!setup.error_suffix) setup.error_suffix = conf.error_suffix;
 		if (!setup.links) setup.links = conf.links;
 
-		// We handle json_files in a special way, because we need to merge with
-		// global.
 		for (const [file, val] of Object.entries(conf.json_files || {})) {
 			if (!(file in setup.json_files)) {
 				setup.json_files[file] = val;
@@ -220,14 +209,6 @@ function reloadConfig(conf) {
 
 reloadConfig(applyDefaults(loadConfig()));
 
-/**
- * Deep compare of two objects for equality with support for ingoring properties.
- *
- * @param a - first object
- * @param b - second object
- * @param ignoreProp - optional list of properties to ignore when comparing
- * @returns boolean
- */
 function objEqual(a, b, ignoreProp = []) {
 	if (a === b) {
 		return true;
@@ -308,8 +289,6 @@ const proxy = new Proxy({
 	},
 	set: function (_, name, value) {
 		currentConfig[name] = value;
-		// Just in case setCurrentConfig does something with the property that
-		// is being set.
 		setCurrentConfig(currentConfig);
 		return true;
 	}

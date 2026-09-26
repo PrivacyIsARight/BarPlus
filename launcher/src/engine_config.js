@@ -18,7 +18,12 @@ function applyEngineConfig(resource, engineInfo, platform) {
 		return false;
 	}
 
-	if (engineInfo.display === 'unrecoil' && !argv.unrecoil) {
+	if (!argv.unrecoil) {
+		return false;
+	}
+
+	if (engineInfo.display !== 'unrecoil') {
+		log.warn(`Engine config is not unrecoil (display: ${engineInfo.display}), keeping pinned engine`);
 		return false;
 	}
 
