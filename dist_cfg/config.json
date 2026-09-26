@@ -34,8 +34,8 @@
             "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
-            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4790.0-ab509a0/BYAR-Chobby-3866.sdd.7z",
-            "destination": "games/BYAR-Chobby-3866.sdd",
+            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4792.0-1d9197e/BYAR-Chobby-3867.sdd.7z",
+            "destination": "games/BYAR-Chobby-3867.sdd",
             "extract": true
           }
         ]
@@ -45,7 +45,7 @@
       "launch": {
         "start_args": [
           "--menu",
-          "BYAR Chobby 3866"
+          "BYAR Chobby 3867"
         ],
         "engine": "recoil_2026.07.04",
         "springsettings": {
@@ -84,8 +84,8 @@
             "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
-            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4790.0-ab509a0/BYAR-Chobby-3866.sdd.7z",
-            "destination": "games/BYAR-Chobby-3866.sdd",
+            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4792.0-1d9197e/BYAR-Chobby-3867.sdd.7z",
+            "destination": "games/BYAR-Chobby-3867.sdd",
             "extract": true
           }
         ]
@@ -95,7 +95,7 @@
       "launch": {
         "start_args": [
           "--menu",
-          "BYAR Chobby 3866"
+          "BYAR Chobby 3867"
         ],
         "engine": "recoil_2026.07.04",
         "springsettings": {
@@ -134,8 +134,8 @@
             "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
-            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4790.0-ab509a0/BYAR-Chobby-3866.sdd.7z",
-            "destination": "games/BYAR-Chobby-3866.sdd",
+            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4792.0-1d9197e/BYAR-Chobby-3867.sdd.7z",
+            "destination": "games/BYAR-Chobby-3867.sdd",
             "extract": true
           }
         ]
@@ -145,7 +145,7 @@
       "launch": {
         "start_args": [
           "--menu",
-          "BYAR Chobby 3866"
+          "BYAR Chobby 3867"
         ],
         "engine": "recoil_2026.09.01",
         "springsettings": {
@@ -184,8 +184,8 @@
             "engine_config_url": "https://raw.githubusercontent.com/PrivacyIsARight/unrecoil/master/latest.json"
           },
           {
-            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4790.0-ab509a0/BYAR-Chobby-3866.sdd.7z",
-            "destination": "games/BYAR-Chobby-3866.sdd",
+            "url": "https://github.com/PrivacyIsARight/BarPlus/releases/download/v1.4792.0-1d9197e/BYAR-Chobby-3867.sdd.7z",
+            "destination": "games/BYAR-Chobby-3867.sdd",
             "extract": true
           }
         ]
@@ -195,7 +195,7 @@
       "launch": {
         "start_args": [
           "--menu",
-          "BYAR Chobby 3866"
+          "BYAR Chobby 3867"
         ],
         "engine": "recoil_2026.09.01",
         "springsettings": {
