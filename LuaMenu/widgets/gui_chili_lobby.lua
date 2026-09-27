@@ -10,6 +10,8 @@ function widget:GetInfo()
 	}
 end
 
+require("keysym.lua")
+
 CHOBBY_DIR = LUA_DIRNAME .. "widgets/chobby/"
 
 local interfaceRoot
