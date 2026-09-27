@@ -1,5 +1,3 @@
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 function widget:GetInfo()
 	return {
 		name      = "Chili lobby",
@@ -12,31 +10,20 @@ function widget:GetInfo()
 	}
 end
 
-require("keysym.lua")
-
-LIBS_DIR = "libs/"
-LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
-LCS = LCS()
-
 CHOBBY_DIR = LUA_DIRNAME .. "widgets/chobby/"
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Callins
 
 local interfaceRoot
 
 local oldSizeX, oldSizeY
-local lobbyIcon = nil -- Track desired lobby icon for periodic reapplication
-local lastIconReapply = os.clock()
-local ICON_REAPPLY_INTERVAL = 5 -- seconds
+local lobbyIcon
+local lastIconReapply = Spring.GetTimer()
+local ICON_REAPPLY_INTERVAL = 5
 local ingame = false
 function widget:ViewResize(vsx, vsy, viewGeometry)
 	oldSizeX, oldSizeY = vsx, vsy
 	if interfaceRoot then
 		interfaceRoot.ViewResize(vsx, vsy)
 	end
-	--Spring.Utilities.TableEcho(viewGeometry, "viewGeometry")
 	WG.Chobby:_ViewResize(vsx, vsy)
 end
 
@@ -46,22 +33,21 @@ function widget:Update(dt)
 		widget:ViewResize(screenWidth, screenHeight)
 	end
 
-	-- Periodically reapply lobby icon to handle stale game icons (e.g. gameover)
 	if lobbyIcon and not ingame then
-		local now = os.clock()
-		if now - lastIconReapply >= ICON_REAPPLY_INTERVAL then
+		local now = Spring.GetTimer()
+		if Spring.DiffTimers(now, lastIconReapply) >= ICON_REAPPLY_INTERVAL then
 			lastIconReapply = now
 			Spring.SetWMIcon(lobbyIcon, true)
 		end
 	end
 end
 
-local function SetIngameTrue()
-	lobby:SetIngameStatus(true)
-end
-
-local function SetIngameFalse()
-	lobby:SetIngameStatus(false)
+local function SetIngame(value)
+	ingame = value
+	if interfaceRoot then
+		interfaceRoot.SetIngame(value)
+	end
+	WG.Delay(function() lobby:SetIngameStatus(value) end, 1)
 end
 
 local ignoreFirstCall = true
@@ -70,20 +56,26 @@ function widget:ActivateMenu()
 		ignoreFirstCall = false
 		return
 	end
-	ingame = false
-	interfaceRoot.SetIngame(false)
-	WG.Delay(SetIngameFalse, 1)
+	SetIngame(false)
 end
 
 function widget:ActivateGame()
-	ingame = true
-	interfaceRoot.SetIngame(true)
-	WG.Delay(SetIngameTrue, 1)
+	SetIngame(true)
+end
+
+local function ApplyTaskbarIdentity()
+	local gameConfig = Chobby.Configuration.gameConfig
+	local taskbarTitle = gameConfig.taskbarTitle
+	if taskbarTitle then
+		Spring.SetWMCaption(taskbarTitle, gameConfig.taskbarTitleShort or taskbarTitle)
+	end
+	lobbyIcon = gameConfig.taskbarIcon or "bitmaps/logo.png"
+	Spring.SetWMIcon(lobbyIcon, true)
 end
 
 function widget:Initialize()
 	if WG.LimitFps then
-		WG.LimitFps.ForceRedrawPeriod(5) -- High FPS for the first few seconds to shorten the initial white flash.
+		WG.LimitFps.ForceRedrawPeriod(5)
 	end
 	if not WG.LibLobby then
 		Spring.Log("chobby", LOG.ERROR, "Missing liblobby.")
@@ -107,14 +99,7 @@ function widget:Initialize()
 	Chobby.lobbyInterfaceHolder = lobbyInterfaceHolder
 	Chobby.interfaceRoot = interfaceRoot
 
-	local taskbarTitle = Chobby.Configuration.gameConfig.taskbarTitle
-	local taskbarTitleShort = Chobby.Configuration.gameConfig.taskbarTitleShort or taskbarTitle
-	if taskbarTitle then
-		Spring.SetWMCaption(taskbarTitle, taskbarTitleShort)
-	end
-	local taskbarIcon = Chobby.Configuration.gameConfig.taskbarIcon or "bitmaps/logo.png"
-	lobbyIcon = taskbarIcon
-	Spring.SetWMIcon(lobbyIcon, true)
+	ApplyTaskbarIdentity()
 
 	local function OnBattleAboutToStart()
 		lobby:SetIngameStatus(true)
@@ -127,17 +112,9 @@ function widget:Initialize()
 
 	local function onConfigurationChange(listener, key, value)
 		if key == "gameConfigName" then
-			local taskbarTitle = Chobby.Configuration.gameConfig.taskbarTitle
-			local taskbarTitleShort = Chobby.Configuration.gameConfig.taskbarTitleShort or taskbarTitle
-			if taskbarTitle then
-				Spring.SetWMCaption(taskbarTitle, taskbarTitleShort)
-			end
-			local taskbarIcon = Chobby.Configuration.gameConfig.taskbarIcon or "bitmaps/logo.png"
-			lobbyIcon = taskbarIcon
-			Spring.SetWMIcon(lobbyIcon, true)
-		end
-		if key == "language" then
-			Spring.Echo("Set language to "..value)
+			ApplyTaskbarIdentity()
+		elseif key == "language" then
+			Spring.Echo("Set language to " .. value)
 			i18n.setLocale(value)
 		end
 	end
@@ -145,9 +122,7 @@ function widget:Initialize()
 end
 
 function widget:KeyPress(key, mods, isRepeat, label, unicode)
-	if interfaceRoot then
-		return interfaceRoot.KeyPressed(key, mods, isRepeat, label, unicode)
-	end
+	return interfaceRoot and interfaceRoot.KeyPressed(key, mods, isRepeat, label, unicode)
 end
 
 function widget:Shutdown()
@@ -156,7 +131,9 @@ function widget:Shutdown()
 end
 
 function widget:DrawScreen()
-	WG.Chobby:_DrawScreen()
+	if WG.Chobby then
+		WG.Chobby:_DrawScreen()
+	end
 end
 
 function widget:GetConfigData()
@@ -168,5 +145,9 @@ function widget:GetConfigData()
 end
 
 function widget:SetConfigData(...)
+	if WG.Chobby == nil then
+		Spring.Log("Chobby", LOG.ERROR, "No WG.Chobby available during widget:SetConfigData()")
+		return
+	end
 	WG.Chobby:_SetConfigData(...)
 end
