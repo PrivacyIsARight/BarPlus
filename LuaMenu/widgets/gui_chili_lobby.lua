@@ -12,6 +12,10 @@ end
 
 require("keysym.lua")
 
+LIBS_DIR = "libs/"
+LCS = loadstring(VFS.LoadFile(LIBS_DIR .. "lcs/LCS.lua"))
+LCS = LCS()
+
 CHOBBY_DIR = LUA_DIRNAME .. "widgets/chobby/"
 
 local interfaceRoot
