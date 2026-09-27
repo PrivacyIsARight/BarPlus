@@ -4,6 +4,7 @@
 
 VFS.Include(LIB_LOBBY_DIRNAME .. "observable.lua")
 VFS.Include(LIB_LOBBY_DIRNAME .. "utilities.lua")
+VFS.Include(LIB_LOBBY_DIRNAME .. "agent_hash.lua")
 
 local JsonDecode = Json.decode
 local spGetTimer = Spring.GetTimer
@@ -73,7 +74,7 @@ function Lobby:_Clean()
 	self.myBattleID = nil
 	self.scriptPassword = nil
 	self.sessionToken = nil
-	self.agent = "0 0"
+	self.agent = NewLobbyAgentHash()
 
 	-- reconnection delay in seconds
 	self.reconnectionDelay = 15
