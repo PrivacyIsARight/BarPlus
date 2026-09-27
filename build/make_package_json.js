@@ -48,3 +48,5 @@ if (require.main === module) {
 
 	createPackagejson(args[2], args[3], args[4], args[5]);
 }
+
+module.exports = { createPackagejson };

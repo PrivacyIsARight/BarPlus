@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
+const REPO_ROOT = path.resolve(__dirname, '..');
 const CONFIG_PATH = path.join(REPO_ROOT, 'dist_cfg', 'config.json');
 const MODINFO_PATH = path.join(REPO_ROOT, 'modinfo.lua');
 const MAKE_PACKAGE_JSON = path.join(REPO_ROOT, 'build', 'make_package_json.js');
@@ -106,9 +106,8 @@ test('modinfo.lua exposes the $VERSION placeholder for the pack step', () => {
 });
 
 test('build/make_package_json.js stamps the package correctly', () => {
-	const pkgSrc = fs.readFileSync(path.join(REPO_ROOT, 'launcher', 'package.json'), 'utf8');
 	const configSrc = fs.readFileSync(CONFIG_PATH, 'utf8');
-	fs.writeFileSync(path.join(tmp, 'package.json'), pkgSrc);
+	fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ build: {} }, null, 2));
 	fs.writeFileSync(path.join(tmp, 'config.json'), configSrc);
 
 	const res = spawnSync(

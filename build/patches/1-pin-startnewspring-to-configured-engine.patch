@@ -1,0 +1,41 @@
+diff --git a/launcher/src/exts/start_new_spring_handler.js b/launcher/src/exts/start_new_spring_handler.js
+index 46036886..54c84ed0 100644
+--- a/launcher/src/exts/start_new_spring_handler.js
++++ b/launcher/src/exts/start_new_spring_handler.js
+@@ -5,11 +5,21 @@ const { bridge } = require('../spring_api');
+ const springPlatform = require('../spring_platform');
+ const { Launcher } = require('../engine_launcher');
+ const { resolveInside } = require('../fs_utils');
++const { config } = require('../launcher_config');
++
++function normalizeEngineName(name) {
++	return String(name).toLowerCase().replace(/^recoil_/, '');
++}
++
++function configuredEngineName() {
++	const name = config.launch.engine || (config.downloads.engines || [])[0];
++	return name == null ? null : String(name).toLowerCase();
++}
+ 
+ bridge.register('StartNewSpring', async command => {
+ 	const launcher = new Launcher();
+ 
+-	const engineName = String(command.Engine || '').toLowerCase();
++	let engineName = String(command.Engine || '').toLowerCase();
+ 	if (engineName.length === 0 || engineName.length > 255 ||
+ 			engineName === '.' || engineName === '..' ||
+ 			engineName.includes('/') || engineName.includes('\\') ||
+@@ -17,6 +27,13 @@ bridge.register('StartNewSpring', async command => {
+ 		log.error(`StartNewSpring: rejected invalid engine identifier: ${engineName}`);
+ 		return;
+ 	}
++
++	const configuredEngine = configuredEngineName();
++	if (configuredEngine != null && normalizeEngineName(engineName) !== normalizeEngineName(configuredEngine)) {
++		log.warn(`StartNewSpring: engine ${engineName} is not the configured engine ${configuredEngine}, starting ${configuredEngine} instead`);
++		engineName = configuredEngine;
++	}
++
+ 	const engineDir = resolveInside(join(springPlatform.writePath, 'engine'), engineName);
+ 	if (engineDir == null) {
+ 		log.error(`StartNewSpring: engine path escapes the engines directory: ${engineName}`);

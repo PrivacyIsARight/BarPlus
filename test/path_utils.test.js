@@ -6,7 +6,7 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { resolveInside, archiveEntryInside } = require('../src/path_utils');
+const { resolveInside, archiveEntryInside } = require('../dist_cfg/launcher_src/path_utils');
 
 let tmp = null;
 let base = null;
