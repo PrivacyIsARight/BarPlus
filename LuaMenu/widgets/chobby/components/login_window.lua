@@ -2,9 +2,55 @@ LoginWindow = LCS.class{}
 
 include "LuaMenu/widgets/chobby/utilities/word_library.lua"
 
---TODO: make this a util function, maybe even add this support to chili as a whole?
+local spGetKeyCode = Spring.GetKeyCode
+
+local EMAIL_PROVIDERS = {
+	["gmail.com"] = {"gmai.com", "gmail.co", "gmial.com", "gmail.cm", "gmail.om", "gmail.con", "gmal.com", "gamil.com"},
+	["hotmail.com"] = {"hotmai.com", "hotmail.co", "hotmil.com", "hotmail.cm", "hotmale.com", "hotmial.com"},
+	["yahoo.com"] = {"yaho.com", "yahoo.co", "yahho.com", "yahoo.cm", "yajoo.com", "yahooo.com"},
+	["outlook.com"] = {"outlook.co", "outlok.com", "outlook.cm", "outloook.com", "outlookk.com"},
+	["aol.com"] = {"aol.co", "aol.cm", "aol.om", "aol.con"},
+	["icloud.com"] = {"icloud.co", "icloud.cm", "iclud.com", "icloud.om", "icould.com"},
+	["live.com"] = {"live.co", "live.cm", "liv.com", "livee.com"},
+	["msn.com"] = {"msn.co", "msn.cm", "msnn.com"},
+	["comcast.net"] = {"comcast.com", "comast.net", "comcst.net"},
+	["verizon.net"] = {"verizon.com", "verison.net", "verizonn.net"},
+	["web.de"] = {"webb.de", "weeb.de", "web.dee", "web.dde", "web.ed", "webde.de", "web-de.de", "wed.de"},
+	["gmx.de"] = {"gmmx.de", "ggmx.de", "gmxx.de", "gmx.ed", "gmx.dee", "gmx.dde", "gmz.de"},
+	["freenet.de"] = {"freeenet.de", "freenett.de", "ffreenet.de", "freenet.ed", "freenet.dee", "freenet.dde", "free-net.de", "freenet-mobilfunk.de", "frenet.de", "freenete.de"},
+	["t-online.de"] = {"t-onlin.de", "tt-online.de", "t-onlinee.de", "t-online.ed", "t-online.dee", "t-online.dde", "t-onnline.de", "t-oonline.de", "tonline.de", "t-onine.de", "t-oneline.de", "t.online.de"},
+	["protonmail.com"] = {"protonmail.co", "protonmail.cm", "protonmail.con", "protonmaill.com", "protonmai.com", "protomail.com", "protronmail.com", "prontonmail.com", "protonnmail.com", "protonmial.com"},
+	["proton.me"] = {"proton.me.com", "proton.ne", "proton.ms", "proton.mr", "protom.me", "protron.me", "protonm.me"},
+	["pm.me"] = {"pmme.com", "pm.me.com", "pn.me", "pm.ne", "pm.ms", "pm.mr", "pm-me.me"},
+	["protonmail.ch"] = {"protonmail.c", "protonmail.h", "protonmai.ch", "protonmial.ch", "protomail.ch", "protronmail.ch", "prontonmail.ch"},
+}
+
+local EMAIL_TYPOS = {}
+for correct, typos in pairs(EMAIL_PROVIDERS) do
+	for i = 1, #typos do
+		EMAIL_TYPOS[typos[i]] = correct
+	end
+end
+EMAIL_PROVIDERS = nil
+
+local RENAME_ERROR_WORDS = {"fail", "denied", "taken", "already", "cooldown", "week", "month", "max", "too "}
+
+local function IsEnterKey(key)
+	return key == spGetKeyCode("enter") or key == spGetKeyCode("numpad_enter")
+end
+
+local function ContainsAny(text, words)
+	for i = 1, #words do
+		if text:find(words[i], 1, true) then
+			return true
+		end
+	end
+	return false
+end
+
 function createTabGroup(ctrls, visibleFunc)
-	for i = 1, #ctrls do
+	local count = #ctrls
+	for i = 1, count do
 		local ctrl1 = ctrls[i]
 		if ctrl1.OnKeyPress == nil then
 			ctrl1.OnKeyPress = {}
@@ -12,26 +58,26 @@ function createTabGroup(ctrls, visibleFunc)
 
 		table.insert(ctrl1.OnKeyPress,
 			function(obj, key, mods, ...)
-				if key == Spring.GetKeyCode("tab") then
-					local nextIndex = i%(#ctrls) + 1
-					local ctrl2
-					while (not ctrl2) and nextIndex ~= i do
-						if (not visibleFunc[nextIndex]) or visibleFunc[nextIndex]() then
-							ctrl2 = ctrls[nextIndex]
-						end
-						nextIndex = nextIndex%(#ctrls) + 1
+				if key ~= spGetKeyCode("tab") then
+					return
+				end
+				local nextIndex = i % count + 1
+				local ctrl2
+				while (not ctrl2) and nextIndex ~= i do
+					if (not visibleFunc[nextIndex]) or visibleFunc[nextIndex]() then
+						ctrl2 = ctrls[nextIndex]
 					end
+					nextIndex = nextIndex % count + 1
+				end
 
-					if ctrl2 then
-						screen0:FocusControl(ctrl2)
-						if ctrl2.classname == "editbox" then
-	-- 						ctrl2:Select(1, #ctrl2.text + 1)
-							-- HACK
-							ctrl2.selStart = 1
-							ctrl2.selStartPhysical = 1
-							ctrl2.selEnd = #ctrl2.text + 1
-							ctrl2.selEndPhysical = #ctrl2.text + 1
-						end
+				if ctrl2 then
+					screen0:FocusControl(ctrl2)
+					if ctrl2.classname == "editbox" then
+						local last = #ctrl2.text + 1
+						ctrl2.selStart = 1
+						ctrl2.selStartPhysical = 1
+						ctrl2.selEnd = last
+						ctrl2.selEndPhysical = last
 					end
 				end
 			end
@@ -39,38 +85,87 @@ function createTabGroup(ctrls, visibleFunc)
 	end
 end
 
+local lobbyName
 local function GetLobbyName()
-	local byarchobbyrapidTag = "unknown"
-	for i,v in ipairs(VFS.GetLoadedArchives()) do
-		if string.find(v,"BYAR Chobby ", nil, true) then
-			byarchobbyrapidTag = string.gsub(string.gsub(v,"test%-", ""), "BYAR Chobby ", "")
-			byarchobbyrapidTag = string.gsub(byarchobbyrapidTag, "[^%w]", " ")
+	if lobbyName then
+		return lobbyName
+	end
+	local tag = "unknown"
+	for _, v in ipairs(VFS.GetLoadedArchives()) do
+		if string.find(v, "BYAR Chobby ", nil, true) then
+			tag = string.gsub(string.gsub(v, "test%-", ""), "BYAR Chobby ", "")
+			tag = string.gsub(tag, "[^%w]", " ")
 			break
 		end
 	end
-	local lobbyname = 'BarPlus Version '..byarchobbyrapidTag
-	--Spring.Utilities.TraceFullEcho()
-	return lobbyname
+	lobbyName = 'BarPlus Version ' .. tag
+	return lobbyName
+end
+
+local function Font(size)
+	return WG.Chobby.Configuration:GetFont(size)
+end
+
+local function NewTextBox(props, fontSize, hintFontSize)
+	props.objectOverrideFont = Font(fontSize or 3)
+	props.objectOverrideHintFont = Font(hintFontSize or 11)
+	return TextBox:New(props)
+end
+
+local function NewEditBox(props, fontSize, hintFontSize)
+	props.objectOverrideFont = Font(fontSize or 3)
+	props.objectOverrideHintFont = Font(hintFontSize or 11)
+	return EditBox:New(props)
+end
+
+local function NewLabel(props, fontSize)
+	props.objectOverrideFont = Font(fontSize or 3)
+	return Label:New(props)
+end
+
+local function NewButton(props, fontSize)
+	props.objectOverrideFont = Font(fontSize or 3)
+	return Button:New(props)
+end
+
+local function NewConfigCheckbox(y, caption, configKey)
+	return Checkbox:New {
+		x = 15,
+		width = 215,
+		y = y,
+		height = 35,
+		boxalign = "right",
+		boxsize = 15,
+		caption = caption,
+		checked = Configuration[configKey],
+		objectOverrideFont = Font(2),
+		OnClick = {function(obj)
+			Configuration:SetConfigValue(configKey, obj.checked)
+		end},
+	}
 end
 
 function LoginWindow:init(failFunction, cancelText, windowClassname, params)
-
 	if WG.Chobby.lobbyInterfaceHolder:GetChildByName("loginWindow") then
 		Log.Error("Tried to spawn duplicate login window")
 		return
 	end
+
 	local ww, wh = Spring.GetWindowGeometry()
 	self.emailRequired = (params and params.emailRequired) or false
-	local defaultWindowHeight = (params and params.windowHeight) or (self.emailRequired and 800) or 800
+	local defaultWindowHeight = (params and params.windowHeight) or 800
 	self.windowHeight = math.min(defaultWindowHeight, math.max(740, wh - 20))
 	self.loginAfterRegister = (params and params.loginAfterRegister) or false
 
+	local windowHeight = self.windowHeight
 	local registerChildren = {}
-
 	local recoverChildren = {}
-
 	local loginChildren = {}
 
+	local function add(list, ctrl)
+		list[#list + 1] = ctrl
+		return ctrl
+	end
 
 	self.ResetText = function()
 		if self.txtError then
@@ -78,7 +173,7 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		end
 	end
 
-	self.CancelFunc = function ()
+	self.CancelFunc = function()
 		self.window:Dispose()
 		if failFunction then
 			failFunction()
@@ -86,355 +181,159 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		self.window = nil
 	end
 
-	self.lblLoginInstructions = Label:New {
-		x = 15,
-		width = 170,
-		y = 14,
-		height = 35,
+	local function PasswordKeyPress()
+		return {
+			function(obj, key)
+				if IsEnterKey(key) then
+					if self.tabPanel.tabBar:IsSelected("login") then
+						self:MayBeDisconnectBeforeTryLogin()
+					else
+						self:tryRegister()
+					end
+				end
+			end
+		}
+	end
+
+	local function RegisterKeyPress()
+		return {
+			function(obj, key)
+				if IsEnterKey(key) and self.tabPanel.tabBar:IsSelected("register") then
+					self:tryRegister()
+				end
+			end
+		}
+	end
+
+	local defaultName = Configuration.userName or Configuration.suggestedNameFromSteam or ""
+
+	self.lblLoginInstructions = add(loginChildren, NewLabel({
+		x = 15, width = 170, y = 14, height = 35,
 		caption = i18n("login_long"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-	}
-	loginChildren[#loginChildren+1] = self.lblLoginInstructions
+	}))
 
-	self.lblRegisterInstructions = Label:New {
-		x = 15,
-		width = 170,
-		y = 14,
-		height = 35,
+	self.lblRegisterInstructions = add(registerChildren, NewLabel({
+		x = 15, width = 170, y = 14, height = 35,
 		caption = i18n("register_long"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-	}
-	registerChildren[#registerChildren + 1] = self.lblRegisterInstructions
+	}))
 
-	self.txtUsername = TextBox:New {
-		x = 15,
-		width = 170,
-		y = 60,
-		height = 35,
+	self.txtUsername = add(loginChildren, NewTextBox({
+		x = 15, width = 170, y = 60, height = 35,
 		text = i18n("username") .. ":",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	loginChildren[#loginChildren+1] = self.txtUsername
+	}))
 
-	self.ebUsername = EditBox:New {
-		x = 135,
-		width = 200,
-		y = 51,
-		height = 35,
+	self.ebUsername = add(loginChildren, NewEditBox({
+		x = 135, width = 200, y = 51, height = 35,
 		hint = i18n("enter_username"),
-		text = Configuration.userName or Configuration.suggestedNameFromSteam or "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	loginChildren[#loginChildren+1] = self.ebUsername
+		text = defaultName,
+	}))
 
-	self.txtPassword = TextBox:New {
-		x = 15,
-		width = 170,
-		y = 100,
-		height = 35,
+	self.txtPassword = add(loginChildren, NewTextBox({
+		x = 15, width = 170, y = 100, height = 35,
 		text = i18n("password") .. ":",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	loginChildren[#loginChildren+1] = self.txtPassword
+	}))
 
-
-	self.ebPassword = EditBox:New {
-		x = 135,
-		width = 200,
-		y = 91,
-		height = 35,
+	self.ebPassword = add(loginChildren, NewEditBox({
+		x = 135, width = 200, y = 91, height = 35,
 		text = Configuration.password or "",
 		passwordInput = true,
 		hint = i18n("enter_password"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-		OnKeyPress = {
-			function(obj, key, mods, ...)
-				if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-					if self.tabPanel.tabBar:IsSelected("login") then
-						self:MayBeDisconnectBeforeTryLogin()
-					else
-						self:tryRegister()
-					end
-				end
-			end
-		},
-	}
-	loginChildren[#loginChildren+1] = self.ebPassword
+		OnKeyPress = PasswordKeyPress(),
+	}))
 
-
-	self.txtUsernameRegister = TextBox:New {
-		x = 15,
-		width = 170,
-		y = 60,
-		height = 35,
+	self.txtUsernameRegister = add(registerChildren, NewTextBox({
+		x = 15, width = 170, y = 60, height = 35,
 		text = i18n("username") .. ":",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	registerChildren[#registerChildren+1] = self.txtUsernameRegister
+	}))
 
-	self.ebUsernameRegister = EditBox:New {
-		x = 135,
-		width = 200,
-		y = 51,
-		height = 35,
+	self.ebUsernameRegister = add(registerChildren, NewEditBox({
+		x = 135, width = 200, y = 51, height = 35,
 		hint = i18n("enter_username"),
-		text = Configuration.userName or Configuration.suggestedNameFromSteam or "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	registerChildren[#registerChildren+1] = self.ebUsernameRegister
+		text = defaultName,
+	}))
 
-
-	self.txtPasswordRegister = TextBox:New {
-		x = 15,
-		width = 170,
-		y = 100,
-		height = 35,
+	self.txtPasswordRegister = add(registerChildren, NewTextBox({
+		x = 15, width = 170, y = 100, height = 35,
 		text = i18n("password") .. ":",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	registerChildren[#registerChildren+1] = self.txtPasswordRegister
+	}))
 
-	self.ebPasswordRegister = EditBox:New {
-		x = 135,
-		width = 200,
-		y = 91,
-		height = 35,
+	self.ebPasswordRegister = add(registerChildren, NewEditBox({
+		x = 135, width = 200, y = 91, height = 35,
 		text = Configuration.password or "",
 		passwordInput = true,
 		hint = i18n("enter_password"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-		OnKeyPress = {
-			function(obj, key, mods, ...)
-				if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-					if self.tabPanel.tabBar:IsSelected("login") then
-						self:MayBeDisconnectBeforeTryLogin()
-					else
-						self:tryRegister()
-					end
-				end
-			end
-		},
-	}
-	registerChildren[#registerChildren+1] = self.ebPasswordRegister
+		OnKeyPress = PasswordKeyPress(),
+	}))
 
-
-	self.txtConfirmPassword = TextBox:New {
-		x = 15,
-		width = 170,
-		y = 140,
-		height = 70,
+	self.txtConfirmPassword = add(registerChildren, NewTextBox({
+		x = 15, width = 170, y = 140, height = 70,
 		text = i18n("confirm") .. ":",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	registerChildren[#registerChildren + 1] = self.txtConfirmPassword
+	}))
 
-	self.ebConfirmPassword = EditBox:New {
-		x = 135,
-		width = 200,
-		y = 131,
-		height = 35,
+	self.ebConfirmPassword = add(registerChildren, NewEditBox({
+		x = 135, width = 200, y = 131, height = 35,
 		text = "",
 		hint = i18n("confirm_password"),
 		passwordInput = true,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-		OnKeyPress = {
-			function(obj, key, mods, ...)
-				if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-					if self.tabPanel.tabBar:IsSelected("register") then
-						self:tryRegister()
-					end
-				end
-			end
-		},
-	}
-	registerChildren[#registerChildren + 1] = self.ebConfirmPassword
+		OnKeyPress = RegisterKeyPress(),
+	}))
 
 	if self.emailRequired then
-		self.txtEmail = TextBox:New {
-			x = 15,
-			width = 170,
-			y = 180,
-			height = 35,
+		self.txtEmail = add(registerChildren, NewTextBox({
+			x = 15, width = 170, y = 180, height = 35,
 			text = i18n("email") .. ":",
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-		}
-		registerChildren[#registerChildren + 1] = self.txtEmail
+		}))
 
-		self.ebEmail = EditBox:New {
-			x = 135,
-			width = 200,
-			y = 171,
-			height = 35,
+		self.ebEmail = add(registerChildren, NewEditBox({
+			x = 135, width = 200, y = 171, height = 35,
 			text = "",
 			hint = i18n("enter_email"),
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-			OnKeyPress = {
-				function(obj, key, mods, ...)
-					if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-						if self.tabPanel.tabBar:IsSelected("register") then
-							self:tryRegister()
-						end
-					end
-				end
-			},
-		}
-		registerChildren[#registerChildren + 1] = self.ebEmail
+			OnKeyPress = RegisterKeyPress(),
+		}))
 
-		self.txtConfirmEmail = TextBox:New {
-			x = 15,
-			width = 170,
-			y = 220,
-			height = 35,
+		self.txtConfirmEmail = add(registerChildren, NewTextBox({
+			x = 15, width = 170, y = 220, height = 35,
 			text = i18n("confirm") .. ":",
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-		}
-		registerChildren[#registerChildren + 1] = self.txtConfirmEmail
+		}))
 
-		self.ebConfirmEmail = EditBox:New {
-			x = 135,
-			width = 200,
-			y = 211,
-			height = 35,
+		self.ebConfirmEmail = add(registerChildren, NewEditBox({
+			x = 135, width = 200, y = 211, height = 35,
 			text = "",
-            hint = i18n('confirm_email'),
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-			OnKeyPress = {
-				function(obj, key, mods, ...)
-					if key == Spring.GetKeyCode("enter") or key == Spring.GetKeyCode("numpad_enter") then
-						if self.tabPanel.tabBar:IsSelected("register") then
-							self:tryRegister()
-						end
-					end
-				end
-			},
-		}
-		registerChildren[#registerChildren + 1] = self.ebConfirmEmail
+			hint = i18n("confirm_email"),
+			OnKeyPress = RegisterKeyPress(),
+		}))
 	end
 
-  self.lblRegistrationMultiplayer = Label:New {
-		x = 15,
-		width = 170,
-		y = 260,
-		height = 35,
+	self.lblRegistrationMultiplayer = add(registerChildren, NewLabel({
+		x = 15, width = 170, y = 260, height = 35,
 		caption = i18n("required_for_online"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-	}
-	registerChildren[#registerChildren + 1] = self.lblRegistrationMultiplayer
+	}))
 
+	self.cbAutoLogin = add(loginChildren, NewConfigCheckbox(windowHeight - 180, i18n("autoLogin"), "autoLogin"))
+	self.cbAutoLoginRegister = add(registerChildren, NewConfigCheckbox(windowHeight - 180, i18n("autoLogin"), "autoLogin"))
+	self.cbRememberPassword = add(loginChildren, NewConfigCheckbox(windowHeight - 215, i18n("rememberPassword"), "rememberPassword"))
+	self.cbRememberPasswordRegister = add(registerChildren, NewConfigCheckbox(windowHeight - 215, i18n("rememberPassword"), "rememberPassword"))
 
-
-	self.cbAutoLogin = Checkbox:New {
-		x = 15,
-		width = 215,
-		y = self.windowHeight - 180,
-		height = 35,
-		boxalign = "right",
-		boxsize = 15,
-		caption = i18n("autoLogin"),
-		checked = Configuration.autoLogin,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		OnClick = {function (obj)
-			Configuration:SetConfigValue("autoLogin", obj.checked)
-		end},
-	}
-	loginChildren[#loginChildren+1] = self.cbAutoLogin
-
-	self.cbAutoLoginRegister = Checkbox:New {
-		x = 15,
-		width = 215,
-		y = self.windowHeight - 180,
-		height = 35,
-		boxalign = "right",
-		boxsize = 15,
-		caption = i18n("autoLogin"),
-		checked = Configuration.autoLogin,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		OnClick = {function (obj)
-			Configuration:SetConfigValue("autoLogin", obj.checked)
-		end},
-	}
-	registerChildren[#registerChildren + 1] = self.cbAutoLoginRegister
-
-	self.cbRememberPassword = Checkbox:New {
-		x = 15,
-		width = 215,
-		y = self.windowHeight - 215,
-		height = 35,
-		boxalign = "right",
-		boxsize = 15,
-		caption = i18n("rememberPassword"),
-		checked = Configuration.rememberPassword,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		OnClick = {function (obj)
-			Configuration:SetConfigValue("rememberPassword", obj.checked)
-		end},
-	}
-	loginChildren[#loginChildren+1] = self.cbRememberPassword
-
-	self.cbRememberPasswordRegister = Checkbox:New {
-		x = 15,
-		width = 215,
-		y = self.windowHeight - 215,
-		height = 35,
-		boxalign = "right",
-		boxsize = 15,
-		caption = i18n("rememberPassword"),
-		checked = Configuration.rememberPassword,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		OnClick = {function (obj)
-			Configuration:SetConfigValue("rememberPassword", obj.checked)
-		end},
-	}
-	registerChildren[#registerChildren + 1] = self.cbRememberPasswordRegister
-
-	self.txtError = TextBox:New {
-		x = 15,
-		right = 15,
-		y = 140, --self.windowHeight - 400,
-		height = 400,
+	self.txtError = add(loginChildren, NewTextBox({
+		x = 15, right = 15, y = 140, height = 400,
 		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	loginChildren[#loginChildren+1] = self.txtError
+	}))
 
-	self.txtErrorRegister = TextBox:New {
-		x = 15,
-		right = 15,
-		y = self.windowHeight - 246,
-		height = 90,
+	self.txtErrorRegister = add(registerChildren, NewTextBox({
+		x = 15, right = 15, y = windowHeight - 246, height = 90,
 		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(11),
-	}
-	registerChildren[#registerChildren + 1] = self.txtErrorRegister
+	}))
+
+	local btnLoginOnClick
 
 	local function reEnableBtnLogin()
 		self.btnLogin.tooltip = nil
 		self.btnLogin.suppressButtonReaction = false
 		self.btnLogin:SetEnabled(true)
-		self.btnLogin.OnClick = {
-			function()
-				btnLoginOnClick()
-			end
-		}
+		self.btnLogin.OnClick = {btnLoginOnClick}
 	end
 
-	function btnLoginOnClick()
+	btnLoginOnClick = function()
 		self.btnLogin.tooltip = "Please wait a moment before retrying login"
 		self.btnLogin.suppressButtonReaction = true
 		self.btnLogin:SetEnabled(false)
@@ -443,13 +342,9 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		WG.Delay(reEnableBtnLogin, 20)
 	end
 
-	self.btnLogin = Button:New {
-		right = 140,
-		width = 130,
-		y = self.windowHeight - 143,
-		height = 70,
+	self.btnLogin = add(loginChildren, NewButton({
+		right = 140, width = 130, y = windowHeight - 143, height = 70,
 		caption = i18n("login_verb"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
 		classname = "action_button",
 		tooltip = nil,
 		OnClick = {
@@ -461,434 +356,136 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 				end
 			end
 		},
-	}
-	loginChildren[#loginChildren+1] = self.btnLogin
+	}))
 
-
-
-	self.btnRegister = Button:New {
-		right = 140,
-		width = 130,
-		y = self.windowHeight - 143,
-		height = 70,
+	self.btnRegister = add(registerChildren, NewButton({
+		right = 140, width = 130, y = windowHeight - 143, height = 70,
 		caption = i18n("register_verb"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
 		classname = "option_button",
 		OnClick = {
 			function()
 				self:tryRegister()
 			end
 		},
-	}
-	registerChildren[#registerChildren + 1] = self.btnRegister
+	}))
 
-	self.btnCancel = Button:New {
-		right = 2,
-		width = 130,
-		y = self.windowHeight - 143,
-		height = 70,
+	self.btnCancel = NewButton({
+		right = 2, width = 130, y = windowHeight - 143, height = 70,
 		caption = i18n(cancelText or "cancel"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
 		classname = "negative_button",
 		OnClick = {
 			function()
 				self.CancelFunc()
 			end
 		},
-	}
+	})
 
-
-	-- Recovery needs the following abilities
-		-- Change user name (requires old email)
-			-- Requires user to be logged in
-		-- Reset Password (requires old email)
-			-- User cant even log in, needs email and then verification code
-		-- Change email associated with account
-			-- requires user to be logged in
-		-- Forgot username
-			-- requires email?
-		-- Change password
-			-- must be logged in
-
-	-- row grid goes by 40 pixels plus 10
-	-- col grid is 6 pieces 125 pixels plus 10
 	local formw = 150
 	local formh = 20
 	local pad = 15
 
------------------------CHANGE USERNAME-------------------------------
-	self.txtChangeUserName = TextBox:New {
-		x = pad + formw * 0 ,
-		y = pad + formh * 0 ,
-		width =   formw * 3 ,
-		height =  60 ,
-		-- caption = i18n("register_long"),
+	self.txtChangeUserName = add(recoverChildren, NewTextBox({
+		x = pad, y = pad, width = formw * 3, height = 60,
 		text = "Change username. You must be logged in, and will be logged out on successful change. Max: 20 characters. Cooldown: no more than twice a week, 3/month.",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtChangeUserName
+	}, 1, 1))
 
-	self.ebChangeUserName = EditBox:New {
-		x = pad ,
-		y = 80 ,
-		width =   350 ,
-		height =  formh * 1 ,
-		text = Configuration.userName or Configuration.suggestedNameFromSteam or "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
+	self.ebChangeUserName = add(recoverChildren, NewEditBox({
+		x = pad, y = 80, width = 350, height = formh,
+		text = defaultName,
 		tooltip = '3-20 characters. Letters, numbers, square brackets, and underscores only.',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebChangeUserName
+	}, 1, 1))
 
-	self.btnChangeUserName = Button:New {
-		x = pad + 360 ,
-		y = 80 ,
-		width =   150 ,
-		height =  formh * 1 ,
+	self.btnChangeUserName = add(recoverChildren, NewButton({
+		x = pad + 360, y = 80, width = 150, height = formh,
 		caption = i18n("change_username"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
 		classname = "negative_button",
 		OnClick = {
 			function()
 				self:tryChangeUserName()
 			end
 		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnChangeUserName
+	}, 1))
 
-	self.txtHelpChangeUserName = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 105 ,
-		width =   formw * 3 + 60 ,
-		height =  formh * 1 ,
+	self.txtHelpChangeUserName = add(recoverChildren, NewTextBox({
+		x = pad, y = 105, width = formw * 3 + 60, height = formh,
 		text = "If this doesnt work contact us on Discord.",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtHelpChangeUserName
+	}, 1, 1))
 
-	self.txtErrorChangeUserName = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 128 ,
-		width =   formw * 3 + 60 ,
-		height =  28 ,
+	self.txtErrorChangeUserName = add(recoverChildren, NewTextBox({
+		x = pad, y = 128, width = formw * 3 + 60, height = 28,
 		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtErrorChangeUserName
+	}, 1, 1))
 
-	recoverChildren[#recoverChildren+1] = Line:New{x=5,y=160,right=5, height = 1}
+	add(recoverChildren, Line:New{x = 5, y = 160, right = 5, height = 1})
 
-------------------------------RESET PASSWORD----------------------------------
-	self.txtResetPassword = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 168 ,
-		width =   formw * 3 ,
-		height =  formh * 2 ,
-		-- caption = i18n("register_long"),
+	self.txtResetPassword = add(recoverChildren, NewTextBox({
+		x = pad, y = 168, width = formw * 3, height = formh * 2,
 		text = "Reset forgotten password: You need to use your web browser to reset a forgotten password.",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtResetPassword
+	}, 1, 1))
 
-
---[[
-
-
-
-	self.lblResetPasswordEmail =  Label:New {
-		x = pad + formw * 0 ,
-		y = pad + formh * 7 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		-- caption = i18n("register_long"),
-		caption = "Email address:",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.lblResetPasswordEmail
-
-	self.ebResetPasswordEmail = EditBox:New {
-		x = pad + formw * 1 ,
-		y = pad + formh * 7 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-		tooltip = 'Make sure you enter your valid email address',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebResetPasswordEmail
-
-	self.lblResetPasswordVerification =  Label:New {
-		x = pad + formw * 0 ,
-		y = pad + formh * 8 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		-- caption = i18n("register_long"),
-		caption = "Verification Code:",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.lblResetPasswordVerification
-
-	self.ebResetPasswordVerification = EditBox:New {
-		x = pad + formw * 1 ,
-		y = pad + formh * 8 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-		tooltip = 'You will recieve this code via email after submitting your email in the above box',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebResetPasswordVerification
-
-	self.btnResetPasswordEmail = Button:New {
-		x = pad + formw * 2 ,
-		y = pad + formh * 7 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		caption = i18n("submit_email"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		classname = "negative_button",
-		OnClick = {
-			function()
-				self:tryResetPasswordEmail()
-			end
-		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnResetPasswordEmail
-
-	self.btnResetPasswordVerification = Button:New {
-		x = pad + formw * 2 ,
-		y = pad + formh * 8 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		caption = i18n("submit_verification"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		classname = "negative_button",
-		OnClick = {
-			function()
-				self:tryResetPasswordVerification()
-			end
-		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnResetPasswordVerification
-
-	self.txtErrorResetPassword = TextBox:New {
-		x = pad + formw * 0 ,
-		y = pad + formh * 9 ,
-		width =   formw * 3 ,
-		height =  formh * 1 ,
-		text = "If this doesnt work contact us on Discord",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtErrorResetPassword
-
-	recoverChildren[#recoverChildren+1] = Line:New{x=5,y=formh * 11,right=5, height = 1}
---]]
----------------------------Change Password--------------------------------
-	self.txtChangePassword = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 292 ,
-		width =   formw * 3 ,
-		height =  formh * 2 ,
-		-- caption = i18n("register_long"),
+	self.txtChangePassword = add(recoverChildren, NewTextBox({
+		x = pad, y = 292, width = formw * 3, height = formh * 2,
 		text = "Change Password: You must be logged in, enter your old and your new password",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtChangePassword
+	}, 1, 1))
 
-
-
---[[
-	self.lblChangePasswordOld =  Label:New {
-		x = pad + formw * 0 ,
-		y = pad + formh * 13 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		-- caption = i18n("register_long"),
-		caption = "Old password:",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.lblChangePasswordOld
-
-	self.ebChangePasswordOld = EditBox:New {
-		x = pad + formw * 1 ,
-		y = pad + formh * 13 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-		tooltip = 'Enter your old password here',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebChangePasswordOld
-
-	self.lblChangePasswordNew =  Label:New {
-		x = pad + formw * 0 ,
-		y = pad + formh * 14 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		-- caption = i18n("register_long"),
-		caption = "New Password:",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.lblChangePasswordNew
-
-	self.ebChangePasswordNew = EditBox:New {
-		x = pad + formw * 1 ,
-		y = pad + formh * 14 ,
-		width =   formw * 1 ,
-		height =  formh * 1 ,
-		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-		tooltip = 'Enter your new password here',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebChangePasswordNew
-
-	self.btnChangePassword = Button:New {
-		x = pad + formw * 2 ,
-		y = pad + formh * 13 ,
-		width =   formw * 1 ,
-		height =  formh * 2 ,
-		caption = i18n("change_password"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		classname = "negative_button",
-		OnClick = {
-			function()
-				self:tryChangePassword()
-			end
-		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnChangePassword
-
-	self.txtErrorChangePassword = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 4 + pad + formh * 15 ,
-		width =   formw * 3 ,
-		height =  formh * 1 ,
-		text = "If this doesnt work contact us on Discord",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtErrorChangePassword
-
-	recoverChildren[#recoverChildren+1] = Line:New{x=5,y=formh * 17,right=5, height = 1}
---]]
-	---------------------------Change Email-------------------------------
-	self.txtChangeEmail = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 420 ,
-		width =   520 ,
-		height =  82 ,
-		-- caption = i18n("register_long"),
+	self.txtChangeEmail = add(recoverChildren, NewTextBox({
+		x = pad, y = 420, width = 520, height = 82,
 		text = "Change email address associated with your account. You must be logged in. Enter the new email address you wish to use, then enter the validation code sent to the new email address.",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtChangeEmail
+	}, 1, 1))
 
-	self.lblChangeEmailEmail =  Label:New {
-		x = pad + formw * 0 ,
-		y = 510 ,
-		width =   170 ,
-		height =  formh * 1 ,
+	self.lblChangeEmailEmail = add(recoverChildren, NewLabel({
+		x = pad, y = 510, width = 170, height = formh,
 		autosize = false,
 		valign = "center",
-		-- caption = i18n("register_long"),
 		caption = "New email address:",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.lblChangeEmailEmail
+	}, 1))
 
-	self.ebChangeEmailEmail = EditBox:New {
-		x = 190 ,
-		y = 510 ,
-		width =   210 ,
-		height =  formh * 1 ,
+	self.ebChangeEmailEmail = add(recoverChildren, NewEditBox({
+		x = 190, y = 510, width = 210, height = formh,
 		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
 		tooltip = 'Make sure you enter your new email address',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebChangeEmailEmail
+	}, 1, 1))
 
-	self.lblChangeEmailVerification =  Label:New {
-		x = pad + formw * 0 ,
-		y = 540 ,
-		width =   170 ,
-		height =  formh * 1 ,
+	self.lblChangeEmailVerification = add(recoverChildren, NewLabel({
+		x = pad, y = 540, width = 170, height = formh,
 		autosize = false,
 		valign = "center",
-		-- caption = i18n("register_long"),
 		caption = "Verification Code:",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.lblChangeEmailVerification
+	}, 1))
 
-	self.ebChangeEmailVerification = EditBox:New {
-		x = 190 ,
-		y = 540 ,
-		width =   210 ,
-		height =  formh * 1 ,
+	self.ebChangeEmailVerification = add(recoverChildren, NewEditBox({
+		x = 190, y = 540, width = 210, height = formh,
 		text = "",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
 		tooltip = 'You will recieve this code via email after submitting your email in the above box',
-	}
-	recoverChildren[#recoverChildren+1] = self.ebChangeEmailVerification
+	}, 1, 1))
 
-	self.btnChangeEmail = Button:New {
-		x = 405 ,
-		y = 510 ,
-		width =   155 ,
-		height =  formh * 1 ,
+	self.btnChangeEmail = add(recoverChildren, NewButton({
+		x = 405, y = 510, width = 155, height = formh,
 		caption = i18n("submit_email"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
 		classname = "negative_button",
 		OnClick = {
 			function()
 				self:tryChangeEmail()
 			end
 		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnChangeEmail
+	}, 1))
 
-	self.btnChangeEmailVerification = Button:New {
-		x = 405 ,
-		y = 540 ,
-		width =   155 ,
-		height =  formh * 1 ,
+	self.btnChangeEmailVerification = add(recoverChildren, NewButton({
+		x = 405, y = 540, width = 155, height = formh,
 		caption = i18n("submit_verification"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
 		classname = "negative_button",
 		OnClick = {
 			function()
 				self:tryChangeEmailVerification()
 			end
 		},
-	}
-	recoverChildren[#recoverChildren+1] = self.btnChangeEmailVerification
+	}, 1))
 
-	self.txtErrorChangeEmail = TextBox:New {
-		x = pad + formw * 0 ,
-		y = 570 ,
-		width =   560 ,
-		height =  formh * 1 ,
+	self.txtErrorChangeEmail = add(recoverChildren, NewTextBox({
+		x = pad, y = 570, width = 560, height = formh,
 		text = "If this doesnt work contact us on Discord",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(1),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(1),
-	}
-	recoverChildren[#recoverChildren+1] = self.txtErrorChangeEmail
+	}, 1, 1))
 
-
-	--------- just logout button --------
 	local function LogoutFunc()
 		if lobby:GetConnectionStatus() ~= "offline" then
 			Spring.Echo("Logout")
@@ -899,30 +496,20 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		end
 	end
 
-	self.btnLogOut = Button:New {
-		right = 140,
-		width = 130,
-		y = self.windowHeight - 143,
-		height = 70,
+	self.btnLogOut = add(recoverChildren, NewButton({
+		right = 140, width = 130, y = windowHeight - 143, height = 70,
 		caption = "Logout",
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
 		classname = "negative_button",
-		OnClick = {
-			LogoutFunc
-		},
-	}
-
-	recoverChildren[#recoverChildren+1] = self.btnLogOut
-
-
+		OnClick = {LogoutFunc},
+	}))
 
 	local width = math.min(620, math.max(580, ww - 20))
 
 	self.window = Window:New {
 		x = math.floor(math.max(0, (ww - width) / 2)),
-		y = math.floor(math.max(0,(wh - self.windowHeight) / 2)),
+		y = math.floor(math.max(0, (wh - windowHeight) / 2)),
 		width = width,
-		height = self.windowHeight,
+		height = windowHeight,
 		caption = "",
 		noFont = true,
 		resizable = false,
@@ -942,20 +529,19 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		}
 	}
 
+	local tabFont = Font(2)
 	self.tabPanel = Chili.DetachableTabPanel:New {
 		x = 0,
 		right = 0,
 		y = 0,
-		minTabWidth = width/3 - 20,
+		minTabWidth = width / 3 - 20,
 		bottom = 0,
 		padding = {0, 0, 0, 0},
 		tabs = {
-			[1] = { name = "login", caption = i18n("login"), children = loginChildren, objectOverrideFont = WG.Chobby.Configuration:GetFont(2)},
-			[2] = { name = "register", caption = i18n("register_verb"), children = registerChildren, objectOverrideFont = WG.Chobby.Configuration:GetFont(2)},
-			[3] = { name = "reset", caption = "Recover/Change", children = recoverChildren, objectOverrideFont = WG.Chobby.Configuration:GetFont(2)},
-			--[3] = { name = "test", caption = "teset2", children = {self.testbutton}, objectOverrideFont = WG.Chobby.Configuration:GetFont(2)},
+			{name = "login", caption = i18n("login"), children = loginChildren, objectOverrideFont = tabFont},
+			{name = "register", caption = i18n("register_verb"), children = registerChildren, objectOverrideFont = tabFont},
+			{name = "reset", caption = "Recover/Change", children = recoverChildren, objectOverrideFont = tabFont},
 		},
-
 	}
 
 	self.tabBarHolder = Control:New {
@@ -972,7 +558,6 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		}
 	}
 
-	-- Prompt user to register account if their account has not been registered.
 	if Configuration.firstLoginEver then
 		self.tabPanel.tabBar:Select("register")
 	end
@@ -992,7 +577,6 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 
 	self.window:AddChild(self.tabBarHolder)
 	self.window:AddChild(self.contentsPanel)
-
 	self.window:BringToFront()
 
 	local function IsRegisterInfoVisible()
@@ -1005,31 +589,32 @@ function LoginWindow:init(failFunction, cancelText, windowClassname, params)
 		createTabGroup({self.ebUsername, self.ebPassword, self.ebConfirmPassword}, {false, false, IsRegisterInfoVisible})
 	end
 	screen0:FocusControl(self.ebUsername)
-	-- FIXME: this should probably be moved to the lobby wrapper
 	self.loginAttempts = 0
 end
 
+local REMOVABLE_LISTENERS = {
+	{"onAgreementEnd", "OnAgreementEnd"},
+	{"onAgreement", "OnAgreement"},
+	{"onConnect", "OnConnect"},
+	{"onConnectRegister", "OnConnect"},
+	{"onDisconnected", "OnDisconnected"},
+	{"onRedirect", "OnRedirect"},
+	{"onRegistrationDenied", "OnRegistrationDenied"},
+	{"onChangeEmailRequestDenied", "OnChangeEmailRequestDenied"},
+	{"onChangeEmailRequestAccepted", "OnChangeEmailRequestAccepted"},
+	{"onChangeEmailDenied", "OnChangeEmailDenied"},
+	{"onChangeEmailAccepted", "OnChangeEmailAccepted"},
+}
+
 function LoginWindow:RemoveListeners()
 	self:ClearRenameListeners()
-	if self.onAgreementEnd then
-		lobby:RemoveListener("OnAgreementEnd", self.onAgreementEnd)
-		self.onAgreementEnd = nil
-	end
-	if self.onAgreement then
-		lobby:RemoveListener("OnAgreement", self.onAgreement)
-		self.onAgreement = nil
-	end
-	if self.onConnect then
-		lobby:RemoveListener("OnConnect", self.onConnect)
-		self.onConnect = nil
-	end
-	if self.onDisconnected then
-		lobby:RemoveListener("OnDisconnected", self.onDisconnected)
-		self.onDisconnected = nil
-	end
-	-- FIXME: the rest should be removed too
-	if self.OnChangeEmailRequestDenied then
-		lobby:RemoveListener("OnChangeEmailRequestDenied", self.OnChangeEmailRequestDenied)
+	for i = 1, #REMOVABLE_LISTENERS do
+		local field, event = REMOVABLE_LISTENERS[i][1], REMOVABLE_LISTENERS[i][2]
+		local listener = self[field]
+		if listener then
+			lobby:RemoveListener(event, listener)
+			self[field] = nil
+		end
 	end
 end
 
@@ -1055,11 +640,12 @@ function LoginWindow:MayBeDisconnectBeforeTryLogin()
 		return
 	end
 
-	-- disconnect and cleanup before login to next account
-	local function callTryLogin() self:tryLogin() end
-	self.onDisconnected = function(listener)
+	local function callTryLogin()
+		self:tryLogin()
+	end
+	self.onDisconnected = function()
 		lobby:RemoveListener("OnDisconnected", self.onDisconnected)
-		WG.Delay(callTryLogin, 3) -- server returns error when connecting directly after disconnect
+		WG.Delay(callTryLogin, 3)
 	end
 	lobby:AddListener("OnDisconnected", self.onDisconnected)
 
@@ -1072,14 +658,13 @@ function LoginWindow:tryLogin()
 
 	local username = self.ebUsername.text
 	local password = (self.ebPassword.visible and self.ebPassword.text) or nil
-	--Spring.Echo("isthismd5d?",username,password)
 	if username == '' then
 		return
 	end
 	Configuration.userName = username
 	Configuration.password = password
 
-	if not (lobby:GetConnectionStatus() == "connected") or self.loginAttempts >= 3 then
+	if lobby:GetConnectionStatus() ~= "connected" or self.loginAttempts >= 3 then
 		self.loginAttempts = 0
 		self:RemoveListeners()
 
@@ -1089,24 +674,24 @@ function LoginWindow:tryLogin()
 		end
 		lobby:AddListener("OnConnect", self.onConnect)
 
-		self.onDisconnected = function(listener)
+		self.onDisconnected = function()
 			lobby:RemoveListener("OnDisconnected", self.onDisconnected)
 			self.txtError:SetText(Configuration:GetErrorColor() .. "Cannot reach server:\n" .. tostring(Configuration:GetServerAddress()) .. ":" .. tostring(Configuration:GetServerPort()))
 		end
 		lobby:AddListener("OnDisconnected", self.onDisconnected)
 
-		local function FollowRedirect()
+		local function Connect()
 			lobby:Connect(Configuration:GetServerAddress(), Configuration:GetServerPort(), username, password, 3, nil, GetLobbyName())
 		end
 
 		self.onRedirect = function(listener, newaddress)
 			lobby:Disconnect()
 			Configuration:SetConfigValue("serverAddress", newaddress)
-			WG.Delay(FollowRedirect, 3)
+			WG.Delay(Connect, 3)
 		end
-
 		lobby:AddListener("OnRedirect", self.onRedirect)
-		lobby:Connect(Configuration:GetServerAddress(), Configuration:GetServerPort(), username, password, 3, nil, GetLobbyName())
+
+		Connect()
 	else
 		lobby:Login(username, password, 3, nil, GetLobbyName())
 	end
@@ -1115,108 +700,74 @@ function LoginWindow:tryLogin()
 end
 
 function isInValidUserName(username)
-	validUserNameRegex = "^[a-zA-Z%d%[%]_]+$"
-	if string.match(username,validUserNameRegex) and string.len( username) == string.len( string.match(username,validUserNameRegex)) then
-		--print (username .. " is OK")
-		if string.len(username) >20 then
-			return "Username too long, 20 characters max"
-		end
-		if string.len(username) <3 then
-			return "Username too short, at least 3 characters"
-		end
-		local blacklisted = Word_Library.FindBlacklistedString(username)
-		if blacklisted then
-			return "Username contains banned word/phrase: "..blacklisted
-		end
-		if string.lower(string.sub(username,1,5)) == 'host[' then
-			return "Username Host[...  is reserved internally."
-		end
-		return false
-	else
-		--print (username .. " is not OK: " .. ( string.match(username,validUserNameRegex) or "") )
+	if not string.match(username, "^[a-zA-Z%d%[%]_]+$") then
 		return "Username may only contain letters, numbers, [] and _"
 	end
+	local len = #username
+	if len > 20 then
+		return "Username too long, 20 characters max"
+	end
+	if len < 3 then
+		return "Username too short, at least 3 characters"
+	end
+	local blacklisted = Word_Library.FindBlacklistedString(username)
+	if blacklisted then
+		return "Username contains banned word/phrase: " .. blacklisted
+	end
+	if string.lower(string.sub(username, 1, 5)) == 'host[' then
+		return "Username Host[...  is reserved internally."
+	end
+	return false
 end
 
 function isInValidEmail(email)
 	if not email or email == '' then
-		return false -- Let other validation handle empty email
+		return false
 	end
 
-	-- Extract domain from email
 	local domain = string.match(email, "@(.+)$")
 	if not domain then
-		return false -- Invalid email format, let other validation handle
+		return false
 	end
 
-	domain = string.lower(domain)
-
-	-- Common email providers and their frequent typos
-	local commonProviders = {
-		["gmail.com"] = {"gmai.com", "gmail.co", "gmial.com", "gmail.cm", "gmail.om", "gmail.con", "gmal.com", "gamil.com"},
-		["hotmail.com"] = {"hotmai.com", "hotmail.co", "hotmil.com", "hotmail.cm", "hotmale.com", "hotmial.com"},
-		["yahoo.com"] = {"yaho.com", "yahoo.co", "yahho.com", "yahoo.cm", "yajoo.com", "yahooo.com"},
-		["outlook.com"] = {"outlook.co", "outlok.com", "outlook.cm", "outloook.com", "outlookk.com"},
-		["aol.com"] = {"aol.co", "aol.cm", "aol.om", "aol.con"},
-		["icloud.com"] = {"icloud.co", "icloud.cm", "iclud.com", "icloud.om", "icould.com"},
-		["live.com"] = {"live.co", "live.cm", "liv.com", "livee.com"},
-		["msn.com"] = {"msn.co", "msn.cm", "msnn.com"},
-		["comcast.net"] = {"comcast.com", "comast.net", "comcst.net"},
-		["verizon.net"] = {"verizon.com", "verison.net", "verizonn.net"},
-		["web.de"] = {"webb.de", "weeb.de", "web.dee", "web.dde", "web.ed", "webde.de", "web-de.de", "wed.de"},
-		["gmx.de"] = {"gmmx.de", "ggmx.de", "gmxx.de", "gmx.ed", "gmx.dee", "gmx.dde", "gmx.ed", "gmz.de"},
-		["freenet.de"] = {"freeenet.de", "freenett.de", "ffreenet.de", "freenet.ed", "freenet.dee", "freenet.dde", "freenet.ed", "free-net.de", "freenet-mobilfunk.de", "frenet.de", "freenete.de"},
-		["t-online.de"] = {"t-onlin.de", "tt-online.de", "t-onlinee.de", "t-online.ed", "t-online.dee", "t-online.dde", "t-online.ed", "t-onnline.de", "t-oonline.de", "tonline.de", "t-onine.de", "tonline.de", "t-oneline.de", "t.online.de"},
-		["protonmail.com"] = {"protonmail.co", "protonmail.cm", "protonmail.con", "protonmaill.com", "protonmai.com", "protomail.com", "protronmail.com", "prontonmail.com", "protonnmail.com", "protonmial.com"},
-		["proton.me"] = {"proton.me.com", "proton.ne", "proton.ms", "proton.mr", "protom.me", "protron.me", "protonm.me"},
-		["pm.me"] = {"pmme.com", "pm.me.com", "pn.me", "pm.ne", "pm.ms", "pm.mr", "pm-me.me"},
-		["protonmail.ch"] = {"protonmail.c", "protonmail.h", "protonmai.ch", "protonmial.ch", "protomail.ch", "protronmail.ch", "prontonmail.ch"}
-	}
-
-	-- Check if the domain is a known typo
-	for correctDomain, typos in pairs(commonProviders) do
-		for _, typo in ipairs(typos) do
-			if domain == typo then
-				return "Did you mean " .. correctDomain .. "? (Common typo detected)"
-			end
-		end
+	local correct = EMAIL_TYPOS[string.lower(domain)]
+	if correct then
+		return "Did you mean " .. correct .. "? (Common typo detected)"
 	end
-
 	return false
 end
 
-
 function LoginWindow:tryRegister()
+	local errorColor = Configuration:GetErrorColor()
 	local username = self.ebUsernameRegister.text
 
 	if username == '' then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "No username provided.")
+		self.txtErrorRegister:SetText(errorColor .. "No username provided.")
 		return
 	end
 
-	local isinValidUserName = isInValidUserName(username)
-	if isinValidUserName then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. isinValidUserName)
+	local invalidUserName = isInValidUserName(username)
+	if invalidUserName then
+		self.txtErrorRegister:SetText(errorColor .. invalidUserName)
 		return
 	end
 
 	if self.ebPasswordRegister.text ~= self.ebConfirmPassword.text then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "Passwords do not match.")
+		self.txtErrorRegister:SetText(errorColor .. "Passwords do not match.")
 		return
 	end
 
-	if self.ebEmail.text ~= self.ebConfirmEmail.text then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "Emails do not match.")
-		return
+	if self.emailRequired then
+		if self.ebEmail.text ~= self.ebConfirmEmail.text then
+			self.txtErrorRegister:SetText(errorColor .. "Emails do not match.")
+			return
+		end
+		local invalidEmail = isInValidEmail(self.ebEmail.text)
+		if invalidEmail then
+			self.txtErrorRegister:SetText(errorColor .. invalidEmail)
+			return
+		end
 	end
-
-	local email = self.ebEmail.text
-	local isInvalidEmail = isInValidEmail(email)
-	if isInvalidEmail then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. isInvalidEmail)
-		return
-	end
-
 
 	self.txtErrorRegister:SetText("")
 
@@ -1224,23 +775,22 @@ function LoginWindow:tryRegister()
 	local email = (self.emailRequired and self.ebEmail.visible and self.ebEmail.text) or nil
 
 	if password == '' then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "No password provided.")
+		self.txtErrorRegister:SetText(errorColor .. "No password provided.")
 		return
 	end
 
 	if email == '' then
-		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "No email provided.")
+		self.txtErrorRegister:SetText(errorColor .. "No email provided.")
 		return
 	end
 
-	self.onRegistrationDenied = function (listener, err, accountAlreadyExists)
+	self.onRegistrationDenied = function(listener, err)
 		self.txtErrorRegister:SetText(Configuration:GetErrorColor() .. "Registration error:" .. err)
 		lobby:RemoveListener("OnRegistrationDenied", self.onRegistrationDenied)
 	end
-
 	lobby:AddListener("OnRegistrationDenied", self.onRegistrationDenied)
 
-	if (lobby:GetConnectionStatus() ~= "connected") or self.loginAttempts >= 3 then
+	if lobby:GetConnectionStatus() ~= "connected" or self.loginAttempts >= 3 then
 		self.loginAttempts = 0
 		self:RemoveListeners()
 
@@ -1262,126 +812,102 @@ function LoginWindow:tryRegister()
 	self.loginAttempts = self.loginAttempts + 1
 end
 
----------------------------- Change Username ---------------------------
-
 function LoginWindow:tryChangeUserName()
-	Spring.Echo("lobby:GetConnectionStatus()",lobby:GetConnectionStatus())
 	self:ClearRenameListeners()
 	local newusername = self.ebChangeUserName.text
-	local isinValidUserName = isInValidUserName(newusername)
-	if isinValidUserName then
-		self.txtErrorChangeUserName:SetText(Configuration:GetErrorColor() .. isinValidUserName)
+	local invalidUserName = isInValidUserName(newusername)
+	if invalidUserName then
+		self.txtErrorChangeUserName:SetText(Configuration:GetErrorColor() .. invalidUserName)
 		return
 	end
-	if lobby:GetConnectionStatus() == "connected" then
-		local function SetRenameButtonEnabled(enabled)
-			if self.btnChangeUserName then
-				self.btnChangeUserName:SetEnabled(enabled)
-			end
-		end
-
-		local function FinishRenameRequest(message, color)
-			self.pendingRenameUserName = nil
-			SetRenameButtonEnabled(true)
-			if self.txtErrorChangeUserName then
-				self.txtErrorChangeUserName:SetText((color or "") .. message)
-			end
-			self:ClearRenameListeners()
-		end
-
-		local function GetRenameResponseColor(message)
-			local lowerMessage = string.lower(tostring(message or ""))
-			if lowerMessage:find("success", 1, true) or lowerMessage:find("renamed", 1, true) then
-				return Configuration:GetSuccessColor()
-			end
-			if lowerMessage:find("fail", 1, true) or lowerMessage:find("denied", 1, true) or lowerMessage:find("taken", 1, true) or lowerMessage:find("already", 1, true) or lowerMessage:find("cooldown", 1, true) or lowerMessage:find("week", 1, true) or lowerMessage:find("month", 1, true) or lowerMessage:find("max", 1, true) or lowerMessage:find("too ", 1, true) then
-				return Configuration:GetErrorColor()
-			end
-			return Configuration:GetWarningColor()
-		end
-
-		self.pendingRenameUserName = newusername
-		SetRenameButtonEnabled(false)
-		self.txtErrorChangeUserName:SetText(Configuration:GetWarningColor() .. "Sending rename request for: " .. newusername)
-
-		self.onRenameServerMSG = function(listener, message)
-			FinishRenameRequest(tostring(message or "No message"), GetRenameResponseColor(message))
-		end
-		lobby:AddListener("OnServerMSG", self.onRenameServerMSG)
-
-		self.onRenameDenied = function(listener, reason)
-			FinishRenameRequest("Rename denied: " .. tostring(reason or "No reason provided"), Configuration:GetErrorColor())
-		end
-		lobby:AddListener("OnDenied", self.onRenameDenied)
-
-		self.onRenameDisconnected = function(listener)
-			FinishRenameRequest("Disconnected after rename request. This usually means success; log in as: " .. newusername, Configuration:GetWarningColor())
-		end
-		lobby:AddListener("OnDisconnected", self.onRenameDisconnected)
-
-		WG.Delay(function()
-			if self.pendingRenameUserName == newusername then
-				FinishRenameRequest("No reply yet. Check whether you are still connected, then try again if needed.", Configuration:GetWarningColor())
-			end
-		end, 30)
-
-		lobby:RenameAccount(newusername)
-	else
+	if lobby:GetConnectionStatus() ~= "connected" then
 		self.txtErrorChangeUserName:SetText(Configuration:GetErrorColor() .. "Must be logged in to change user name!")
+		return
 	end
+
+	local function SetRenameButtonEnabled(enabled)
+		if self.btnChangeUserName then
+			self.btnChangeUserName:SetEnabled(enabled)
+		end
+	end
+
+	local function FinishRenameRequest(message, color)
+		self.pendingRenameUserName = nil
+		SetRenameButtonEnabled(true)
+		if self.txtErrorChangeUserName then
+			self.txtErrorChangeUserName:SetText((color or "") .. message)
+		end
+		self:ClearRenameListeners()
+	end
+
+	local function GetRenameResponseColor(message)
+		local lowerMessage = string.lower(tostring(message or ""))
+		if lowerMessage:find("success", 1, true) or lowerMessage:find("renamed", 1, true) then
+			return Configuration:GetSuccessColor()
+		end
+		if ContainsAny(lowerMessage, RENAME_ERROR_WORDS) then
+			return Configuration:GetErrorColor()
+		end
+		return Configuration:GetWarningColor()
+	end
+
+	self.pendingRenameUserName = newusername
+	SetRenameButtonEnabled(false)
+	self.txtErrorChangeUserName:SetText(Configuration:GetWarningColor() .. "Sending rename request for: " .. newusername)
+
+	self.onRenameServerMSG = function(listener, message)
+		FinishRenameRequest(tostring(message or "No message"), GetRenameResponseColor(message))
+	end
+	lobby:AddListener("OnServerMSG", self.onRenameServerMSG)
+
+	self.onRenameDenied = function(listener, reason)
+		FinishRenameRequest("Rename denied: " .. tostring(reason or "No reason provided"), Configuration:GetErrorColor())
+	end
+	lobby:AddListener("OnDenied", self.onRenameDenied)
+
+	self.onRenameDisconnected = function()
+		FinishRenameRequest("Disconnected after rename request. This usually means success; log in as: " .. newusername, Configuration:GetWarningColor())
+	end
+	lobby:AddListener("OnDisconnected", self.onRenameDisconnected)
+
+	WG.Delay(function()
+		if self.pendingRenameUserName == newusername then
+			FinishRenameRequest("No reply yet. Check whether you are still connected, then try again if needed.", Configuration:GetWarningColor())
+		end
+	end, 30)
+
+	lobby:RenameAccount(newusername)
 end
 
----------------------------- Change Email Address ---------------------------
-
-
-
 function LoginWindow:tryChangeEmail()
-	--Spring.Echo("lobby:GetConnectionStatus()",lobby:GetConnectionStatus())
-	-- https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html#CHANGEEMAILREQUEST:client
-	-- step 1, send a CHANGEEMAILREQUEST packet, which either returns CHANGEEMAILREQUESTDENIED or CHANGEEMAILREQUESTACCEPTED
-
+	local errorColor = Configuration:GetErrorColor()
 	local newemail = self.ebChangeEmailEmail.text
 	if string.len(newemail) < 5 then
-		self.txtErrorChangeEmail:SetText(
-		Configuration:GetErrorColor() ..
-		"Enter a valid email address, not " .. newemail
-		)
+		self.txtErrorChangeEmail:SetText(errorColor .. "Enter a valid email address, not " .. newemail)
 		return false
 	end
 
-	local isInvalidEmail = isInValidEmail(newemail)
-	if isInvalidEmail then
-		self.txtErrorChangeEmail:SetText(Configuration:GetErrorColor() .. isInvalidEmail)
+	local invalidEmail = isInValidEmail(newemail)
+	if invalidEmail then
+		self.txtErrorChangeEmail:SetText(errorColor .. invalidEmail)
 		return false
 	end
 
-	if  lobby:GetConnectionStatus() ~= "connected" then
-		self.txtErrorChangeEmail:SetText(
-			Configuration:GetErrorColor() ..
-			"Must be logged in to change email address"
-		)
+	if lobby:GetConnectionStatus() ~= "connected" then
+		self.txtErrorChangeEmail:SetText(errorColor .. "Must be logged in to change email address")
 		return false
 	end
 
-	self.txtErrorChangeEmail:SetText(
-		Configuration:GetWarningColor() ..
-		"Sending Request for: " .. newemail
-	)
+	self.txtErrorChangeEmail:SetText(Configuration:GetWarningColor() .. "Sending Request for: " .. newemail)
 
 	self.onChangeEmailRequestDenied = function(listener, errorMsg)
 		lobby:RemoveListener("OnChangeEmailRequestDenied", self.onChangeEmailRequestDenied)
-		self.txtErrorChangeEmail:SetText(
-				Configuration:GetErrorColor() ..
-				"Change Email Request Denied: " .. errorMsg
-			)
+		self.txtErrorChangeEmail:SetText(Configuration:GetErrorColor() .. "Change Email Request Denied: " .. errorMsg)
 	end
 
-	self.onChangeEmailRequestAccepted = function(listener)
+	self.onChangeEmailRequestAccepted = function()
 		lobby:RemoveListener("OnChangeEmailRequestAccepted", self.onChangeEmailRequestAccepted)
-		self.txtErrorChangeEmail:SetText(
-				Configuration:GetSuccessColor() ..
-				"Request Accepted, enter verification code recieved via email"
-			)
+		self.txtErrorChangeEmail:SetText(Configuration:GetSuccessColor() .. "Request Accepted, enter verification code recieved via email")
 	end
 
 	lobby:AddListener("OnChangeEmailRequestDenied", self.onChangeEmailRequestDenied)
@@ -1389,245 +915,51 @@ function LoginWindow:tryChangeEmail()
 	lobby:ChangeEmailRequest(newemail)
 end
 
-
-
-
-function LoginWindow:tryChangeEmailVerification ()
-	if  lobby:GetConnectionStatus() ~= "connected" then
-		self.txtErrorChangeEmail:SetText(
-			Configuration:GetErrorColor() ..
-			"Must be logged in to verify change email address"
-		)
+function LoginWindow:tryChangeEmailVerification()
+	local errorColor = Configuration:GetErrorColor()
+	if lobby:GetConnectionStatus() ~= "connected" then
+		self.txtErrorChangeEmail:SetText(errorColor .. "Must be logged in to verify change email address")
 		return false
 	end
 
 	local newemail = self.ebChangeEmailEmail.text
 	if string.len(newemail) < 5 then
-		self.txtErrorChangeEmail:SetText(
-		Configuration:GetErrorColor() ..
-		"Enter a valid email address, not" .. newemail
-		)
+		self.txtErrorChangeEmail:SetText(errorColor .. "Enter a valid email address, not " .. newemail)
 		return false
 	end
 
 	local verificationCode = self.ebChangeEmailVerification.text
-
 	if string.len(verificationCode) < 3 then
-		self.txtErrorChangeEmail:SetText(
-			Configuration:GetErrorColor() ..
-			"Verification code too short: " .. verificationCode
-			)
+		self.txtErrorChangeEmail:SetText(errorColor .. "Verification code too short: " .. verificationCode)
 		return false
 	end
 
-	self.txtErrorChangeEmail:SetText(
-		Configuration:GetWarningColor() ..
-		"Sending Verification Code: " .. verificationCode .. " for ".. newemail
-	)
+	self.txtErrorChangeEmail:SetText(Configuration:GetWarningColor() .. "Sending Verification Code: " .. verificationCode .. " for " .. newemail)
 
-	self.onChangeEmailDenied = function (listener, errorMsg)
+	self.onChangeEmailDenied = function(listener, errorMsg)
 		lobby:RemoveListener("OnChangeEmailDenied", self.onChangeEmailDenied)
-		self.txtErrorChangeEmail:SetText(
-				Configuration:GetErrorColor() ..
-				"Change Email Denied: " .. errorMsg
-			)
+		self.txtErrorChangeEmail:SetText(Configuration:GetErrorColor() .. "Change Email Denied: " .. errorMsg)
 	end
 
-	self.onChangeEmailReqestAccepted = function (listener)
+	self.onChangeEmailAccepted = function()
 		lobby:RemoveListener("OnChangeEmailAccepted", self.onChangeEmailAccepted)
-		self.txtErrorChangeEmail:SetText(
-				Configuration:GetSuccessColor() ..
-				"Email changed successfully to " .. self.ebChangeEmailEmail.text
-			)
+		self.txtErrorChangeEmail:SetText(Configuration:GetSuccessColor() .. "Email changed successfully to " .. self.ebChangeEmailEmail.text)
 	end
 
 	lobby:AddListener("OnChangeEmailDenied", self.onChangeEmailDenied)
 	lobby:AddListener("OnChangeEmailAccepted", self.onChangeEmailAccepted)
-
 	lobby:ChangeEmail(newemail, verificationCode)
 end
 
-
----------------------------- Reset Password ---------------------------
-
-
-function LoginWindow:tryResetPasswordEmail()
-	Spring.Echo("lobby:GetConnectionStatus()",lobby:GetConnectionStatus())
-	-- https://springrts.com/dl/LobbyProtocol/ProtocolDescription.html#RESETPASSWORDREQUEST:client
-	if  lobby:GetConnectionStatus() == "connected" then
-		self.txtErrorResetPassword:SetText("Already connected, why do need to reset your password?")
-		return false
-	end
-
-	local emailaddress = self.ebResetPasswordEmail.text
-	if string.len(emailaddress) < 5 then
-		self.txtErrorResetPassword:SetText(
-		Configuration:GetErrorColor() ..
-		"Enter a valid email address, not " .. emailaddress
-		)
-		return false
-	end
-
-	local isInvalidEmail = isInValidEmail(emailaddress)
-	if isInvalidEmail then
-		self.txtErrorResetPassword:SetText(Configuration:GetErrorColor() .. isInvalidEmail)
-		return false
-	end
-
-	self.txtErrorResetPassword:SetText(
-		Configuration:GetWarningColor() ..
-		"Sending reset request for: " .. emailaddress
-	)
-
-	self.onResetPasswordRequestDenied = function(listener,errorMsg)
-		lobby:RemoveListener("OnResetPasswordRequestDenied", self.onResetPasswordRequestDenied)
-		lobby:Disconnect()
-		self.txtErrorResetPassword:SetText(
-				Configuration:GetErrorColor() ..
-				"Password reset request denied: " .. errorMsg
-			)
-	end
-
-	self.onResetPasswordRequestAccepted = function(listener)
-		lobby:RemoveListener("OnResetPasswordRequestAccepted", self.onResetPasswordRequestAccepted)
-		lobby:RemoveListener("OnChangeEmailAccepted", self.onChangeEmailAccepted)
-		self.txtErrorResetPassword:SetText(
-				Configuration:GetSuccessColor() ..
-				"Request Accepted, enter email and verification code recieved via email"
-			)
-	end
-
-	lobby:AddListener("OnResetPasswordRequestDenied", self.onResetPasswordRequestDenied)
-	lobby:AddListener("OnResetPasswordRequestAccepted", self.onResetPasswordRequestAccepted)
-
-	function ResetPasswordRequest()
-		lobby:ResetPasswordRequest(emailaddress)
-		lobby:RemoveListener("OnConnect",ResetPasswordRequest)
-		--lobby:RemoveListener("OnConnect",)
-	end
-
-	lobby:AddListener("OnConnect",ResetPasswordRequest)
-
-	lobby:AddListener("OnDenied",ResetPasswordRequest)
-
-	self.txtErrorResetPassword:SetText(
-		Configuration:GetErrorColor() ..
-		"Attempting to send a reset request..."
-	)
-	Configuration.userName = false --nuke username so we dont try to log in unsuccessfully
-	lobby:Connect(Configuration:GetServerAddress(), Configuration:GetServerPort(), nil, nil, 3, nil, GetLobbyName())
-
-end
-
-
-function LoginWindow:tryResetPasswordVerification ()
-	if  lobby:GetConnectionStatus() == "connected" then
-		self.txtErrorResetPassword:SetText("Already connected, why do need to reset your password?")
-		return false
-	end
-
-	local emailaddress = self.ebResetPasswordEmail.text
-	if string.len(emailaddress) < 5 then
-		self.txtErrorResetPassword:SetText(
-		Configuration:GetErrorColor() ..
-		"Enter a valid email address, not " .. emailaddress
-		)
-		return false
-	end
-
-	local verificationCode = self.ebResetPasswordVerification.text
-	if string.len(verificationCode) < 3 then
-		self.txtErrorResetPassword:SetText(
-			Configuration:GetErrorColor() ..
-			"Verification code too short: " .. verificationCode
-			)
-		return false
-	end
-
-	self.onResetPasswordDenied = function(listener,errorMsg)
-		lobby:RemoveListener("OnResetPasswordDenied", self.onResetPasswordDenied)
-		lobby:Disconnect()
-		self.txtErrorResetPassword:SetText(
-				Configuration:GetErrorColor() ..
-				"Reset Password Denied: " .. errorMsg
-			)
-	end
-
-	self.onResetPasswordAccepted = function(listener)
-		lobby:RemoveListener("OnResetPasswordAccepted", self.onResetPasswordAccepted)
-		self.txtErrorResetPassword:SetText(
-				Configuration:GetSuccessColor() ..
-				"Password successfully reset for " .. self.ebResetPasswordEmail.text
-			)
-	end
-
-	self.txtErrorResetPassword:SetText(
-		Configuration:GetWarningColor() ..
-		"Sending Verification Code: " .. verificationCode .. " for ".. emailaddress
-	)
-	lobby:AddListener("OnResetPasswordDenied", self.onResetPasswordDenied)
-	lobby:AddListener("OnResetPasswordAccepted", self.onResetPasswordAccepted)
-
-	function ResetPassword()
-		lobby:ResetPassword(emailaddress,verificationCode)
-		lobby:RemoveListener("OnConnect",ResetPassword)
-		--lobby:RemoveListener("OnConnect",)
-	end
-
-	lobby:AddListener("OnConnect",ResetPassword)
-
-	lobby:AddListener("OnDenied",ResetPassword)
-
-	Configuration.userName = false --nuke username so we dont try to log in unsuccessfully
-	lobby:Connect(Configuration:GetServerAddress(), Configuration:GetServerPort(), nil, nil, 3, nil, GetLobbyName())
-end
-
-
------------------- Change Password --------------
-
-function LoginWindow:tryChangePassword()
-	Spring.Echo("lobby:GetConnectionStatus()",lobby:GetConnectionStatus())
-	if lobby:GetConnectionStatus() ~= "connected" then
-		self.txtErrorChangePassword:SetText(
-			Configuration:GetErrorColor() ..
-			"Must be connected to change password!"
-		)
-		return
-	end
-
-	local oldPassword = (self.ebChangePasswordOld.text and string.len(self.ebChangePasswordOld.text) > 0 and VFS.CalculateHash(self.ebChangePasswordOld.text, 0)) or nil
-	local newPassword =  (self.ebChangePasswordNew.text and string.len(self.ebChangePasswordNew.text) > 0 and VFS.CalculateHash(self.ebChangePasswordNew.text, 0)) or nil
-
-	if oldPassword == nil or newPassword == nil then
-		self.txtErrorChangePassword:SetText(
-			Configuration:GetErrorColor() ..
-			"At least one password is invalid!"
-		)
-	end
-
-	lobby:ChangePassword(oldPassword, newPassword)
-
-	self.txtErrorChangePassword:SetText(
-		Configuration:GetWarningColor() ..
-		"Password change request sent, you will be logged out if it succeeds"
-	)
-end
-
-
-
------------------  OnConnected ----------------------
-
-
 function LoginWindow:OnConnected()
 	Spring.Echo("OnConnected")
-	--self.txtError:SetText(Configuration:GetPartialColor() .. i18n("connecting"))
 
 	self.onAgreement = function(listener, line)
 		self.agreementText = ((self.agreementText and (self.agreementText .. " \n")) or "") .. line
 	end
 	lobby:AddListener("OnAgreement", self.onAgreement)
 
-	self.onAgreementEnd = function(listener)
+	self.onAgreementEnd = function()
 		self:createAgreementWindow()
 		lobby:RemoveListener("OnAgreementEnd", self.onAgreementEnd)
 		lobby:RemoveListener("OnAgreement", self.onAgreement)
@@ -1644,84 +976,54 @@ function LoginWindow:createAgreementWindow()
 		bottom = "15%",
 		caption = "\nUser agreement",
 		captionColor = {1.0, 1.0, 1.0, 1.0},
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
+		objectOverrideFont = Font(3),
 		OnClick = self.BringToFront,
 		resizable = false,
 		draggable = false,
 		parent = WG.Chobby.lobbyInterfaceHolder,
 	}
 
-	self.tbAgreement = TextBox:New {
-		x = "2%",
-		right = "2%",
-		y = "3%",
+	self.tbAgreement = NewTextBox({
+		x = "2%", right = "2%", y = "3%",
 		text = self.agreementText,
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-		objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
-	}
+	}, 2, 2)
 
 	ScrollPanel:New {
 		x = "2%",
 		right = "2%",
 		y = 48,
 		bottom = 270,
-		children = {
-			self.tbAgreement
-		},
+		children = {self.tbAgreement},
 		parent = self.agreementWindow,
 	}
 
 	if self.emailRequired then
-		self.txtVerif = TextBox:New {
-			x = "2%",
-			width = 200,
-			bottom = 100,
-			height = 35,
+		self.txtVerif = NewTextBox({
+			x = "2%", width = 200, bottom = 100, height = 35,
 			text = i18n("email_verification_code") .. ":",
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
 			parent = self.agreementWindow,
-		}
-		self.ebVerif = EditBox:New {
-			x = 200,
-			right = "3%",
-			bottom = 96,
-			height = 35,
+		}, 2, 2)
+		self.ebVerif = NewEditBox({
+			x = 200, right = "3%", bottom = 96, height = 35,
 			text = "",
-			objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-			objectOverrideHintFont = WG.Chobby.Configuration:GetFont(2),
 			parent = self.agreementWindow,
-		}
+		}, 2, 2)
 	end
 
-
-
-	self.btnYes = Button:New {
-		x = "2%",
-		width = 135,
-		bottom = "1%",
-		height = 70,
+	self.btnYes = NewButton({
+		x = "2%", width = 135, bottom = "1%", height = 70,
 		caption = i18n("accept"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
 		classname = "action_button",
 		OnClick = {
 			function()
-				local verificationCode = ""
-				if self.emailRequired then
-					verificationCode = self.ebVerif.text
-				end
-				self:acceptAgreement(verificationCode)
+				self:acceptAgreement(self.emailRequired and self.ebVerif.text or "")
 			end
 		},
 		parent = self.agreementWindow,
-	}
-	self.btnNo = Button:New {
-		right = "2%",
-		width = 135,
-		bottom = "1%",
-		height = 70,
+	})
+	self.btnNo = NewButton({
+		right = "2%", width = 135, bottom = "1%", height = 70,
 		caption = i18n("decline"),
-		objectOverrideFont = WG.Chobby.Configuration:GetFont(3),
 		classname = "negative_button",
 		OnClick = {
 			function()
@@ -1729,7 +1031,7 @@ function LoginWindow:createAgreementWindow()
 			end
 		},
 		parent = self.agreementWindow,
-	}
+	})
 end
 
 function LoginWindow:acceptAgreement(verificationCode)
@@ -1741,4 +1043,3 @@ function LoginWindow:declineAgreement()
 	lobby:Disconnect()
 	self.agreementWindow:Dispose()
 end
-
