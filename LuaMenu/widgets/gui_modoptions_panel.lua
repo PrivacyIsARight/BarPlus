@@ -10,25 +10,16 @@ function widget:GetInfo()
 	}
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Structure
 local modoptionDefaults = {}
 local modoptionStructure = {}
 
--- Variables
 local battleLobby
 local localModoptions = {}
 local modoptionControlNames = {}
 local modoptions
 local modoptionsByGame = {}
 
--- constants
-local MARKED_AS_CHANGED_COLOR = {0.99, 0.75, .3, 1} -- {0.07, 0.66, 0.92, 1.0}
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Utility Function
+local MARKED_AS_CHANGED_COLOR = {0.99, 0.75, .3, 1}
 
 local function UpdateControlValue(key, value)
 	if not modoptionControlNames then
@@ -36,12 +27,12 @@ local function UpdateControlValue(key, value)
 	end
 	local control = modoptionControlNames[key]
 	if control then
-		if control.SetText then -- editbox
+		if control.SetText then
 			control:SetText(value)
 			control:FocusUpdate()
-		elseif control.Select and control.itemKeyToName then -- combobox
+		elseif control.Select and control.itemKeyToName then
 			control:Select(control.itemKeyToName[value])
-		elseif control.SetToggle then -- checkbox
+		elseif control.SetToggle then
 			control:SetToggle(value == true or value == 1 or value == "1")
 		end
 	end
@@ -49,7 +40,6 @@ end
 
 local function TextFromNum(num, step)
 
-	-- remove excess accuracy
 	local places = 0
 	if step < 0.01  then
 		places = 3
@@ -60,7 +50,6 @@ local function TextFromNum(num, step)
 	end
 	local text = string.format("%." .. places .. "f", num)
 
-	-- remove trailing 0s
 	while text:find("%.") and (text:find("0", text:len()) or text:find("%.", text:len())) do
 		text = text:sub(0, text:len() - 1)
 	end
@@ -79,9 +68,6 @@ local function getModOptionByKey(key)
 	return retOption
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Lock Handling
 local lockedOptions = {}
 local postLock = {}
 local function processChildrenLocks(unlock, lock, bitmask)
@@ -137,10 +123,6 @@ local function processChildrenLocks(unlock, lock, bitmask)
 		lockedOptions[item] = itemLock
 	end end
 end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Option Control Handling
 
 local function ProcessListOption(data, index)
 	local control
@@ -225,7 +207,7 @@ local function ProcessListOption(data, index)
 				localModoptions[data.key] = itemNameToKey[selectedName]
 			end
 		},
-		itemKeyToName = itemKeyToName, -- Not a chili key
+		itemKeyToName = itemKeyToName,
 		tooltip = data.desc,
 	}
 	list.font = data.def == defaultKey and WG.Chobby.Configuration:GetFont(2) or WG.Chobby.Configuration:GetFont(2, "Changed2", {color = MARKED_AS_CHANGED_COLOR})
@@ -285,9 +267,9 @@ local function ProcessBoolOption(data, index)
 		tooltip = data.desc,
 		OnChange =
 			(data.unlock or data.lock) and { function (obj, newState)
-				if newState then -- on enable
+				if newState then
 					processChildrenLocks(data.unlock, data.lock, data.bitmask or 1)
-				else -- on disable
+				else
 					processChildrenLocks(data.lock, data.unlock, data.bitmask or 1)
 				end
 				localModoptions[data.key] = tostring((newState and 1) or 0)
@@ -376,9 +358,7 @@ local function ProcessNumberOption(data, index)
 					return
 				end
 
-				-- Bound the number
 				newValue = math.min(data.max, math.max(data.min, newValue))
-				-- Round to step size
 				newValue = math.floor(newValue/data.step + 0.5)*data.step + 0.01*data.step
 
 				oldText = TextFromNum(newValue, data.step)
@@ -408,9 +388,7 @@ local function ProcessNumberOption(data, index)
 					return
 				end
 
-				-- Bound the number
 				newValue = math.min(data.max, math.max(data.min, newValue))
-				-- Round to step size
 				newValue = math.floor(newValue/data.step + 0.5)*data.step + 0.01*data.step
 
 				oldText = TextFromNum(newValue, data.step)
@@ -593,10 +571,6 @@ local function ProcessLineSeparator(data, index)
 end
 
 local function PopulateTab(options)
-	-- list = combobox
-	-- bool = tickbox
-	-- number = sliderbar (with label)
-	-- string = editBox
 
 	local contentsPanel = ScrollPanel:New {
 		name = "tabPanel",
@@ -654,10 +628,6 @@ local function PopulateTab(options)
 	end
 	return {contentsPanel}
 end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Modoptions Window Handler
 
 local function CreateModoptionWindow()
 	local ww, wh = Spring.GetWindowGeometry()
@@ -754,7 +724,7 @@ local function CreateModoptionWindow()
 	local buttonAccept, buttonReset
 
 	local function AcceptFunc()
-		screen0:FocusControl(buttonAccept) -- Defocus the text entry
+		screen0:FocusControl(buttonAccept)
 		local isBoss = false
 		if not isBoss then
 			for k, v in pairs(localModoptions) do
@@ -836,7 +806,6 @@ local function CreateModoptionWindow()
 	}
 	filterResultsPanel:SetVisibility(false)
 
-	-- Save original control references before any filtering
 	local savedModoptionControlNames = {}
 	for k, v in pairs(modoptionControlNames) do
 		savedModoptionControlNames[k] = v
@@ -897,12 +866,10 @@ local function CreateModoptionWindow()
 		local filtering = #filterWords > 0
 
 		if filtering then
-			-- Hide tabs and tab bar, show the combined filter panel
 			tabBarHolder:SetVisibility(false)
 			tabPanel:SetVisibility(false)
 			filterResultsPanel:SetVisibility(true)
 
-			-- Clear old results
 			filterResultsPanel:ClearChildren()
 
 			local visibleRow = 0
@@ -918,7 +885,6 @@ local function CreateModoptionWindow()
 							and child.filterType ~= "subheader"
 							and not (child.optionKey and lockedOptions[child.optionKey])
 						then
-							-- Multi-word AND: all words must appear in the option name
 							local allFound = true
 							for _, word in ipairs(filterWords) do
 								if not string.find(child.filterText, word, 1, true) then
@@ -927,7 +893,6 @@ local function CreateModoptionWindow()
 								end
 							end
 
-							-- Tier 2: Fuzzy subsequence fallback (min 4 chars, strict threshold)
 							if not allFound then
 								local queryNoSpaces = lowerFilter:gsub("%s+", "")
 								if #queryNoSpaces >= 4 then
@@ -939,7 +904,6 @@ local function CreateModoptionWindow()
 							end
 
 							if allFound then
-								-- First match in this tab: insert a section header
 								if not tabHasResults then
 									tabHasResults = true
 									if visibleRow > 0 then
@@ -959,7 +923,6 @@ local function CreateModoptionWindow()
 									visibleRow = visibleRow + 1
 								end
 
-								-- Clone the control into the filter results
 								local clone
 								if child.filterType == "bool" then
 									clone = ProcessBoolOption(child.optionData, 0)
@@ -984,7 +947,6 @@ local function CreateModoptionWindow()
 				end
 			end
 		else
-			-- Restore normal tab view and original control references
 			tabBarHolder:SetVisibility(true)
 			tabPanel:SetVisibility(true)
 			filterResultsPanel:SetVisibility(false)
@@ -1069,15 +1031,15 @@ local function InitializeModoptionsDisplay()
 		value = tostring(value)
 		local hash = Spring.Utilities.Base64Encode(VFS.CalculateHash(value,1))
 		local tweakText = string.format("%d:%s", value:len(), hash:sub(1, 4))
-		if value:find("[^%w%-_=]") then -- Non-base64url character found
+		if value:find("[^%w%-_=]") then
 			return tweakText
 		end
 		for line in Spring.Utilities.Base64Decode(value):gmatch("([^\r\n]*)[\r\n]?") do
-			if line:sub(1, 2) ~= "--" then -- Line doesn't start with a comment
+			if line:sub(1, 2) ~= "--" then
 				return tweakText
 			end
 			local comment = line:sub(3, 27)
-			if not comment:find("[^%w%p ]") then -- Only whitelisted characters found
+			if not comment:find("[^%w%p ]") then
 				return tweakText .. "\n[" .. comment .. "]"
 			end
 		end
@@ -1138,9 +1100,6 @@ local function InitializeModoptionsDisplay()
 				local option = getModOptionByKey(key)
 				local name = option.name and option.name or key
 				text = text .. "\255\255\255\255"
-				if text ~= "\255\255\255\255" then
-					text = text .. "\255\128\128\128" .. "------" .. "\n"
-				end
 				text = text .. tostring(name).. " = \255\255\255\255"
 				if (key:sub(1,10) == "tweakunits" or key:sub(1,9) == "tweakdefs") then
 					local success, result = pcall(tweakSummary, value)
@@ -1191,10 +1150,6 @@ local function InitializeModoptionsDisplay()
 	return externalFunctions
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- External Interface
-
 local modoptionsDisplay
 
 local ModoptionsPanel = {}
@@ -1212,7 +1167,6 @@ function ModoptionsPanel.RefreshModoptions()
 		sections = {}
 	}
 
-	-- Populate the sections
 	for i = 1, #modoptions do
 		local data = modoptions[i]
 		if data.type == "section" then
@@ -1287,7 +1241,6 @@ function ModoptionsPanel.LoadModoptions(gameName, newBattleLobby, forceReload)
 
 	end
 
-
 	modoptionDefaults = {}
 	if not modoptions then
 		return
@@ -1295,14 +1248,12 @@ function ModoptionsPanel.LoadModoptions(gameName, newBattleLobby, forceReload)
 
 	local currentUnixTime = os.time()
 
-	-- Set modoptionDefaults
 	for i = 1, #modoptions do
 		local data = modoptions[i]
-		if data.key and data.def ~= nil then -- dont check for hidden here yet, as undefined defaults mean they will appear in the modopts list
+		if data.key and data.def ~= nil then
 			if type(data.def) == "boolean" then
 				modoptionDefaults[data.key] = tostring((data.def and 1) or 0)
 			elseif type(data.def) == "number" then
-				-- can't use tostring because of float inaccuracy, eg. 0.6 ends up as "0.6000000002"
 				modoptionDefaults[data.key] = TextFromNum(data.def, data.step)
 			else
 				modoptionDefaults[data.key] = tostring(data.def)
@@ -1313,11 +1264,9 @@ function ModoptionsPanel.LoadModoptions(gameName, newBattleLobby, forceReload)
 		end
 	end
 
-	-- Populate the sections
 	ModoptionsPanel.RefreshModoptions()
 end
 
--- call after LoadModoptions
 function ModoptionsPanel.ReturnModoptions()
 	return modoptions
 end
@@ -1336,10 +1285,6 @@ function ModoptionsPanel.GetModoptionsControl()
 	end
 	return modoptionsDisplay.GetControl()
 end
-
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Initialization
 
 function widget:Initialize()
 	CHOBBY_DIR = LUA_DIRNAME .. "widgets/chobby/"

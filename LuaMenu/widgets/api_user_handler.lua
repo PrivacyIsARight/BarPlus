@@ -1,6 +1,3 @@
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
 function widget:GetInfo()
 	return {
 		name      = "Users Handler",
@@ -9,13 +6,9 @@ function widget:GetInfo()
 		date      = "11 July 2016",
 		license   = "GNU LGPL, v2.1 or later",
 		layer     = -100000,
-		enabled   = true  --  loaded by default?
+		enabled   = true
 	}
 end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Local Variables
 
 local battleUsers = {}
 local tooltipUsers = {}
@@ -102,7 +95,7 @@ local openSkillLoaded = false
 local openSkillLoadFailed = false
 local openSkillLoadCo = nil
 local openSkillLoading = false
-local OPEN_SKILL_LINES_PER_STEP = 150 -- per frame parse
+local OPEN_SKILL_LINES_PER_STEP = 150
 local openSkillPendingUpdates = {}
 
 local IMAGE_CLAN_PATH    = "LuaUI/Configs/Clans/"
@@ -110,15 +103,11 @@ local RANK_DIR           = LUA_DIRNAME .. "configs/gameConfig/zk/rankImages/"
 
 local UserLevelToImageConfFunction
 
-local votedUsers = {} -- 2023-06-29 FB: ToDo: Does not get reset, if user leaves battle during vote, but has no impact
+local votedUsers = {}
 local usersAllowedToVote = {}
 
 local playerNotes
 local UpdateUserActivity
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Globally Applicable Utilities
 
 local function CountryShortnameToFlag(shortname)
 	local fileName = LUA_DIRNAME .. "images/flags/" .. string.lower(shortname) .. ".png"
@@ -160,7 +149,6 @@ local function GetClanImage(clanName)
 		return clanFile
 	end
 end
--- Use string.find loop instead of char-by-char concatenation (O(n) vs O(n²))
 local string_find = string.find
 local string_sub = string.sub
 local function SplitCsvLine(line)
@@ -204,7 +192,6 @@ local function LoadOpenSkillSnapshot()
 	openSkillCache = {}
 	openSkillLoading = true
 
-	-- Parse in steps to avoid stalling menu on startup; OS preview hover can use data as it arrives
 	openSkillLoadCo = coroutine.create(function(lineBudget)
 		local processed = 0
 		local isHeader = true
@@ -241,7 +228,6 @@ local function LoadOpenSkillSnapshot()
 			end
 		end
 
-	-- Apply any live updates received while loading
 	for id, update in pairs(openSkillPendingUpdates) do
 		openSkillCache[id] = openSkillCache[id] or { id = id }
 		local entry = openSkillCache[id]
@@ -312,10 +298,6 @@ local function GetSnapshotSkill(userID, battle)
 	local skillKey, unKey = ResolveSnapshotColumns(battle)
 	return entry[skillKey], entry[unKey]
 end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Utilities that reference controls
 
 local function GetUserCountryImage(userName, userControl)
 	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
@@ -467,7 +449,6 @@ local function SetPlayerNote(userName, userInfo, note)
 		notes[nameNoteKey] = nil
 	end
 
-	-- Client-side only: persisted to a local file and never sent through lobby.
 	SavePlayerNotes()
 	if UpdateUserActivity then
 		UpdateUserActivity(_, userName, {})
@@ -544,8 +525,7 @@ local function GetUserComboBoxOptions(userName, isInBattle, control, showTeamCol
 	if not itsme and not info.isBot and not bs.aiLib then															comboOptions[#comboOptions + 1] = "Report User" end
 	if not (info.isBot or bs.aiLib) then																			comboOptions[#comboOptions + 1] = "Add Player Notes" end
 																													comboOptions[#comboOptions + 1] = "Copy Name"
-	if (iAmBoss or iPlay) and not (control.isSingleplayer or bs.aiLib or info.isBot) and isInBattle  then			comboOptions[#comboOptions + 1] = "\255\128\128\128" .. "--------------"
-																													comboOptions[#comboOptions + 1] =  isBoss and "Disable Boss" or "Make Boss" end
+	if (iAmBoss or iPlay) and not (control.isSingleplayer or bs.aiLib or info.isBot) and isInBattle  then			comboOptions[#comboOptions + 1] =  isBoss and "Disable Boss" or "Make Boss" end
 
 	if #comboOptions == 0 then
 		comboOptions[1] = Label:New {
@@ -572,10 +552,6 @@ local function GetUserRankImageName(userName, userControl)
 	return image
 end
 
--- returns skill, skillUncertaintyColorFont
--- default to skill="  ", sigma = 0, if no skill is known for userName (skill wasn´t set yet in Interface:_OnSetScriptTags)
--- skill format: "XX" or " X" (leading whitespace)
--- takes skillUncertaintyColors values from configuration.lua
 local function GetUserSkillFont(userName, userControl)
 	local config = WG.Chobby.Configuration
 	local skill = "  "
@@ -588,7 +564,6 @@ local function GetUserSkillFont(userName, userControl)
 	end
 
 	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
-	--  in-lobby display still uses live lobby skill
 	if userControl.useSnapshotSkill then
 		local battle = userControl.tooltipBattle or (userInfo.battleID and userControl.lobby:GetBattle(userInfo.battleID))
 		local snapSkill, snapUn = GetSnapshotSkill(userInfo.accountID, battle)
@@ -703,7 +678,6 @@ local function GetUserNameColorFont(userName, userControl)
 	if userControl.colorizeFriends and userName == userControl.lobby:GetMyUserName() then
 		return Configuration:GetFont(1, "User", {color = Configuration:GetMyUserNameColor()} )
 	end
-	-- priorize showing friend color over disregard color, though both may be applied at the same time. So user is reminded to unfriend.
 	if userControl.colorizeFriends and userInfo.isFriend then
 		return Configuration:GetFont(1, "Friend", {color = Configuration:GetFriendsColor()})
 	end
@@ -789,8 +763,6 @@ local function GetIngameStatusKey(userName, userControl)
 	return "ingame_" .. rankPrefix, "In a " .. rankText .. "game"
 end
 
--- gets status name, image and colorFont
--- used for large user displays
 local function GetUserStatusFont(userName, isInBattle, userControl)
 	local userInfo = userControl.replayUserInfo or userControl.lobby:GetUser(userName) or {}
 	if userInfo.isOffline then
@@ -813,9 +785,6 @@ local function getUserStatusImage(userName, userControls)
 	local bs = userControls.replayUserInfo or userControls.lobby:GetUserBattleStatus(userName) or {}
 	local userInfo = userControls.replayUserInfo or userControls.lobby:GetUser(userName) or {}
 
-	-- 1. Check if someone is ingame - If yes, swords, if not, go to point 2.
-	-- 2. Check if someone is synced - If not, red download arrow, if yes, go to point 3.
-	-- 3. Check if someone is ready - if not, red cross, if yes, green checkmark
 	local statusImage = IMAGE_UNKNOWN_SYNC
 	if userControls.isInBattle then
 		if userInfo.isInGame then
@@ -826,7 +795,6 @@ local function getUserStatusImage(userName, userControls)
 			end
 		elseif userControls.isPlaying then
 			if not userControls.suppressSync and (bs and bs.sync and bs.sync == 2) then
-				--statusImage = IMAGE_DLUNREADY
 				statusImage = IMAGE_DOWNLOAD
 			else
 				statusImage = GetUserReadyStatus(userName, userControls)
@@ -841,7 +809,6 @@ local function UpdateUserStatusImage(userName, userControls)
 		userControls.imStatus:SetVisibility(userControls.isPlaying)
 		if userControls.isPlaying then
 			userControls.imStatus.file = getUserStatusImage(userName, userControls)
-			--userControls.imStatus:Invalidate()
 		end
 	end
 end
@@ -1001,7 +968,6 @@ local function UpdateUserActivitySingleList(userList, userName, status)
 						skillKey = skillKey,
 						unKey = unKey,
 						skill = liveSkill,
-						-- Live lobby skill is already adjusted; don't subtract again.
 						un = 0,
 					}
 					if openSkillLoaded and openSkillCache then
@@ -1058,7 +1024,6 @@ local function UpdateFriendsInBattle(battleID)
 	end
 end
 
--- only reacts to map changes
 local function UpdateBattleInfo(listener, battleID, battleInfo)
 	if not ChobbyReady() then
 		return
@@ -1109,23 +1074,6 @@ local function UpdateUserBattle(listener, battleID, userName)
 	end
 end
 
---[[ ZK only
-local function OnPartyUpdate(listener, partyID, partyUsers)
-	if partyID ~= lobby:GetMyPartyID() then
-		return
-	end
-	for i = 1, #partyUsers do
-		UpdateUserComboboxOptions(_, partyUsers[i])
-	end
-end
-
-local function OnPartyLeft(listener, partyID, partyUsers)
-	for i = 1, #partyUsers do
-		UpdateUserComboboxOptions(_, partyUsers[i])
-	end
-end
---]]
-
 local function GetPartyStatus(partyID, username)
 	local party = lobby.parties[partyID]
 	if party then
@@ -1136,7 +1084,6 @@ local function GetPartyStatus(partyID, username)
 		end
 	end
 end
-
 
 local function OnPartyStatusUpdate(listener, partyID, username)
 	if not ChobbyReady() then
@@ -1178,7 +1125,6 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 			local userControls = userList[userName]
 			if userControls then
 
-				-- if this battleStatus is about us and we are switching between spec and player > Then update ComboboxOption of all users in my battle, because the right to access options is dependent of our own spec status (e.g. changeTeam, AddBonus, MakeBoss, ForceSpectator... are only allowed if we are a player)
 				if userList == namedUserList["battleUsers"] and battleStatusDiff
 					and (
 						(battleStatusDiff['isSpectator'] ~= nil and userName == userControls.lobby:GetMyUserName())
@@ -1218,31 +1164,6 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 					end
 				end
 
-				--[[
-				local offset = 0
-				local displaySync = userControls.isPlaying and bs.sync and bs.sync == 2 -- 2 = Sync Status Downloading
-				if userControls.imSyncStatus then
-					userControls.imSyncStatus:SetVisibility(displaySync)
-					if displaySync then
-						userControls.imSyncStatus.file = GetUserSyncStatus(userName, userControls)
-						offset = offset + 1
-						userControls.imSyncStatus:SetPos(offset)
-						offset = offset + 21
-					end
-				end
-
-				local displayReady = userControls.isPlaying and not displaySync
-				if userControls.imReadyStatus and not isSingleplayer then
-					userControls.imReadyStatus:SetVisibility(displayReady)
-					if displayReady then
-						userControls.imReadyStatus.file = GetUserReadyStatus(userName, userControls)
-						offset = offset + 1
-						userControls.imReadyStatus:SetPos(offset)
-						offset = offset + 21
-					end
-				end
-				--]]
-
 				if not userControls.isSingleplayer then
 
 					if userControls.showCountry then
@@ -1263,7 +1184,6 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 						end
 					end
 
-					-- Skill: show only in battlelist (limited by spring lobby protocol, skill not available for users outside of own battle)
 					if userControls.showSkill then
 						local displaySkill = userControls.showSkillAlways or ((userControls.isPlaying or userControls.useSnapshotSkill) and Configuration.showSkillOpt > 1)
 						userControls.tbSkill:SetVisibility(displaySkill)
@@ -1344,21 +1264,16 @@ local function UpdateUserBattleStatus(listener, userName, battleStatusDiff)
 						end
 					end
 					if not userControls.isPlaying or handicap == nil then
-						-- If the player is spectating, don't show handicap label regardless of its value.
 						userControls.lblHandicap:SetVisibility(false)
 					end
 					userControls.lblHandicap:Invalidate()
 				end
-				UpdateUserControlStatus(userName, userControls) -- moves status images right of userName according to nameStartY and nameActualLength
+				UpdateUserControlStatus(userName, userControls)
 			end
 		end
 	end
 end
 
--- 2023-06-29 FB: can be called in 3 modes
--- 1. userName is given and voteOption is either yes/no/blank -> color of user is changed to green/red/orange
--- 2. username nil and voteOption = default -> all username colors, that were changed before, are returned to default (e.g white or moderator/friend/bot color)
--- 3. username nil and voteOption = initVote -> all username colors are overwritten with grey
 local function OnUserVoted(listener, userName, voteOption)
 	if voteOption ~= "yes" and voteOption ~= "no" and voteOption ~= "blank" and voteOption ~= "default" and voteOption ~= "initVote" then
 		return
@@ -1369,16 +1284,16 @@ local function OnUserVoted(listener, userName, voteOption)
 
 	if not userName then
 
-		if voteOption == "default" then -- revert all changed username colors to default after vote
+		if voteOption == "default" then
 			usersAllowedToVote = {}
 			for _, userName2 in pairs(votedUsers) do
 				OnUserVoted(_, userName2, voteOption)
 			end
 			votedUsers = {}
 
-		elseif voteOption == "initVote" --[[and next(votedUsers) == nil]] then -- set all playing battleUsers colors to white on vote start
-			OnUserVoted(_, _, "default") -- 1. revert any changed colors (could be spectator by now, too, or left battle)
-			for userName2, userControls2 in pairs(battleUsers) do -- 2. set all users that are allowed to vote to grey (allowed are only users that were "isPlaying" on time of vote start)
+		elseif voteOption == "initVote"  then
+			OnUserVoted(_, _, "default")
+			for userName2, userControls2 in pairs(battleUsers) do
 				if userControls2.isPlaying then
 					usersAllowedToVote[userName2] = true
 					OnUserVoted(_, userName2, voteOption)
@@ -1400,7 +1315,7 @@ local function OnUserVoted(listener, userName, voteOption)
 			return
 		end
 		if userControls.isPlaying then
-			userControls.tbName.font = WG.Chobby.Configuration:GetFont(1, "vote1" .. voteOption, {color = WG.Chobby.Configuration.voteColor[voteOption]}) -- voteOption can be yes, no, blank, initVote
+			userControls.tbName.font = WG.Chobby.Configuration:GetFont(1, "vote1" .. voteOption, {color = WG.Chobby.Configuration.voteColor[voteOption]})
 			userControls.tbName:Invalidate()
 		end
 	end
@@ -1420,10 +1335,6 @@ local function UpdateUserCountry(listener, userName)
 		end
 	end
 end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Control Handling
 
 local function GetUserControls(userName, opts)
 	if not ChobbyReady() then
@@ -1470,7 +1381,7 @@ local function GetUserControls(userName, opts)
 	userControls.showSkillAlways    = opts.showSkillAlways or false
 	userControls.showRank           = opts.showRank or false
 	userControls.showCountry        = opts.showCountry or false
-	userControls.isSingleplayer     = opts.isSingleplayer or false -- is needed by UpdateUserBattleStatus
+	userControls.isSingleplayer     = opts.isSingleplayer or false
 	userControls.replayUserInfo		= opts.replayUserInfo or false
 	userControls.colorizeFriends    = opts.colorizeFriends or false
 	userControls.partyStatus        = opts.partyStatus
@@ -1504,7 +1415,7 @@ local function GetUserControls(userName, opts)
 		end
 
 		userControls.mainControl = ControlType:New {
-			name = (not comboBoxOnly) and userName, -- Many can be added to screen0
+			name = (not comboBoxOnly) and userName,
 			x = 0,
 			y = 0,
 			right = 0,
@@ -1518,7 +1429,6 @@ local function GetUserControls(userName, opts)
 			selectByName = true,
 			showSelection = false,
 			objectOverrideFont = WG.Chobby.Configuration:GetFont(2),
-			--objectOverrideFont = WG.Chobby.Configuration:GetFont(2,{shadow = false}), -- this for some reason allocates a new font object :(
 			itemHeight = 30,
 			selected = 0,
 			maxDropDownWidth = large and 220 or 170,
@@ -1528,7 +1438,6 @@ local function GetUserControls(userName, opts)
 			OnOpen = {
 				function (obj)
 					obj.tooltip = nil
-					-- Update hovered tooltip
 					local x,y = Spring.GetMouseState()
 					screen0:IsAbove(x,y)
 				end
@@ -1566,36 +1475,11 @@ local function GetUserControls(userName, opts)
 						else
 							userControls.lobby:FriendRequestByID(userInfo.accountID)
 						end
-					--[[ ZK only
-					elseif selectedName == "Join Party" or selectedName == "Invite to Party" then
-					 	userControls.lobby:InviteToParty(userName)
-					 	local userInfo = userControls.lobby:GetUser(userName)
-					 	if WG.SteamHandler.GetIsSteamFriend(userInfo.steamID) and userInfo.isOffline then
-					 		WG.SteamHandler.InviteUserViaSteam(userName, userInfo.steamID)
-					 	end
-					elseif selectedName == "Invite to Campaign" then
-					 	local userInfo = userControls.lobby:GetUser(userName)
-					 	if userInfo.steamID then
-					 		WG.WrapperLoopback.SteamInviteFriendToGame(userInfo.steamID)
-					 	end
-					--]]
 					elseif selectedName == "Join Battle" then
 						local userInfo = userControls.lobby:GetUser(userName) or {}
 						if userInfo.battleID then
 							WG.Chobby.interfaceRoot.TryToJoinBattle(userInfo.battleID)
 						end
-					--[[ ZK only
-					elseif selectedName == "Watch Battle" then
-						local userInfo = userControls.lobby:GetUser(userName) or {}
-						if userInfo.battleID then
-							lobby:RejoinBattle(userInfo.battleID)
-						end
-					elseif selectedName == "User Page" and Configuration.gameConfig.link_userPage ~= nil then
-					 	local userInfo = userControls.lobby:GetUser(userName) or {}
-					 	if userInfo.accountID then
-					 		WG.BrowserHandler.OpenUrl(Configuration.gameConfig.link_userPage(userInfo.accountID))
-					 	end
-					--]]
 					elseif selectedName == "Invite to Party" then
 						if lobby.myPartyID then
 							lobby:InvitePlayerToMyParty(userName, nil, function(errorMessage) if WG.Chobby and WG.Chobby.ErrorPopup then WG.Chobby.ErrorPopup(i18n("error_party_invite_player_failed", { error_message = errorMessage })) end end)
@@ -1618,7 +1502,7 @@ local function GetUserControls(userName, opts)
 							initialColor = battleStatus.teamColor,
 							OnAccepted = function(color)
 								if userName == userControls.lobby:GetMyUserName() then
-									userControls.lobby._requestedBattleStatus = true -- fake the request to ensure it gets sent
+									userControls.lobby._requestedBattleStatus = true
 									userControls.lobby:SetBattleStatus({
 										teamColor = color
 									})
@@ -1676,7 +1560,7 @@ local function GetUserControls(userName, opts)
 											lobby:SayBattle("!force "..userName.." bonus ".. tostring(bonusAmount))
 										end
 									else
-										lobby:SayBattle("!force "..userName.." team ".. tostring(allyTeamID)) -- +1 for spads team
+										lobby:SayBattle("!force "..userName.." team ".. tostring(allyTeamID))
 									end
 								end
 							end
@@ -1776,10 +1660,9 @@ local function GetUserControls(userName, opts)
 								end
 							})
 						else
-							CloneFunc(1) -- Limit to 1 clone in multiplayer to prevent flood protection kick
+							CloneFunc(1)
 						end
 					elseif selectedName == "Ring" then
-						--lobby:Ring(userName)
 						lobby:SayBattle("!ring "..userName)
 					elseif selectedName == "Make Boss" then
 						lobby:SayBattle("!boss "..userName)
@@ -1793,7 +1676,7 @@ local function GetUserControls(userName, opts)
 							WG.BrowserHandler.OpenUrl(Configuration.gameConfig.link_reportPlayer(userInfo.accountID))
 						end
 					elseif selectedName == "Unignore" then
-						userControls.lobby:c_user_reset_relationship(userName) -- provisionally: removes disregards and follows
+						userControls.lobby:c_user_reset_relationship(userName)
 					elseif selectedName == "Ignore" or selectedName == "Unavoid" then
 						local function YesFunc()
 							userControls.lobby:c_user_relationship(userName, Configuration.IGNORE)
@@ -1814,23 +1697,6 @@ local function GetUserControls(userName, opts)
 							nil,
 							"OK"
 						)
-						-- WG.TextEntryWindow.CreateTextEntryWindow({
-						-- 	defaultValue = "",
-						-- 	caption = "Report "..userName,
-						-- 	labelCaption = "Report ".. userName .." for abusive behaviour or violation of the terms of service. Please specify a description of the event.",
-						-- 	width = 360,
-						-- 	--ebheight = 120,
-						-- 	oklabel = "Report",
-						-- 	disableAcceptHotkey = true,
-						-- 	url = 'https://www.beyondallreason.info/code-of-conduct',
-						-- 	OnAccepted = function(reportreason)
-						-- 		if isSingleplayer then
-						-- 			-- hell no
-						-- 		else
-						-- 			lobby:ReportPlayer(userName,"lobby","nil",reportreason)
-						-- 		end
-						-- 	end
-						-- })
 					end
 				end
 			}
@@ -1860,50 +1726,6 @@ local function GetUserControls(userName, opts)
 			offset = offset - 1
 		end
 	end
-
-	--[[
-	local displaySync = userControls.isPlaying and (bs and bs.sync and bs.sync == 2) -- 2 = Sync Status Downloading
-	if isInBattle and not suppressSync then
-		offset = offset + 1
-		userControls.imSyncStatus = Image:New {
-			name = "imSyncStatus",
-			x = offset,
-			y = offsetY + 1,
-			width = 21,
-			height = 19,
-			parent = userControls.mainControl,
-			keepAspect = true,
-			file = GetUserSyncStatus(userName, userControls),
-		}
-		userControls.imSyncStatus:SetVisibility(displaySync)
-		if displaySync then
-			offset = offset + 21
-		else
-			offset = offset - 1
-		end
-	end
-
-	local displayReady = userControls.isPlaying and not displaySync
-	if showReady then
-		offset = offset + 1
-		userControls.imReadyStatus = Image:New {
-			name = "imReadyStatus",
-			x = offset,
-			y = offsetY + 1,
-			width = 21,
-			height = 19,
-			parent = userControls.mainControl,
-			keepAspect = true,
-			file = GetUserReadyStatus(userName, userControls),
-		}
-		userControls.imReadyStatus:SetVisibility(displayReady)
-		if displayReady then
-			offset = offset + 21
-		else
-			offset = offset - 1
-		end
-	end
-	--]]
 
 	if not isSingleplayer and showJoinQueue then
 		offset = offset + 2
@@ -1996,25 +1818,6 @@ local function GetUserControls(userName, opts)
 		end
 	end
 
-	-- ZK specific
-	-- local clanImage, needDownload = GetUserClanImage(userName, userControls)
-	-- if clanImage then
-	-- 	offset = offset + 1
-	-- 	userControls.imClan = Image:New {
-	-- 		name = "imClan",
-	-- 		x = offset,
-	-- 		y = offsetY + 1,
-	-- 		width = 21,
-	-- 		height = 19,
-	-- 		parent = userControls.mainControl,
-	-- 		keepAspect = true,
-	-- 		file = clanImage,
-	-- 		fallbackFile = Configuration:GetLoadingImage(1),
-	-- 		checkFileExists = needDownload,
-	-- 	}
-	-- 	offset = offset + 21
-	-- end
-
 	if showSide then
 		local file = nil
 		bs = bs or {}
@@ -2040,7 +1843,6 @@ local function GetUserControls(userName, opts)
 
 	offset = offset + 2
 
-	-- This is also used for top name tag
 	userControls.tbName = TextBox:New {
 		name = "tbName",
 		x = offset,
@@ -2111,7 +1913,6 @@ local function GetUserControls(userName, opts)
 		}
 	end
 
-	--Spring.Utilities.TraceEcho(userName,"hide", hideStatus == true,"large",large == true)
 	if not hideStatus then
 		userControls.statusImages = {}
 		UpdateUserControlStatus(userName, userControls)
@@ -2208,7 +2009,6 @@ local function GetUserControls(userName, opts)
 
 	Configuration:AddListener("OnConfigurationChange", OnConfigurationChange)
 
-	-- This is always checked against main lobby.
 	userControls.needReinitialization = lobby.status ~= "connected"
 
 	return userControls
@@ -2232,7 +2032,6 @@ local function _GetUserDropdownMenu(userName, isInBattle)
 	userControls.mainControl:SetPos(math.max(0, x - 60), screenHeight - y - userControls.mainControl.height + 5, 170)
 
 	local function delayFunc()
-		-- Must click on the new ComboBox, otherwise an infinite loop may be caused.
 		screen0:MouseDown(x, y + 10, 1)
 	end
 
@@ -2245,9 +2044,6 @@ local function _GetUserDropdownMenu(userName, isInBattle)
 	end
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- External Functions
 local userHandler = {
 	CountryShortnameToFlag = CountryShortnameToFlag,
 	GetUserRankImage = GetUserRankImage,
@@ -2413,7 +2209,7 @@ function userHandler.GetPartyUser(userName, partyID, partyStatus)
 		height = WG.Chobby.PartyWrapper.ROW_HEIGHT,
 		partyStatus = partyStatus,
 		showPartyStatus = { party_status_invite = true },
-		hideStatus = true -- Ideally we'd show this, but it has so much of a hardcoded position that I don't want to change it out for the invite.
+		hideStatus = true
 	})
 end
 
@@ -2493,37 +2289,17 @@ function userHandler.GetUserDropdownMenu(userName, isInbattle)
 	_GetUserDropdownMenu(userName, isInbattle)
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Connection
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Listeners
-
 local function AddListeners()
-	-- OnFriendList leads to duplicate updates, each friend is propagated by OnFriend already
-	-- lobby:AddListener("OnFriendList", UpdateUserActivityList)
 
 	lobby:AddListener("OnUpdateUserStatus", UpdateUserActivity)
 
 	lobby:AddListener("OnFriend", UpdateUserActivity)
 
-	-- little dirty here. this one is meant to exist temporarily until api_user_handler is switched to use accountID as primary anchor
 	lobby:AddListener("OnUnfriendByID", function(listener, userID, userName)
 		UpdateUserActivity(_, userName)
 	end)
 	lobby:AddListener("OnAddDisregardUser", UpdateUserActivity)
 	lobby:AddListener("OnRemoveDisregardUser", UpdateUserActivity)
-
-	--[[ ZK only
-	lobby:AddListener("OnPartyInviteSent", UpdateUserActivity)
-	lobby:AddListener("OnPartyInviteResponse", UpdateUserActivity)
-
-	lobby:AddListener("OnPartyCreate", OnPartyUpdate)
-	lobby:AddListener("OnPartyUpdate", OnPartyUpdate)
-	lobby:AddListener("OnPartyLeft", OnPartyLeft)
-	--]]
 
 	lobby:AddListener("OnAddUser", UpdateUserActivity)
 	lobby:AddListener("OnRemoveUser", function(listener, username)
@@ -2562,10 +2338,6 @@ local function AddListeners()
 	end)
 end
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
--- Widget Interface
-
 local function DelayedInitialize()
 	if not ChobbyReady() then
 		WG.Delay(DelayedInitialize, 0.1)
@@ -2578,28 +2350,23 @@ local function DelayedInitialize()
 	local function onConfigurationChange(listener, key, value)
 		if key == "gameConfigName" then
 			UserLevelToImageConfFunction = Configuration.gameConfig.rankFunction
-			-- TODO, update all rank icons.
 		end
 	end
 
 	Configuration:AddListener("OnConfigurationChange", onConfigurationChange)
 end
 
-
 function widget:Initialize()
 	CHOBBY_DIR = LUA_DIRNAME .. "widgets/chobby/"
 	VFS.Include(LUA_DIRNAME .. "widgets/chobby/headers/exports.lua", nil, VFS.RAW_FIRST)
-	--Spring.LuaTracyPlotConfig("ChobbyMem","Number", true, true, 255)
 	AddListeners()
 	WG.Delay(DelayedInitialize, 0.1)
-	-- Warm the cache without blocking the first user-list update.
 	WG.Delay(LoadOpenSkillSnapshot, 0.2)
 
 	WG.UserHandler = userHandler
 end
 
 function widget:Update()
-	-- Continue incremental snapshot parsing.
 	if not openSkillLoadCo or not openSkillLoading then
 		return
 	end
@@ -2616,24 +2383,3 @@ function widget:Update()
 		openSkillLoadCo = nil
 	end
 end
-
---local oldTimer
---local awayStatus = false
---function widget:Update()
---	if not oldTimer then
---		oldTimer = Spring.GetTimer()
---	end
---	local newTimer = Spring.GetTimer()
---	local deltaTime = Spring.DiffTimers(newTimer, oldTimer)
---	if deltaTime < 2 then
---		return
---	end
---	oldTimer = newTimer
---	awayStatus = not awayStatus
---	lobby:SetAllUserAway(awayStatus)
---
---	--lobby:SetAllUserStatusRandomly()
---end
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------

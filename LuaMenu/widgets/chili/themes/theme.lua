@@ -1,16 +1,8 @@
---//=============================================================================
---// Theme
-
 theme = {}
 
-theme.name = "Armada Blues"
+theme.name = "BarGlass"
 
-
---//=============================================================================
---// Define default skins
-
-local defaultSkin = "Armada Blues"
---local defaultSkin = "Evolved"
+local defaultSkin = "BarGlass"
 
 theme.skin = {
   general = {
@@ -18,18 +10,11 @@ theme.skin = {
   },
 
   imagelistview = {
-  --  imageFolder      = LUA_DIRNAME .. "images/folder.png",
-  --  imageFolderUp    = LUA_DIRNAME .. "images/folder_up.png",
   },
 
   icons = {
-  --  imageplaceholder = LUA_DIRNAME .. "images/placeholder.png",
   },
 }
-
-
---//=============================================================================
---// Theme
 
 function theme.GetDefaultSkin(class)
   local skinName
@@ -37,7 +22,6 @@ function theme.GetDefaultSkin(class)
   repeat
     skinName = theme.skin[class.classname].skinName
     class = class.inherited
---FIXME check if the skin contains the current control class! if not use inherit the theme table before doing so in the skin
   until ((skinName)and(SkinHandler.IsValidSkin(skinName)))or(not class);
 
   if (not skinName)or(not SkinHandler.IsValidSkin(skinName)) then
@@ -51,10 +35,8 @@ function theme.GetDefaultSkin(class)
   return skinName
 end
 
-
 function theme.LoadThemeDefaults(control)
   if (theme.skin[control.classname])
-    then table.merge(control,theme.skin[control.classname]) end -- per-class defaults
+    then table.merge(control,theme.skin[control.classname]) end
   table.merge(control,theme.skin.general)
 end
-

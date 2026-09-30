@@ -14,7 +14,7 @@ local spGetMouseState           = Spring.GetMouseState
 local spFormatTime              = Spring.Utilities.FormatTime
 local screenWidth, screenHeight = Spring.GetWindowGeometry()
 
-local MAX_WIDTH = 880 -- 220 x 4 for Replay tooltips
+local MAX_WIDTH = 880
 local MAX_WINDOW_WIDTH = MAX_WIDTH + 11
 
 local TOOLTIP_TEXT_NAME = "tooltipText"
@@ -35,18 +35,10 @@ local BATTLE_NOT_RUNNING = LUA_DIRNAME .. "images/nothing.png"
 local PASSWORD_EXPLAINATION = "Battle requires a password to join."
 local LOCKED_EXPLAINATION = "Battle is locked."
 
-
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Variables
-
 local mousePosX, mousePosY
 local tipWindow, tipTextDisplay
 local tooltipOverride = nil
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Helpers
 local function sortfunc(t)
 	local st = {}
 	for k,v in pairs(t) do
@@ -75,10 +67,6 @@ local function GetReadableBarbProfile(profile)
 	end
 	return tostring(profile)
 end
-
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Initialization
 
 local function InitWindow()
 	tipWindow = Chili.Window:New{
@@ -132,10 +120,6 @@ local function EvilHax()
 		widget:ViewResize(screenWidth, screenHeight)
 	end
 end
-
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Specific tooltip type utilities
 
 local function GetTooltipLine(parent, hasImage, fontSize, xOffset, imageWidth)
 	local textDisplay, imageDisplay
@@ -230,17 +214,12 @@ local function GetTooltipLine(parent, hasImage, fontSize, xOffset, imageWidth)
 	return externalFunctions
 end
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Battle tooltip
 local battleTooltip = {}
 
 local spadsRequestQueue = {}
 local spadsRequest = nil
 local allowedNextRequestClock = os.clock()
 
--- start/resume sending requests
--- executed on each update()
 local function StartResumeSpadsRequest()
 	if #spadsRequestQueue == 0 then
 		return
@@ -251,10 +230,8 @@ local function StartResumeSpadsRequest()
 		return
 	end
 
-	-- pop most recent request
 	spadsRequest = spadsRequestQueue[#spadsRequestQueue]
 
-	-- empty request queue completly (we only want to ask for the most recent hovered battle)
 	spadsRequestQueue = {}
 
 	allowedNextRequestClock = os.clock() + 0.4
@@ -267,7 +244,6 @@ local function StartResumeSpadsRequest()
 end
 
 local function OnUpdateBattleInfo(listener, _battleID, _battleInfo)
-	-- validate input
 	if not spadsRequest then
 		return
 	end
@@ -283,20 +259,19 @@ local function OnUpdateBattleInfo(listener, _battleID, _battleInfo)
 		return
 	end
 
-	-- end validation - it's about our request
 	spadsRequest = nil
 
 	local newMessage, elapsed
 	if _battleInfo.thisGameStartedAt then
 		elapsed = os.clock() - math.floor(_battleInfo.thisGameStartedAt + 0.5)
-		newMessage = string.format("Running for %s", spFormatTime(elapsed, true)) -- ToDo: Replace with i18n
+		newMessage = string.format("Running for %s", spFormatTime(elapsed, true))
 
 	elseif _battleInfo.lastGameEndedAt then
 		if type(_battleInfo.lastGameEndedAt) == "string" and _battleInfo.lastGameEndedAt == "unknown" then
-			newMessage = "First game for this lobby" -- ToDo: Replace with i18n
+			newMessage = "First game for this lobby"
 		else
 			elapsed = os.clock() - math.floor(_battleInfo.lastGameEndedAt)
-			newMessage = string.format("Last game ended %sago", spFormatTime(elapsed, true)) -- ToDo: Replace with i18n
+			newMessage = string.format("Last game ended %sago", spFormatTime(elapsed, true))
 		end
 	end
 
@@ -332,29 +307,12 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 	end
 	local offset = 7
 
-	-- Battle Name
 	if not battleTooltip.title then
 		battleTooltip.title = GetTooltipLine(battleTooltip.mainControl, nil, 3)
 	end
-	--if battle.isMatchMaker then
-	--	title = (title or "") .. " - Click to watch"
-	--end
 	battleTooltip.title.Update(offset, battle.title)
 	offset = offset + 25 * battleTooltip.title.GetLines()
 
-	-- Battle Type (ZK specific)
-	-- if battle.battleMode then
-	-- 	if not battleTooltip.battleMode then
-	-- 		battleTooltip.battleMode = GetTooltipLine(battleTooltip.mainControl)
-	-- 	end
-	-- 	local modeName = Configuration.battleTypeToName[battle.battleMode]
-	-- 	battleTooltip.battleMode.Update(offset, (modeName and i18n(modeName)) or "")
-	-- 	offset = offset + 21
-	-- elseif battleTooltip.battleMode then
-	-- 	battleTooltip.battleMode.Hide()
-	-- end
-
-	-- MapName
 	if showMapName and battle.mapName then
 		if not battleTooltip.mapName then
 			battleTooltip.mapName = GetTooltipLine(battleTooltip.mainControl)
@@ -365,7 +323,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		battleTooltip.mapName.Hide()
 	end
 
-	-- Players and Spectators
 	if battle.spectatorCount and battle.maxPlayers and battle.users then
 		if not battleTooltip.playerCount then
 			battleTooltip.playerCount = GetTooltipLine(battleTooltip.mainControl)
@@ -382,7 +339,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		battleTooltip.playerCount.Hide()
 	end
 
-	-- Avg OpenSkill, disabled if showOS is turned off
 	local showOS = Configuration.showSkillOpt and Configuration.showSkillOpt > 1
 	if showOS and battle.users and WG.UserHandler and WG.UserHandler.GetSnapshotSkillValue then
 		local total = 0
@@ -410,7 +366,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		battleTooltip.avgOpenSkill.Hide()
 	end
 
-	-- Password
 	if battle.passworded then
 		if not battleTooltip.password then
 			battleTooltip.password = GetTooltipLine(battleTooltip.mainControl, true)
@@ -426,7 +381,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		battleTooltip.password.Hide()
 	end
 
-	-- Locked
 	if battle.locked then
 		if not battleTooltip.locked then
 			battleTooltip.locked = GetTooltipLine(battleTooltip.mainControl, true)
@@ -442,7 +396,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		battleTooltip.locked.Hide()
 	end
 
-	-- ingame
 	if battle.isRunning and not (battle.locked or battle.passworded) then
 		if not battleTooltip.isRunning then
 			battleTooltip.isRunning = GetTooltipLine(battleTooltip.mainControl, true)
@@ -471,10 +424,10 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 			QueueSpadsStatusRequest(battle.battleID, offset)
 		else
 			local elapsed = os.clock() - math.floor(battle.thisGameStartedAt)
-			message = string.format("Running for %s", spFormatTime(elapsed, true)) -- ToDo: Replace with i18n
+			message = string.format("Running for %s", spFormatTime(elapsed, true))
 		end
 
-	else -- battle not running
+	else
 
 		message = "Fetching last ended time ..."
 		if not battle.lastGameEndedAt then
@@ -491,7 +444,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 	battleTooltip.runningOrEndedAt.Update( offset, message)
 	offset = offset + 21
 
-	-- Player list
 	local userListPosition = offset
 	if battle.users then
 		offset = offset
@@ -527,7 +479,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		offset = offset + playerOffset + 5
 	end
 
-	-- Debug Mode
 	if Configuration.debugMode then
 		offset = offset + 10
 
@@ -567,7 +518,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 		battleTooltip.mainControl:RemoveChild(battleTooltip.debugText)
 	end
 
-	-- Set tooltip sizes
 	battleTooltip.mainControl:SetPos(nil, nil, width, offset)
 
 	if battleTooltip.userList then
@@ -579,10 +529,6 @@ local function GetBattleTooltip(battleID, battle, showMapName)
 
 	return battleTooltip.mainControl
 end
-
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Minimap tooltip
 
 local minimapTooltip = {}
 
@@ -632,15 +578,11 @@ local function GetMinimapTooltip(mapName, title)
 		end
 
 		minimapTooltip.title.Update(7, mapName.. "\n" .. title)
-		-- Set tooltip sizes
 		minimapTooltip.mainControl:SetPos(nil, nil, width, height)
 
 		return minimapTooltip.mainControl
 end
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- User tooltip
 local userTooltip = {}
 
 local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
@@ -665,7 +607,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 	end
 	local offset = 7
 
-	-- User Name
 	if not userTooltip.name then
 		userTooltip.name = GetTooltipLine(userTooltip.mainControl, nil, 3)
 	end
@@ -673,20 +614,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 	userTooltip.name.Update(offset, truncatedName)
 	offset = offset + 23
 
-	-- Clan (ZK specific)
-	-- if userInfo.clan then
-	-- 	if not userTooltip.clan then
-	-- 		userTooltip.clan = GetTooltipLine(userTooltip.mainControl, true)
-	-- 	end
-	--
-	-- 	local clanFile, needDownload = WG.UserHandler.GetClanImage(userInfo.clan)
-	-- 	userTooltip.clan.Update(offset, "Clan: " .. userInfo.clan, clanFile, nil, nil, needDownload)
-	-- 	offset = offset + 20
-	-- elseif userTooltip.clan then
-	-- 	userTooltip.clan.Hide()
-	-- end
-
-	-- Disregard and Friend
 	if userInfo.isDisregarded or userInfo.isFriend then
 		if not userTooltip.friendIgnore then
 			userTooltip.friendIgnore = GetTooltipLine(userTooltip.mainControl, true)
@@ -716,7 +643,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.friendIgnore:Hide()
 	end
 
-	-- Country
 	if userInfo.country then
 		if not userTooltip.country then
 			userTooltip.country = GetTooltipLine(userTooltip.mainControl, true)
@@ -741,7 +667,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.country:Hide()
 	end
 
-	-- Moderator
 	if userInfo.isAdmin then
 		if not userTooltip.moderator then
 			userTooltip.moderator = GetTooltipLine(userTooltip.mainControl, true)
@@ -759,7 +684,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.moderator:Hide()
 	end
 
-	-- Level
 	if userInfo.level or userBattleInfo.aiLib then
 		if not userTooltip.level then
 			userTooltip.level = GetTooltipLine(userTooltip.mainControl, true)
@@ -793,7 +717,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.level:Hide()
 	end
 
-	-- AI profile (BARbarian only)
 	local isBarbAi = userBattleInfo.aiLib and string.lower(userBattleInfo.aiLib) == "barb"
 	local aiProfile
 	if type(userBattleInfo.aiOptions) == "table" then
@@ -802,7 +725,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		aiProfile = userBattleInfo.aiOptions:match('"profile"%s*:%s*"([^"]+)"')
 	end
 	if isBarbAi and (not aiProfile or aiProfile == "") then
-		-- Default difficulty when added without explicity choosing a profile
 		aiProfile = "hard"
 	end
 	local readableProfile = isBarbAi and GetReadableBarbProfile(aiProfile) or nil
@@ -819,74 +741,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.aiProfile:Hide()
 	end
 
-
-	-- ZK specific
-	-- if userInfo.badges and Configuration.gameConfig.badges then
-	-- 	if not userTooltip.badge then
-	-- 		userTooltip.badge = {}
-	-- 	end
-	-- 	local badgeDecs = Configuration.gameConfig.badges
-	-- 	local i = 1
-	-- 	while i <= #userInfo.badges do
-	-- 		if not userTooltip.badge[i] then
-	-- 			userTooltip.badge[i] = GetTooltipLine(userTooltip.mainControl, true, nil, nil, 46)
-	-- 		end
-	-- 		local badgeData = badgeDecs[userInfo.badges[i]]
-	-- 		if badgeData then
-	-- 			userTooltip.badge[i].Update(
-	-- 				offset,
-	-- 				badgeData.text,
-	-- 				badgeData.image
-	-- 			)
-	-- 			offset = offset + 20
-	-- 		else
-	-- 			userTooltip.badge[i]:Hide()
-	-- 		end
-	-- 		i = i + 1
-	-- 	end
-	-- 	while userTooltip.badge[i] do
-	-- 		userTooltip.badge[i]:Hide()
-	-- 		i = i + 1
-	-- 	end
-	-- elseif userTooltip.badge then
-	-- 	local i = 1
-	-- 	while userTooltip.badge[i] do
-	-- 		userTooltip.badge[i]:Hide()
-	-- 		i = i + 1
-	-- 	end
-	-- end
-
-	-- InGameSince (ZK specific)
-	-- if userInfo.inGameSince and userInfo.isInGame then
-	-- 	if not userTooltip.inGameSince then
-	-- 		userTooltip.inGameSince = GetTooltipLine(userTooltip.mainControl, true)
-	-- 	end
-	-- 	userTooltip.inGameSince.Update(
-	-- 		offset,
-	-- 		"In game for " .. Spring.Utilities.GetTimeToPast(userInfo.inGameSince, true),
-	-- 		IMAGE_INGAME
-	-- 	)
-	-- 	offset = offset + 20
-	-- elseif userTooltip.inGameSince then
-	-- 	userTooltip.inGameSince:Hide()
-	-- end
-
-	-- Away Since (ZK specific)
-	-- if userInfo.awaySince and userInfo.isAway then
-	-- 	if not userTooltip.awaySince then
-	-- 		userTooltip.awaySince = GetTooltipLine(userTooltip.mainControl, true)
-	-- 	end
-	-- 	userTooltip.awaySince.Update(
-	-- 		offset,
-	-- 		"Idle for " .. Spring.Utilities.GetTimeToPast(userInfo.awaySince, true),
-	-- 		IMAGE_AFK
-	-- 	)
-	-- 	offset = offset + 20
-	-- elseif userTooltip.awaySince then
-	-- 	userTooltip.awaySince:Hide()
-	-- end
-
-	-- In Battle
 	if (not inBattleroom) and userInfo.battleID and lobby:GetBattle(userInfo.battleID) then
 		local battle = lobby:GetBattle(userInfo.battleID)
 
@@ -904,68 +758,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		end
 
 		local battleOffset = 0
-
-		-- show minimap inside user tooltip ?
-		-- if not userTooltip.runningImage then
-		-- 	userTooltip.runningImage = Image:New {
-		-- 		name = "runningImage",
-		-- 		x = 6,
-		-- 		y = battleOffset,
-		-- 		width = 70,
-		-- 		height = 70,
-		-- 		keepAspect = false,
-		-- 		file = BATTLE_RUNNING,
-		-- 		parent = userTooltip.battleInfoHolder,
-		-- 	}
-		-- end
-		-- userTooltip.runningImage:SetVisibility(battle.isRunning == true)
---
-		-- local mapImageFile, needDownload = Configuration:GetMinimapSmallImage(battle.mapName)
-		-- if not userTooltip.minimapImage then
-		-- 	userTooltip.minimapImage = Image:New {
-		-- 		name = "minimapImage",
-		-- 		x = 6,
-		-- 		y = battleOffset,
-		-- 		width = 70,
-		-- 		height = 70,
-		-- 		valign = 'top',
-		-- 		keepAspect = true,
-		-- 		file = mapImageFile,
-		-- 		fallbackFile = Configuration:GetLoadingImage(2),
-		-- 		checkFileExists = needDownload,
-		-- 		parent = userTooltip.battleInfoHolder,
-		-- 	}
-		-- end
-		-- userTooltip.minimapImage.file = mapImageFile
-		-- userTooltip.minimapImage.fallbackFile = Configuration:GetLoadingImage(2)
-		-- userTooltip.minimapImage.checkFileExists = needDownload
-		-- userTooltip.minimapImage:Invalidate()
-		-- offset = offset + 25
-		-- battleOffset = battleOffset + 25
---
-		-- if not userTooltip.lblMap then
-		-- 	userTooltip.lblMap = Label:New {
-		-- 		name = "mapCaption",
-		-- 		x = 6 + 70 + 5,
-		-- 		y = battleOffset,
-		-- 		right = 5,
-		-- 		height = 20,
-		-- 		valign = 'center',
-		-- 		caption = battle.mapName:sub(1, 22),
-		-- 		objectOverrideFont = WG.Chobby.Configuration:GetFont(9),
-		-- 		parent = userTooltip.battleInfoHolder,
-		-- 		OnResize = {
-		-- 			function (obj, xSize, ySize)
-		-- 				if battle then
-		-- 					obj:SetCaption(StringUtilities.GetTruncatedStringWithDotDot(battle.mapName, obj.font, obj.width))
-		-- 				end
-		-- 			end
-		-- 		}
-		-- 	}
-		-- end
-		-- userTooltip.lblMap:SetCaption(battle.mapName:sub(1, 22))
-		-- offset = offset + 45
-		-- battleOffset = battleOffset + 45
 
 		if not userTooltip.battleTooltipHolder then
 			userTooltip.battleTooltipHolder = Chili.Control:New {
@@ -1022,7 +814,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.playerNote:Hide()
 	end
 
-	-- Debug Mode
 	if Configuration.debugMode then
 
 		if not userTooltip.debugText then
@@ -1046,7 +837,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 			userTooltip.mainControl:AddChild(userTooltip.debugText)
 		end
 
-
 		local st = sortfunc(userInfo)
 		local n = ""
 		local text = ""
@@ -1055,7 +845,6 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 			n = "\n"
 		end
 		if next(userBattleInfo) then
-			text = text .. "\n" .. "----------------"
 			st = sortfunc(userBattleInfo)
 			for _, kv in ipairs(st) do
 				text = text .. "\n" .. kv[1] .. " = " .. tostring(kv[2])
@@ -1071,17 +860,11 @@ local function GetUserTooltip(userName, userInfo, userBattleInfo, inBattleroom)
 		userTooltip.mainControl:RemoveChild(userTooltip.debugText)
 	end
 
-	-- Set tooltip sizes
 	userTooltip.mainControl:SetPos(nil, nil, width, offset)
 
 	return userTooltip.mainControl
 end
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Replay tooltip
-
--- demos may have no skill values
 local function SortPlayersBySkill(a, b)
 	local skillA = tonumber(a.skill)
 	local skillB = tonumber(b.skill)
@@ -1101,9 +884,9 @@ local function getReplayPlayerListTooltip(teamList)
 
 	local showTeams = true
 	if #teamList > 2 then
-		showTeams = false -- assume ffa
+		showTeams = false
 		for i = 1, #teamList do
-			if #teamList[i] > 1 then -- no, it's teamFFA
+			if #teamList[i] > 1 then
 				showTeams = true
 			end
 		end
@@ -1115,9 +898,9 @@ local function getReplayPlayerListTooltip(teamList)
 		cols = math.ceil(#teamList / math.ceil(#teamList / 4))
 	else
 		if #teamList < 33 then
-			divisor = 8 -- max 4 columns
+			divisor = 8
 		else
-			divisor = 16 -- big ffas are difficult to handle
+			divisor = 16
 		end
 		cols = math.ceil(#teamList / divisor)
 
@@ -1170,7 +953,6 @@ local function getReplayPlayerListTooltip(teamList)
 
 			teamStack = newTeamStack()
 
-			-- team title
 			if not teamStack.teamTitle then
 				teamStack.teamTitle = GetTooltipLine(teamStack, nil, 3)
 			end
@@ -1209,22 +991,16 @@ local function getReplayPlayerListTooltip(teamList)
 	end
 	totalHeight = totalHeight + yOffsetTeamMax
 
-	-- Set tooltip sizes
-
 	replayTooltip.mainStackPanel:SetPos(nil, nil, cols * PLAYERWIDTH, totalHeight + 5)
 
 	return replayTooltip.mainStackPanel
 end
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Tooltip maintence
-
 local function GetTooltip()
 	if tooltipOverride then
 		return tooltipOverride
 	end
-	if screen0.currentTooltip then -- this gives chili absolute priority, otherwise TraceSreenRay() would ignore the fact ChiliUI is underneath the mouse
+	if screen0.currentTooltip then
 		return screen0.currentTooltip
 	end
 end
@@ -1251,7 +1027,6 @@ local function SetTooltipPos()
 		width  = _cachedTooltipWidth
 		height = tooltipChild.height + 14
 	else
-		-- Fudge numbers correspond to padding
 		width, height = tooltipChild.width + 9, tooltipChild.height + 8
 	end
 
@@ -1260,9 +1035,8 @@ local function SetTooltipPos()
 	end
 
 	x = x + 20
-	y = screenHeight - y -- Spring y is from the bottom, chili is from the top
+	y = screenHeight - y
 
-	-- Making sure the tooltip is within the boundaries of the screen
 	if y + height + 20 > screenHeight then
 		if y > height then
 			y = y - height
@@ -1337,7 +1111,7 @@ local function UpdateTooltip(inputText)
 		local tooltipControl = getReplayPlayerListTooltip(replayControl.teams)
 		tipWindow:ClearChildren()
 		tipWindow:AddChild(tooltipControl)
-	else -- For everything else display a normal tooltip
+	else
 		tipWindow:ClearChildren()
 		tipTextDisplay:SetText(inputText)
 		tipWindow:AddChild(tipTextDisplay)
@@ -1355,9 +1129,7 @@ local function CheckTooltipUpdate(newText)
 			SetTooltipPos()
 			_lastTooltipMouseX, _lastTooltipMouseY = spGetMouseState()
 		else
-			-- Changed to dont update tooltip pos if not desired
 			if WG.Chobby.Configuration and WG.Chobby.Configuration.staticTooltipPositions ~= true then
-				-- Only update tooltip position when mouse has actually moved
 				local mx, my = spGetMouseState()
 				if mx ~= _lastTooltipMouseX or my ~= _lastTooltipMouseY then
 					_lastTooltipMouseX, _lastTooltipMouseY = mx, my
@@ -1373,10 +1145,6 @@ local function CheckTooltipUpdate(newText)
 	end
 end
 
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- External Functions
-
 local TooltipHandler = {}
 
 function TooltipHandler.TooltipOverrideClear()
@@ -1391,10 +1159,6 @@ function TooltipHandler.TooltipOverride(newText, overrideTime)
 		WG.Delay(TooltipHandler.TooltipOverrideClear, overrideTime)
 	end
 end
-
---------------------------------------------------------------------------
---------------------------------------------------------------------------
--- Widget callins
 
 function widget:Update()
 	EvilHax()
@@ -1415,4 +1179,3 @@ function widget:Shutdown()
 	lobby:RemoveListener("OnUpdateBattleInfo", OnUpdateBattleInfo)
 	tipWindow:Dispose()
 end
-
