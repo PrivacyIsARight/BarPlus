@@ -6,6 +6,7 @@ const { spawn } = require('child_process');
 const { resolve } = require('path');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const log = require('electron-log');
 
@@ -21,6 +22,18 @@ bridge.on('listening', () => {
 	const a = bridge.server.address();
 	address = a.address;
 	port = a.port;
+});
+
+bridge.on('connection', () => {
+	bridge.send('RandomSeed', {
+		seed: crypto.randomBytes(32).toString('hex')
+	});
+});
+
+bridge.register('ReadRandomSeed', () => {
+	bridge.send('RandomSeed', {
+		seed: crypto.randomBytes(32).toString('hex')
+	});
 });
 
 function generateScriptTXT() {

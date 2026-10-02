@@ -134,137 +134,54 @@ local function Sha256Hex(msg)
 		.. Hex32(h5) .. Hex32(h6) .. Hex32(h7) .. Hex32(h8)
 end
 
-local function ToHex(data)
-	return (data:gsub(".", function(c)
-		return string.format("%02x", c:byte())
-	end))
-end
+local SEED_HEX_LENGTH = 64
 
-local function ReadOsRandomHex(ffi, numBytes)
-	local buf = ffi.new("uint8_t[?]", numBytes)
-	local function callValue(fn, ...)
-		local ok, result = pcall(fn, ...)
-		if not ok then
-			return nil
-		end
-		return result
+local function ReadLauncherSeedHex()
+	local connector = WG and WG.Connector
+	if type(connector) ~= "table" or type(connector.GetRandomSeed) ~= "function" then
+		return nil
 	end
-	local function callVoid(fn, ...)
-		return pcall(fn, ...)
+	local okCall, seed = pcall(connector.GetRandomSeed, connector)
+	if not okCall or type(seed) ~= "string" or #seed ~= SEED_HEX_LENGTH
+		or not seed:match("^%x+$") then
+		return nil
 	end
-
-	local okBcrypt, bcrypt = pcall(ffi.load, "bcrypt")
-	if okBcrypt and bcrypt then
-		local okSym, bcryptGenRandom = pcall(function() return bcrypt.BCryptGenRandom end)
-		if okSym and bcryptGenRandom then
-			local status = callValue(bcryptGenRandom, nil, buf, numBytes, 2)
-			if status == 0 then
-				return ToHex(ffi.string(buf, numBytes))
-			end
-		end
-	end
-
-	local okAdvapi, advapi = pcall(ffi.load, "advapi32")
-	if okAdvapi and advapi then
-		local okSym, rtlGenRandom = pcall(function() return advapi.SystemFunction036 end)
-		if okSym and rtlGenRandom then
-			if callValue(rtlGenRandom, buf, numBytes) then
-				return ToHex(ffi.string(buf, numBytes))
-			end
-		end
-	end
-
-	local okGetrandom, getrandom = pcall(function() return ffi.C.getrandom end)
-	if okGetrandom and getrandom then
-		if callValue(getrandom, buf, numBytes, 0) == numBytes then
-			return ToHex(ffi.string(buf, numBytes))
-		end
-	end
-
-	local okArc4, arc4randomBuf = pcall(function() return ffi.C.arc4random_buf end)
-	if okArc4 and arc4randomBuf then
-		if callVoid(arc4randomBuf, buf, numBytes) then
-			return ToHex(ffi.string(buf, numBytes))
-		end
-	end
-
-	return nil
-end
-
-local function SecureRandomHex(numBytes)
-	local okFfi, ffi = pcall(require, "ffi")
-	if okFfi and type(ffi) == "table" and type(ffi.new) == "function" then
-		local okCall, hex = pcall(ReadOsRandomHex, ffi, numBytes)
-		if okCall and hex then
-			return hex, "os random device via ffi"
-		end
-	end
-	if not io or not io.open then
-		return nil, nil
-	end
-	local handle = io.open("/dev/urandom", "rb")
-	if not handle then
-		return nil, nil
-	end
-	local data = handle:read(numBytes)
-	handle:close()
-	if not data or #data < numBytes then
-		return nil, nil
-	end
-	return ToHex(data), "/dev/urandom"
+	return seed
 end
 
 local NO_SECRET = "0000000000000000 0000000000000000"
 
-local NO_SECRET_MESSAGE = "BarPlus could not find a secure source of random numbers "
-	.. "on this system, so it is using a fixed placeholder for your client identity. "
-	.. "No hardware identifier has left your machine, but that placeholder is the same "
-	.. "for every session, which means the server can tell your sessions apart as "
-	.. "belonging to one client. This is not supposed to happen, please report it."
+local agentSeed
+local agentCounter = 0
+local agentSeedWarned = false
 
-local function ReportNoSecureRandom()
-	Spring.Log("liblobby", LOG.ERROR, "NO SECURE RANDOM SOURCE: " .. NO_SECRET_MESSAGE)
-	pcall(function()
-		if WG and WG.Chobby and WG.Chobby.ErrorPopup then
-			WG.Chobby.ErrorPopup(NO_SECRET_MESSAGE)
-		elseif ErrorPopup then
-			ErrorPopup(NO_SECRET_MESSAGE)
-		end
-	end)
+local function EnsureAgentSeed()
+	if agentSeed then
+		return agentSeed
+	end
+	local hex = ReadLauncherSeedHex()
+	if hex then
+		agentSeed = hex
+		Spring.Log("liblobby", LOG.NOTICE, "lobby agent hash seeded from launcher")
+		return agentSeed
+	end
+	if not agentSeedWarned then
+		agentSeedWarned = true
+		NoSeedWarning.Report()
+	end
+	return NO_SECRET
 end
 
-local agentSecret
-local agentCounter = 0
-local agentSecretWarned = false
-local agentSecretIsReal = false
-
-local function EnsureAgentSecret()
-	if agentSecret then
-		return agentSecret, agentSecretIsReal
-	end
-	local hex, source = SecureRandomHex(32)
-	if hex then
-		agentSecret = hex
-		agentSecretIsReal = true
-		Spring.Log("liblobby", LOG.NOTICE, "lobby agent hash seeded from " .. source)
-		return agentSecret, true
-	end
-	agentSecret = NO_SECRET
-	if not agentSecretWarned then
-		agentSecretWarned = true
-		ReportNoSecureRandom()
-	end
-	return agentSecret, false
+function RetryNoSeedWarning()
+	NoSeedWarning.Retry()
 end
 
 function NewLobbyAgentHash()
-	local secret, fromCsprng = EnsureAgentSecret()
-	if not fromCsprng then
-		return secret
+	local seed = EnsureAgentSeed()
+	if seed == NO_SECRET then
+		return seed
 	end
 	agentCounter = agentCounter + 1
-	local digest = Sha256Hex(secret .. "|" .. agentCounter .. "|"
-		.. tostring(os.time()) .. "|" .. tostring(os.clock()) .. "|"
-		.. tostring(Spring.GetTimer()))
+	local digest = Sha256Hex(seed .. "|" .. agentCounter .. "|" .. tostring(os.time()))
 	return digest:sub(1, 16) .. " " .. digest:sub(17, 32)
 end

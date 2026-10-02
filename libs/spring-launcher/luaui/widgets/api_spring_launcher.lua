@@ -4,6 +4,8 @@ local host, port
 local client
 local isConnected = false
 local buffer = ""
+local randomSeed
+local randomSeedRequested = false
 
 local Connector = {
 	callbacks = {}, -- name based callbacks
@@ -34,6 +36,24 @@ end
 Connector.Register("LoadExtensionFailed", function(command)
 	Spring.Log(LOG_SECTION, LOG.ERROR, command.error)
 end)
+
+Connector.Register("RandomSeed", function(command)
+	if type(command) == "table" and type(command.seed) == "string" then
+		randomSeed = command.seed
+	end
+end)
+
+function Connector.GetRandomSeed()
+	return randomSeed
+end
+
+function Connector.RequestRandomSeed()
+	if randomSeed or randomSeedRequested then
+		return
+	end
+	randomSeedRequested = true
+	Connector.Send("ReadRandomSeed", {})
+end
 
 function Connector.Unregister(name, callback)
 	if not Connector.callbacks[name] then
@@ -171,9 +191,11 @@ end
 function widget:Update()
 	isConnected = client ~= nil and client:getpeername()
 	if not isConnected then
+		randomSeedRequested = false
 		self:SocketConnect(host, port)
 		return
 	end
+	Connector.RequestRandomSeed()
 	Connector._FlushCommandQueue()
 
 	self:ReadAvailableSockets()

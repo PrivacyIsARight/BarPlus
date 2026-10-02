@@ -18,6 +18,7 @@ class Bridge extends EventEmitter {
 			this.socket = socket; // Allow multiple sockets?
 
 			log.info('bridge: connection to Spring established');
+			this.emit('connection', socket);
 
 			socket.on('data', (data) => {
 				const msgs = data.toString().split('\n');

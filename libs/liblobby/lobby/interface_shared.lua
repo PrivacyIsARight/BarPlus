@@ -356,6 +356,7 @@ function Interface:SafeUpdate()
 end
 
 function Interface:Update()
+	RetryNoSeedWarning()
 	-- Cache the wrapper closures once per Interface instance instead of creating 2 closures per frame
 	if not self._updateWrapper then
 		self._updateWrapper = function() self:SafeUpdate() end

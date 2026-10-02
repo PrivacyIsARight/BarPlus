@@ -70,6 +70,7 @@ function Interface:Login(user, password, cpu, localIP, lobbyVersion)
 
 	if self.buffer then self.buffer = "" end
 	password = VFS.CalculateHash(password, 0)
+	self.agent = NewLobbyAgentHash()
 	sentence = "LuaLobby " .. GetServerLobbyName() .. "\t" .. self.agent .. "\t" .. "b sp"
 	cmd = concat("LOGIN", user, password, "0", localIP, sentence)
 	self:_SendCommand(cmd)
