@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
+      - main
 
 permissions:
   contents: write
@@ -265,7 +265,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           for attempt in 1 2 3; do
             git fetch origin
-            git checkout -B master origin/master
+            git checkout -B main origin/main
             node build/update_launcher_config.js dist_cfg/config.json "$MENU_URL" "$MENU_COUNT"
             git add dist_cfg/config.json
             if git diff --cached --quiet; then
@@ -273,7 +273,7 @@ jobs:
               exit 0
             fi
             git commit -m "Update menu target to build $MENU_COUNT"
-            if git push origin master; then
+            if git push origin main; then
               echo "menu target updated"
               exit 0
             fi
