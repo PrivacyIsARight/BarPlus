@@ -136,17 +136,60 @@ end
 
 local SEED_HEX_LENGTH = 64
 
-local function ReadLauncherSeedHex()
-	local connector = WG and WG.Connector
-	if type(connector) ~= "table" or type(connector.GetRandomSeed) ~= "function" then
+local MISS = {
+	NO_CONNECTOR = "no_connector",
+	NO_METHOD = "no_method",
+	ERROR = "error",
+	NO_SEED = "no_seed",
+	MALFORMED = "malformed",
+}
+
+local function GetConnector()
+	local conn = WG and WG.Connector
+	if type(conn) ~= "table" then
 		return nil
 	end
-	local okCall, seed = pcall(connector.GetRandomSeed, connector)
-	if not okCall or type(seed) ~= "string" or #seed ~= SEED_HEX_LENGTH
-		or not seed:match("^%x+$") then
-		return nil
+	return conn
+end
+
+local function ReadLauncherSeedHex()
+	local connector = GetConnector()
+	if not connector then
+		return nil, MISS.NO_CONNECTOR
+	end
+	if type(connector.GetRandomSeed) ~= "function" then
+		return nil, MISS.NO_METHOD
+	end
+	local ok, seed = pcall(connector.GetRandomSeed, connector)
+	if not ok then
+		return nil, MISS.ERROR, tostring(seed)
+	end
+	if seed == nil or seed == false or seed == "" then
+		return nil, MISS.NO_SEED
+	end
+	if type(seed) ~= "string" or #seed ~= SEED_HEX_LENGTH or not seed:match("^%x+$") then
+		local len = type(seed) == "string" and #seed or "n/a"
+		return nil, MISS.MALFORMED, string.format("type=%s,len=%s", type(seed), tostring(len))
 	end
 	return seed
+end
+
+local function LogMiss(reason, err)
+	local msg = string.format("lobby agent hash: no launcher seed (%s)",
+		tostring(reason))
+	if err then
+		local serr = tostring(err):gsub("%s+", " "):match("^%s*(.-)%s*$")
+		msg = msg .. " | err=" .. serr
+	end
+	Spring.Log("liblobby", LOG.NOTICE, msg)
+end
+
+local function Guard(label, f, ...)
+	local ok, res = pcall(f, ...)
+	if not ok then
+		Spring.Log("liblobby", LOG.ERROR, "lobby agent hash: " .. label .. " failed: " .. tostring(res))
+	end
+	return ok, res
 end
 
 local NO_SECRET = "0000000000000000 0000000000000000"
@@ -159,7 +202,7 @@ local function EnsureAgentSeed()
 	if agentSeed then
 		return agentSeed
 	end
-	local hex = ReadLauncherSeedHex()
+	local hex, reason, err = ReadLauncherSeedHex()
 	if hex then
 		agentSeed = hex
 		Spring.Log("liblobby", LOG.NOTICE, "lobby agent hash seeded from launcher")
@@ -167,7 +210,8 @@ local function EnsureAgentSeed()
 	end
 	if not agentSeedWarned then
 		agentSeedWarned = true
-		NoSeedWarning.Report()
+		Guard("warning report", NoSeedWarning.Report)
+		Guard("LogMiss", LogMiss, reason, err)
 	end
 	return NO_SECRET
 end

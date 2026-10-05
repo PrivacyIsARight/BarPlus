@@ -50,7 +50,8 @@
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
-      }
+      },
+      "disable_launcher_update_dialog": true
     },
     {
       "package": {
@@ -99,7 +100,8 @@
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
-      }
+      },
+      "disable_launcher_update_dialog": true
     },
     {
       "package": {
@@ -148,7 +150,8 @@
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
-      }
+      },
+      "disable_launcher_update_dialog": true
     },
     {
       "package": {
@@ -197,7 +200,8 @@
         "springsettings": {
           "RapidTagResolutionOrder": "repos-cdn.beyondallreason.dev;repos.beyondallreason.dev"
         }
-      }
+      },
+      "disable_launcher_update_dialog": true
     },
     {
       "package": {
