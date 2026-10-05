@@ -714,7 +714,6 @@ local function GetAiTabControls()
 	local children = {}
 
 	children[#children + 1], offset = AddCheckboxSetting(offset, i18n("simple_ai_list"), "simpleAiList", true, nil, i18n("simple_ai_list_tooltip"))
-	children[#children + 1], offset = AddCheckboxSetting(offset, "Show old AI versions", "showOldAiVersions", false)
 	children[#children + 1], offset = AddCheckboxSetting(offset, "Show AIOptions", "showAiOptions", true)
 
 	freezeSettings = false

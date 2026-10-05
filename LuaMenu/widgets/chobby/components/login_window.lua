@@ -1,7 +1,5 @@
 LoginWindow = LCS.class{}
 
-include "LuaMenu/widgets/chobby/utilities/word_library.lua"
-
 local spGetKeyCode = Spring.GetKeyCode
 
 local EMAIL_PROVIDERS = {
@@ -699,27 +697,6 @@ function LoginWindow:tryLogin()
 	self.loginAttempts = self.loginAttempts + 1
 end
 
-function isInValidUserName(username)
-	if not string.match(username, "^[a-zA-Z%d%[%]_]+$") then
-		return "Username may only contain letters, numbers, [] and _"
-	end
-	local len = #username
-	if len > 20 then
-		return "Username too long, 20 characters max"
-	end
-	if len < 3 then
-		return "Username too short, at least 3 characters"
-	end
-	local blacklisted = Word_Library.FindBlacklistedString(username)
-	if blacklisted then
-		return "Username contains banned word/phrase: " .. blacklisted
-	end
-	if string.lower(string.sub(username, 1, 5)) == 'host[' then
-		return "Username Host[...  is reserved internally."
-	end
-	return false
-end
-
 function isInValidEmail(email)
 	if not email or email == '' then
 		return false
@@ -743,12 +720,6 @@ function LoginWindow:tryRegister()
 
 	if username == '' then
 		self.txtErrorRegister:SetText(errorColor .. "No username provided.")
-		return
-	end
-
-	local invalidUserName = isInValidUserName(username)
-	if invalidUserName then
-		self.txtErrorRegister:SetText(errorColor .. invalidUserName)
 		return
 	end
 
@@ -815,11 +786,6 @@ end
 function LoginWindow:tryChangeUserName()
 	self:ClearRenameListeners()
 	local newusername = self.ebChangeUserName.text
-	local invalidUserName = isInValidUserName(newusername)
-	if invalidUserName then
-		self.txtErrorChangeUserName:SetText(Configuration:GetErrorColor() .. invalidUserName)
-		return
-	end
 	if lobby:GetConnectionStatus() ~= "connected" then
 		self.txtErrorChangeUserName:SetText(Configuration:GetErrorColor() .. "Must be logged in to change user name!")
 		return

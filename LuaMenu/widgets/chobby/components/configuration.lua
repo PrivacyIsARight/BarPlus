@@ -353,7 +353,6 @@ function Configuration:init()
 	self.showMatchMakerBattles = false
 	self.hideInterface = false
 	self.enableTextToSpeech = true
-	self.showOldAiVersions = false
 	self.showAiOptions = true
 	self.drawAtFullSpeed = false
 	self.fixFlicker = true
@@ -799,7 +798,6 @@ function Configuration:GetConfigData()
 		matchmakerRejectCount = self.matchmakerRejectCount,
 		matchmakerPopupTime = self.matchmakerPopupTime,
 		enableTextToSpeech = self.enableTextToSpeech,
-		showOldAiVersions = self.showOldAiVersions,
 		showAiOptions = self.showAiOptions,
 		chatFontSize = self.chatFontSize,
 		myAccountID = self.myAccountID,

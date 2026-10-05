@@ -31,13 +31,11 @@ function AiListWindow:init(lobby, gameName)
 	--Spring.Echo("VFS.GetAvailableAIs(gameName)",gameName)
 	--Spring.Utilities.TableEcho(ais)
 
-	local blackList = Configuration.gameConfig.aiBlacklist
-	local oldAiVersions = (not Configuration.showOldAiVersions) and Configuration.gameConfig.oldAiVersions
 	local isRunning64Bit = Configuration:GetIsRunning64Bit()
 	local isSingleplayer = lobby.name == "singleplayer"
 
 	for i, ai in pairs(ais) do
-		self:AddAiToList(ai, blackList, oldAiVersions, isRunning64Bit, isSingleplayer)
+		self:AddAiToList(ai, isRunning64Bit, isSingleplayer)
 	end
 end
 
@@ -51,13 +49,9 @@ function AiListWindow:CompareItems(id1, id2)
 	return true
 end
 
-function AiListWindow:AddAiToList(ai, blackList, oldAiVersions, isRunning64Bit, isSingleplayer)
+function AiListWindow:AddAiToList(ai, isRunning64Bit, isSingleplayer)
 	self.isSinglePlayer = isSingleplayer
 	local shortName = ai.shortName or "Unknown"
-
-	if blackList and blackList[shortName] then
-		return
-	end
 
 	if (isRunning64Bit and string.find(shortName, "32")) or ((not isRunning64Bit) and string.find(shortName, "64")) then
 		return
@@ -69,14 +63,6 @@ function AiListWindow:AddAiToList(ai, blackList, oldAiVersions, isRunning64Bit, 
 		version = " " .. ai.version
 	end
 	local aiName = shortName .. version
-
-	if oldAiVersions then
-		for i = 1, #oldAiVersions do
-			if string.find(aiName, oldAiVersions[i]) then
-				return
-			end
-		end
-	end
 
 	local displayName = aiName
 	if Configuration.simpleAiList and Configuration.gameConfig.GetAiSimpleName then

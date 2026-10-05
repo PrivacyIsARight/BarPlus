@@ -9,7 +9,7 @@ local subnameMap = {
 }
 
 local function GetAiSimpleName(name)
-	return subnameMap[name]
+	return subnameMap[name] or name
 end
 
 local simpleAiOrder = {

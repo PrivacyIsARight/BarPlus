@@ -1,7 +1,6 @@
 local shortname = "byar"
 
 local sidedata           = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/sidedata.lua")
-local aiBlacklist        = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/aiBlacklist.lua")
 local aiSimpleNames      = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/aiSimpleName.lua")
 local aiCustomData       = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/aiCustomData.lua")
 local singleplayerConfig = VFS.Include(LUA_DIRNAME .. "configs/gameConfig/" .. shortname .. "/singleplayerMenu.lua")
@@ -69,7 +68,6 @@ local externalFuncAndData = {
 	--editor                 = "SpringBoard BYAR $VERSION",
 	defaultChatChannels    = {"main"},
 	sayPrivateSelectAndActivateChatTab = sayPrivateSelectAndActivateChatTab,
-	aiBlacklist            = aiBlacklist,
 	unversionedGameAis     = {"SimpleAI","SimpleDefenderAI", "SimpleConstructorAI", "ScavengersAI", "RaptorsAI"},
 	GetAiSimpleName        = aiSimpleNames.GetAiSimpleName,
 	simpleAiOrder          = aiSimpleNames.simpleAiOrder,
