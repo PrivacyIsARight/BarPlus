@@ -9,6 +9,7 @@ const { spawnSync } = require('child_process');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const PREPARE = path.join(REPO_ROOT, 'build', 'prepare_launcher.js');
+const { applyPatches } = require(PREPARE);
 
 const UPSTREAM_ARGS = `\t.option('write-path', {
 		alias: 'w',
@@ -16,6 +17,25 @@ const UPSTREAM_ARGS = `\t.option('write-path', {
 		description: 'Path to directory holding data'
 	})
 `;
+
+const UPSTREAM_UPDATE_OPTION = `	.option('disable-launcher-update', {
+		type: 'boolean',
+		default: false,
+		description: 'Disables launcher application self update.'
+	})
+`;
+
+const SELF_UPDATE_PATCH = path.join(REPO_ROOT, 'build', 'patches', '2-enable-launcher-self-update.patch');
+
+function unpatch(patched, root) {
+	const dir = path.join(root, 'launcher');
+	const file = path.join(dir, 'src', 'launcher_args.js');
+	fs.mkdirSync(path.dirname(file), { recursive: true });
+	fs.writeFileSync(file, patched);
+	const res = spawnSync('git', ['apply', '-R', '-p1', SELF_UPDATE_PATCH], { cwd: root, encoding: 'utf8' });
+	assert.equal(res.status, 0, res.stderr || 'could not reverse the self-update patch');
+	return fs.readFileSync(file, 'utf8');
+}
 
 const UPSTREAM_IMPORT = `const { handleConfigUpdate, handleConfigReload } = require('./launcher_config_update');
 `;
@@ -30,7 +50,7 @@ function makeUpstream(dir) {
 	fs.mkdirSync(path.join(dir, 'src'), { recursive: true });
 	fs.mkdirSync(path.join(dir, 'build'), { recursive: true });
 	fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'spring-launcher', build: {} }, null, 2));
-	fs.writeFileSync(path.join(dir, 'src', 'launcher_args.js'), `'use strict';\n${UPSTREAM_ARGS}.argv;\n`);
+	fs.writeFileSync(path.join(dir, 'src', 'launcher_args.js'), unpatch(`'use strict';\n${UPSTREAM_ARGS}${UPSTREAM_UPDATE_OPTION}\t.argv;\n`, path.dirname(dir)));
 	fs.writeFileSync(path.join(dir, 'src', 'launcher_wizard.js'), `'use strict';\n${UPSTREAM_IMPORT}\nclass Wizard {\n\tgenerateSteps() {\n\t\tconst asyncSteps = [];\n\t\tconst steps = [];\n${UPSTREAM_RESOURCES}\t}\n}\n`);
 	fs.writeFileSync(path.join(dir, 'build', 'icon.png'), 'upstream-icon');
 }
@@ -94,6 +114,25 @@ test('prepare copies every launcher source overlay, including nested handlers', 
 	}
 });
 
+test('prepare enables the launcher self-update by default', () => {
+	assert.match(
+		read('src', 'launcher_args.js'),
+		/\.option\('disable-launcher-update', \{\n\t\ttype: 'boolean',\n\t\tdefault: false,/,
+	);
+	assert.equal(fs.existsSync(path.join(REPO_ROOT, 'dist_cfg', 'launcher_src', 'launcher_args.js')), false);
+});
+
+test('prepare leaves the pinned engine handler unpatched', () => {
+	assert.doesNotMatch(read('src', 'exts', 'start_new_spring_handler.js'), /configuredEngine/);
+});
+
+test('prepare does not change anything when patches are already applied', () => {
+	const first = read('src', 'launcher_args.js');
+	applyPatches(launcherDir);
+	applyPatches(launcherDir);
+	assert.equal(read('src', 'launcher_args.js'), first);
+});
+
 test('prepare stamps the package with the BarPlus identity', () => {
 	const pkg = JSON.parse(read('package.json'));
 	assert.equal(pkg.version.match(/^1\.500\.0-/) ? true : false, true);
@@ -101,7 +140,7 @@ test('prepare stamps the package with the BarPlus identity', () => {
 	assert.deepEqual(pkg.build.publish[0], { provider: 'github', owner: 'Owner', repo: 'Repo', releaseType: 'release' });
 });
 
-test('prepare is idempotent', () => {
+test('prepare produces the same config when run repeatedly', () => {
 	const before = read('src', 'config.json');
 	prepare();
 	prepare();

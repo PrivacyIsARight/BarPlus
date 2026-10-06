@@ -9,6 +9,7 @@ const { createPackagejson } = require('./make_package_json');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DIST_CFG = path.join(REPO_ROOT, 'dist_cfg');
+const PATCH_DIR = path.join(REPO_ROOT, 'build', 'patches');
 
 const UPSTREAM_URL = 'https://gitlab.com/TorGibson/beyond-bar-launcher.git';
 const UPSTREAM_REF = process.env.BBL_REF || 'v0.1.1';
@@ -58,6 +59,29 @@ function overlayDistCfg(dir) {
 	fs.cpSync(launcherSrc, path.join(dir, 'src'), { recursive: true });
 }
 
+function applyPatches(dir) {
+	if (!fs.existsSync(PATCH_DIR)) {
+		return;
+	}
+	const patches = fs.readdirSync(PATCH_DIR)
+		.filter(f => f.endsWith('.patch'))
+		.sort();
+	const root = path.dirname(path.resolve(dir));
+	for (const patch of patches) {
+		const file = path.join(PATCH_DIR, patch);
+		const check = spawnSync('git', ['apply', '-R', '--check', file], { cwd: root });
+		if (check.status === 0) {
+			console.log(`${patch} is already applied, skipping`);
+			continue;
+		}
+		try {
+			run('git', ['apply', '--ignore-whitespace', file], root);
+		} catch (error) {
+			throw new Error(`${patch} does not apply to ${dir}: ${error.message}`);
+		}
+	}
+}
+
 function assertBuildFields(dir) {
 	const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
 	assert.ok(pkg.build && typeof pkg.build === 'object', 'Upstream package.json has no build block');
@@ -67,6 +91,7 @@ function prepareLauncher(dir, repoFullName, version) {
 	fetch(dir);
 	assertUpstream(dir);
 	overlayDistCfg(dir);
+	applyPatches(dir);
 	assertBuildFields(dir);
 	createPackagejson(path.join(dir, 'package.json'), path.join(DIST_CFG, 'config.json'), repoFullName, version);
 }
@@ -74,6 +99,7 @@ function prepareLauncher(dir, repoFullName, version) {
 module.exports = {
 	prepareLauncher,
 	overlayDistCfg,
+	applyPatches,
 	UPSTREAM_URL,
 	UPSTREAM_REF,
 };

@@ -1,0 +1,16 @@
+diff --git a/launcher/src/launcher_args.js b/launcher/src/launcher_args.js
+index 2c576a8..602d8a3 100644
+--- a/launcher/src/launcher_args.js
++++ b/launcher/src/launcher_args.js
+@@ -12,10 +12,7 @@ const argv = require('yargs') // eslint-disable-line
+ 	})
+ 	.option('disable-launcher-update', {
+ 		type: 'boolean',
+-		// Defaults to true in this fork: a self-update would replace it with the
+-		// upstream launcher and remove custom server selection. Pass
+-		// --disable-launcher-update=false to restore upstream behaviour.
+-		default: true,
++		default: false,
+ 		description: 'Disables launcher application self update.'
+ 	})
+ 	.argv;
