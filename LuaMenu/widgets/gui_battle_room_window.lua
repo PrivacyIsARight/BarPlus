@@ -74,7 +74,6 @@ local playerHandler
 
 -- modoptions extra
 local factionComboBoxes = {}
-local randomSkirmishCooldownEnds = 0
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -1050,22 +1049,7 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 		local randomButtonCaption = "Generate Random Game"
 		local btnRandomSkirmish
 
-		local function UpdateRandomSkirmishButton()
-			if not btnRandomSkirmish or btnRandomSkirmish.disposed then
-				return
-			end
-			local remaining = math.ceil(randomSkirmishCooldownEnds - os.clock())
-			if remaining > 0 then
-				btnRandomSkirmish:SetEnabled(false)
-				ButtonUtilities.SetCaption(btnRandomSkirmish, randomButtonCaption .. " (" .. remaining .. "s)")
-				WG.Delay(UpdateRandomSkirmishButton, 0.2)
-			else
-				btnRandomSkirmish:SetEnabled(true)
-				ButtonUtilities.SetCaption(btnRandomSkirmish, randomButtonCaption)
-			end
-		end
-		-- UI button to generate random skirmish game, 2s cooldown to prevent spam
-		--cooldown might not be needed cause of single player?
+		-- UI button to generate random skirmish game
 		btnRandomSkirmish = Button:New {
 			name = "btnRandomSkirmish",
 			x = 0,
@@ -1078,12 +1062,6 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 			tooltip = "Picks a random map and fills teams with bots.",
 			OnClick = {
 				function()
-					if os.clock() < randomSkirmishCooldownEnds then
-						return
-					end
-					randomSkirmishCooldownEnds = os.clock() + 2
-					UpdateRandomSkirmishButton()
-
 					local generated = BuildRandomSkirmishSetup()
 					if not generated then
 						return
@@ -1093,7 +1071,6 @@ local function SetupInfoButtonsPanel(leftInfo, rightInfo, battle, battleID, myUs
 			},
 			parent = rightInfo,
 		}
-		UpdateRandomSkirmishButton()
 	end
 
 	local function SetBtnPlayState(selected, caption)
