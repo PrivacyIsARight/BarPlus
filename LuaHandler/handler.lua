@@ -46,7 +46,7 @@ local userAction = false
 local trustedClient = nil
 
 local CLIENT_NAME   = "Settings Window"
-local CLIENT_DIGEST = "11f845f8167e2a06"
+local CLIENT_DIGEST = "9949382442831602"
 
 local function FNV64(data)
 	local P = 16777619

@@ -750,6 +750,7 @@ function Configuration:GetConfigData()
 		doNotDisturb = self.doNotDisturb,
 		simplifiedSkirmishSetup = self.simplifiedSkirmishSetup,
 		randomSkirmishDifficulty = self.randomSkirmishDifficulty,
+		autoBossEmptyLobby = self.autoBossEmptyLobby,
 		debugMode = self.debugMode,
 		debugAutoWin = self.debugAutoWin,
 		enableProfiler = self.enableProfiler,

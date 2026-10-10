@@ -303,6 +303,8 @@ return {
 		randomSkirmishDifficulty_tooltip = "BARbarian AI difficulty profile used when generating a random game.",
 		queueExitConfirmPromptDoNotAskAgain = "No prompt when leaving queue",
 		queueExitConfirmPromptDoNotAskAgain_tooltip = "Disabled = Shows a prompt when leaving the queue or game.",
+		autoBossEmptyLobby = "Auto boss in empty lobbies",
+		autoBossEmptyLobby_tooltip = "When you join a lobby as a player and you are not the boss, automatically take boss as long as no other players are present (spectators are ignored).",
 		ingame_notifcations = "Notifications while ingame",
 		ingame_notifcations_tooltip = "Allows chat from friends and other important notifications to be shown while you are playing",
 		non_friend_notifications = "Non-friend notifications",
