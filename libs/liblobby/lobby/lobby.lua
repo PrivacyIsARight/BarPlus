@@ -2129,8 +2129,17 @@ function Lobby:GetUserId(userName)
 end
 
 -- Returns all users, visible users
-function Lobby:GetUserCount()
-	return self.userCount
+function Lobby:GetUserCount(excludeBots)
+	if not excludeBots then
+		return self.userCount
+	end
+	local count = 0
+	for _, userInfo in pairs(self.users) do
+		if not userInfo.isOffline and not userInfo.isBot then
+			count = count + 1
+		end
+	end
+	return count
 end
 
 -- gets the userInfo, or creates a new one with an offline user if it doesn't exist

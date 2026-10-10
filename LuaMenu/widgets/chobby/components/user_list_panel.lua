@@ -141,7 +141,7 @@ end
 
 function UserListPanel:UpdateUserCount()
 	if self.textCount then
-		self.textCount:SetText(lobby:GetUserCount() .. " players online")
+		self.textCount:SetText(lobby:GetUserCount(true) .. " players online")
 	end
 end
 

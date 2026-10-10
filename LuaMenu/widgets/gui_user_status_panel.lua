@@ -54,7 +54,7 @@ end
 
 local function UpdateOnlineCount()
 	if onlineCountText and onlineCountText.parent then
-		onlineCountText:SetText("\255\180\180\180" .. lobby:GetUserCount() .. " online\b")
+		onlineCountText:SetText("\255\180\180\180" .. lobby:GetUserCount(true) .. " online\b")
 	end
 end
 
@@ -161,7 +161,7 @@ local function InitializeControls(window)
 		height = 20,
 		valign = "center",
 		align = "left",
-		text = "\255\180\180\180" .. lobby:GetUserCount() .. " online\b",
+		text = "\255\180\180\180" .. lobby:GetUserCount(true) .. " online\b",
 		objectOverrideFont = (WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration:GetFont(11)) or nil,
 		objectOverrideHintFont = (WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration:GetFont(11)) or nil,
 		parent = window,
