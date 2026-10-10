@@ -542,6 +542,8 @@ function BattleListWindow:MakeWatchBattle(battleID, battle)
 		parent = parentButton,
 	}
 
+	parentButton.runningTimeCaption = lblRunningTime
+
 	return parentButton
 end
 
@@ -1186,7 +1188,7 @@ function BattleListWindow:UpdateTimers()
 		end
 
 		local battle = lobby:GetBattle(battleID)
-		local runningTimeCaption = items.battleButton:GetChildByName("runningTimeCaption")
+		local runningTimeCaption = items.battleButton.runningTimeCaption
 		if battle and runningTimeCaption then
 			local modeName = battle.battleMode and Configuration.battleTypeToHumanName[battle.battleMode]
 			if modeName then

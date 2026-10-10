@@ -208,6 +208,8 @@ function BattleWatchListWindow:AddBattle(battleID)
 		parent = parentButton,
 	}
 
+	parentButton.runningTimeCaption = lblRunningTime
+
 	self:AddRow({parentButton}, battle.battleID)
 end
 
@@ -247,7 +249,7 @@ function BattleWatchListWindow:UpdateTimers()
 		end
 
 		local battle = lobby:GetBattle(battleID)
-		local runningTimeCaption = items.battleButton:GetChildByName("runningTimeCaption")
+		local runningTimeCaption = items.battleButton.runningTimeCaption
 		runningTimeCaption:SetCaption("Running for " .. Spring.Utilities.GetTimeToPast(battle.runningSince))
 	end
 end
