@@ -118,6 +118,8 @@ function Configuration:init()
 	self.battleFilterNonFriend = false
 	self.battleFilterRunning = false
 	self.battleFilterLocked = false
+	self.battleFilterHideAI = false
+	self.battleFilterHidePvP = false
 	-- self.battleFilterVsAI = nil
 	self.battleFilterRedundant = true
 	self.battleFilterRedundantRegions = {"EU - ", "USA - ", "AUS - ","EU - ENGINE TESTING ","US - ","AU - ", "UK - "}
@@ -657,8 +659,17 @@ function Configuration:SetConfigData(data)
 	end
 
 	if data.battleFilterVsAI ~= nil then
-		self.battleFilterPvMode = data.battleFilterVsAI and 2 or 1
-		Spring.Log("Settings", LOG.NOTICE, ("Migrated battleFilterVsAI (%s) -> battleFilterPvMode (%d)"):format(tostring(data.battleFilterVsAI), self.battleFilterPvMode))
+		self.battleFilterHideAI = data.battleFilterVsAI and true or false
+		Spring.Log("Settings", LOG.NOTICE, ("Migrated battleFilterVsAI (%s) -> battleFilterHideAI (%s)"):format(tostring(data.battleFilterVsAI), tostring(self.battleFilterHideAI)))
+	end
+
+	if data.battleFilterPvMode ~= nil and data.battleFilterPvMode > 1 then
+		if data.battleFilterPvMode == 2 then
+			self.battleFilterHideAI = true
+		elseif data.battleFilterPvMode == 3 then
+			self.battleFilterHidePvP = true
+		end
+		Spring.Log("Settings", LOG.NOTICE, ("Migrated battleFilterPvMode (%d) -> battleFilterHideAI (%s), battleFilterHidePvP (%s)"):format(data.battleFilterPvMode, tostring(self.battleFilterHideAI), tostring(self.battleFilterHidePvP)))
 	end
 
 	-- should be removed at 1.1.2024
@@ -732,7 +743,8 @@ function Configuration:GetConfigData()
 		battleFilterRunning = self.battleFilterRunning,
 		battleFilterLocked = self.battleFilterLocked,
 		battleFilterVsAI = self.battleFilterVsAI,
-		battleFilterPvMode = self.battleFilterPvMode,
+		battleFilterHideAI = self.battleFilterHideAI,
+		battleFilterHidePvP = self.battleFilterHidePvP,
 		channels = self.channels,
 		gameConfigName = self.gameConfigName,
 		language = self.language,
