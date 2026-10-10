@@ -337,6 +337,59 @@ do
 		:link(tt_ignore)             :to (allchars)
 		:link(true)                  :to "*"
 
+	local esc_map = {}
+	local function add_escape (c, r) esc_map[c:byte()] = r end
+	add_escape('"', '"')
+	add_escape("'", "'")
+	add_escape("\\", "\\")
+	add_escape("/", "/")
+	add_escape("a", "\a")
+	add_escape("b", "\b")
+	add_escape("f", "\f")
+	add_escape("n", "\n")
+	add_escape("r", "\r")
+	add_escape("t", "\t")
+	add_escape("v", "\v")
+	local esc_bs = ("\\"):byte()
+	local esc_d0, esc_d9 = ("0"):byte(), ("9"):byte()
+
+	local function unescape_string (s)
+		if not s:find("\\", 1, true) then return s end
+		local parts = {}
+		local pos, len = 1, #s
+		while pos <= len do
+			local n = s:find("\\", pos, true)
+			if not n then break end
+			if n > pos then parts[#parts + 1] = s:sub(pos, n - 1) end
+			local b = s:byte(n + 1)
+			local r = esc_map[b]
+			if r then
+				parts[#parts + 1] = r
+				pos = n + 2
+			elseif b and b >= esc_d0 and b <= esc_d9 then
+				local value = b - esc_d0
+				local j = n + 2
+				while j <= len and j < n + 4 do
+					local d = s:byte(j)
+					if not d or d < esc_d0 or d > esc_d9 then break end
+					value = value * 10 + (d - esc_d0)
+					j = j + 1
+				end
+				if value > 255 then
+					error("invalid escape sequence \\" .. s:sub(n + 1, j - 1) .. " in JSON string")
+				end
+				parts[#parts + 1] = string.char(value)
+				pos = j
+			else
+				parts[#parts + 1] = s:sub(n + 1, n + 1)
+				pos = n + 2
+			end
+		end
+		if pos <= len then parts[#parts + 1] = s:sub(pos) end
+		if not parts[1] then return s end
+		return table.concat(parts)
+	end
+
 	function decode (js_string)
 		local pos = 1 -- position in the string
 
@@ -380,39 +433,42 @@ do
 
 		-- read a string, double and single quoted ones
 		local function read_string (tok)
+			local q = tok == tt_singlequote_string and "'" or '"'
 			local start = pos
-			--local returnString = {}
-			repeat
-				local t = next_token(tok)
-				if t == c_esc then
-					--table.insert(returnString, js_string:sub(start, pos-2))
-					--table.insert(returnString, escapechar[ js_string:byte(pos) ])
-					pos = pos + 1
-					--start = pos
-				end -- jump over escaped chars, no matter what
-			until t == true
-			return (base.loadstring("return " .. js_string:sub(start-1, pos-1) ) ())
-
-			-- We consider the situation where no escaped chars were encountered separately,
-			-- and use the fastest possible return in this case.
-
-			--if 0 == #returnString then
-			--	return js_string:sub(start,pos-2)
-			--else
-			--	table.insert(returnString, js_string:sub(start,pos-2))
-			--	return table.concat(returnString,"");
-			--end
-			--return js_string:sub(start,pos-2)
+			local i = start
+			while true do
+				local j = js_string:find(q, i, true)
+				if not j then
+					error("unexpected termination of JSON while looking for a string terminator")
+				end
+				local k = j - 1
+				local bcount = 0
+				while k >= start and js_string:byte(k) == esc_bs do
+					bcount = bcount + 1
+					k = k - 1
+				end
+				if bcount % 2 == 0 then
+					pos = j + 1
+					local content = js_string:sub(start, j - 1)
+					if content:match("[\n\r]") then
+						error("invalid control character in JSON string" ..
+							"\nContext: \n" .. js_string:sub(math.max(1,start-30),j+30))
+					end
+					return unescape_string(content)
+				end
+				i = j + 1
+			end
 		end
 
 		local function read_num ()
-			local start = pos
-			while pos <= #js_string do
-				local b = js_string:byte(pos)
-				if not tt_numeric[b] then break end
-				pos = pos + 1
+			local start = pos - 1
+			local j = js_string:find("[^0-9.Ee-]", pos)
+			if j then
+				pos = j
+			else
+				pos = #js_string + 1
 			end
-			return tonumber(js_string:sub(start-1,pos-1))
+			return tonumber(js_string:sub(start, pos - 1))
 		end
 
 		-- read_bool and read_null are both making an assumption that I have not tested:
