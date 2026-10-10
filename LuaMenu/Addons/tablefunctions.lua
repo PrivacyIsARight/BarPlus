@@ -86,16 +86,15 @@ function Spring.Utilities.TableToString(data, key)
 	elseif dataType == "boolean" then
 		return key .. "=" .. ((data and "true") or "false")
 	elseif dataType == "table" then
-		local str
-		if key then
-			str = key ..  "={"
-		else
-			str = "{"
-		end
+		local parts = { key and (key .. "={") or "{" }
+		local n = 1
 		for k, v in pairs(data) do
-			str = str .. Spring.Utilities.TableToString(v, k) .. ","
+			n = n + 1
+			parts[n] = Spring.Utilities.TableToString(v, k) .. ","
 		end
-		return str .. "}"
+		n = n + 1
+		parts[n] = "}"
+		return table.concat(parts)
 	else
 		Spring.Echo("TableToString Error: unknown data type", dataType)
 	end
