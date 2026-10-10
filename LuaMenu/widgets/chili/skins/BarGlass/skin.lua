@@ -14,19 +14,19 @@ local C = {}
 C.accent        = {0.247, 0.550, 0.850, 1.00}
 C.accentGlow    = {0.340, 0.663, 0.850, 0.55}
 
-C.windowTop     = {0.072, 0.085, 0.115, 0.66}
-C.windowBottom  = {0.034, 0.041, 0.058, 0.70}
-C.rim           = {0.850, 0.850, 0.850, 0.14}
-C.rimLight      = {0.850, 0.850, 0.850, 0.30}
+C.windowTop     = {0.072, 0.085, 0.115, 0.759}
+C.windowBottom  = {0.034, 0.041, 0.058, 0.805}
+C.rim           = {0.850, 0.850, 0.850, 0.161}
+C.rimLight      = {0.850, 0.850, 0.850, 0.345}
 
-C.panel         = {0.060, 0.070, 0.094, 0.58}
-C.panelHover    = {0.085, 0.102, 0.136, 0.62}
+C.panel         = {0.060, 0.070, 0.094, 0.667}
+C.panelHover    = {0.085, 0.102, 0.136, 0.713}
 
-C.field         = {0.017, 0.022, 0.032, 0.58}
-C.fieldFocus    = {0.026, 0.034, 0.049, 0.62}
+C.field         = {0.017, 0.022, 0.032, 0.667}
+C.fieldFocus    = {0.026, 0.034, 0.049, 0.713}
 
-C.progressTrack = {0.000, 0.000, 0.000, 0.45}
-C.thumb         = {0.136, 0.170, 0.221, 0.80}
+C.progressTrack = {0.000, 0.000, 0.000, 0.518}
+C.thumb         = {0.136, 0.170, 0.221, 0.920}
 
 C.pressTint     = {0.017, 0.020, 0.029, 1.00}
 C.hoverTint     = {0.187, 0.281, 0.400, 1.00}
@@ -305,7 +305,7 @@ skin.startbox_window = {
     DrawGlassWindow(obj, obj.width, obj.height)
   end,
   captionColor = C.text,
-  backgroundColor = {0.06, 0.07, 0.10, 0.30},
+  backgroundColor = {0.06, 0.07, 0.10, 0.345},
 }
 
 skin.panel = {
@@ -331,10 +331,10 @@ skin.overlay_panel = {
     Glass.Surface(w, h, {
       radius = ControlRadius(w, h), rimWidth = 1, seg = C.seg, smooth = C.smooth,
       rim = C.rim,
-      fill = {0.04, 0.05, 0.07, 0.66},
+      fill = {0.04, 0.05, 0.07, 0.759},
     })
   end,
-  backgroundColor = {0.04, 0.05, 0.07, 0.66},
+  backgroundColor = {0.04, 0.05, 0.07, 0.759},
 }
 
 skin.party_wrapper = {
@@ -351,49 +351,49 @@ skin.party_wrapper = {
 
 skin.button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.105, 0.122, 0.158, 0.60})
+    DrawGlassButton(obj, {0.105, 0.122, 0.158, 0.69})
   end,
-  backgroundColor = {0.105, 0.122, 0.158, 0.60},
+  backgroundColor = {0.105, 0.122, 0.158, 0.69},
   focusColor = C.accentGlow,
 }
 
 skin.button_small = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.105, 0.122, 0.158, 0.55})
+    DrawGlassButton(obj, {0.105, 0.122, 0.158, 0.633})
   end,
-  backgroundColor = {0.105, 0.122, 0.158, 0.55},
+  backgroundColor = {0.105, 0.122, 0.158, 0.633},
   focusColor = C.accentGlow,
 }
 
 skin.button_bulb = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.125, 0.145, 0.185, 0.65})
+    DrawGlassButton(obj, {0.125, 0.145, 0.185, 0.748})
   end,
-  backgroundColor = {0.125, 0.145, 0.185, 0.65},
+  backgroundColor = {0.125, 0.145, 0.185, 0.748},
   focusColor = C.accentGlow,
 }
 
 skin.button_slimbulb = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.100, 0.118, 0.150, 0.60})
+    DrawGlassButton(obj, {0.100, 0.118, 0.150, 0.69})
   end,
-  backgroundColor = {0.100, 0.118, 0.150, 0.60},
+  backgroundColor = {0.100, 0.118, 0.150, 0.69},
   focusColor = C.accentGlow,
 }
 
 skin.action_button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.130, 0.290, 0.470, 0.62})
+    DrawGlassButton(obj, {0.130, 0.290, 0.470, 0.713})
   end,
-  backgroundColor = {0.130, 0.290, 0.470, 0.62},
+  backgroundColor = {0.130, 0.290, 0.470, 0.713},
   focusColor = C.accentGlow,
 }
 
 skin.option_button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.115, 0.135, 0.175, 0.60})
+    DrawGlassButton(obj, {0.115, 0.135, 0.175, 0.69})
   end,
-  backgroundColor = {0.115, 0.135, 0.175, 0.60},
+  backgroundColor = {0.115, 0.135, 0.175, 0.69},
   focusColor = C.accentGlow,
 }
 
@@ -403,41 +403,41 @@ skin.playing_button = {
 
 skin.negative_button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.400, 0.110, 0.140, 0.62})
+    DrawGlassButton(obj, {0.400, 0.110, 0.140, 0.713})
   end,
-  backgroundColor = {0.400, 0.110, 0.140, 0.62},
+  backgroundColor = {0.400, 0.110, 0.140, 0.713},
   focusColor = {1.0, 0.45, 0.45, 0.60},
 }
 
 skin.positive_button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.110, 0.320, 0.160, 0.62})
+    DrawGlassButton(obj, {0.110, 0.320, 0.160, 0.713})
   end,
-  backgroundColor = {0.110, 0.320, 0.160, 0.62},
+  backgroundColor = {0.110, 0.320, 0.160, 0.713},
   focusColor = {0.40, 0.90, 0.55, 0.60},
 }
 
 skin.link_button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.085, 0.135, 0.185, 0.55})
+    DrawGlassButton(obj, {0.085, 0.135, 0.185, 0.633})
   end,
-  backgroundColor = {0.085, 0.135, 0.185, 0.55},
+  backgroundColor = {0.085, 0.135, 0.185, 0.633},
   focusColor = C.accentGlow,
 }
 
 skin.button_simple = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.090, 0.105, 0.135, 0.55})
+    DrawGlassButton(obj, {0.090, 0.105, 0.135, 0.633})
   end,
-  backgroundColor = {0.090, 0.105, 0.135, 0.55},
+  backgroundColor = {0.090, 0.105, 0.135, 0.633},
   focusColor = C.accentGlow,
 }
 
 skin.battle_default_button = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.090, 0.130, 0.190, 0.60})
+    DrawGlassButton(obj, {0.090, 0.130, 0.190, 0.69})
   end,
-  backgroundColor = {0.090, 0.130, 0.190, 0.60},
+  backgroundColor = {0.090, 0.130, 0.190, 0.69},
   focusColor = C.accentGlow,
 }
 
@@ -445,20 +445,20 @@ skin.ready_button = {
   DrawControl = function(obj)
     DrawGlassButton(obj, obj.backgroundColor)
   end,
-  backgroundColor = {0.090, 0.300, 0.170, 0.60},
+  backgroundColor = {0.090, 0.300, 0.170, 0.69},
   focusColor = {0.40, 0.90, 0.55, 0.60},
   StyleReady = function(self)
-    self.backgroundColor = {0.090, 0.300, 0.170, 0.60}
+    self.backgroundColor = {0.090, 0.300, 0.170, 0.69}
     self.focusColor = {0.40, 0.90, 0.55, 0.60}
     self:Invalidate()
   end,
   StyleUnready = function(self)
-    self.backgroundColor = {0.300, 0.250, 0.110, 0.60}
+    self.backgroundColor = {0.300, 0.250, 0.110, 0.69}
     self.focusColor = {1.00, 0.85, 0.35, 0.60}
     self:Invalidate()
   end,
   StyleOff = function(self)
-    self.backgroundColor = {0.100, 0.110, 0.130, 0.55}
+    self.backgroundColor = {0.100, 0.110, 0.130, 0.633}
     self.focusColor = C.accentGlow
     self:Invalidate()
   end,
@@ -466,9 +466,9 @@ skin.ready_button = {
 
 skin.combobox_item = {
   DrawControl = function(obj)
-    DrawGlassButton(obj, {0.070, 0.082, 0.110, 0.66})
+    DrawGlassButton(obj, {0.070, 0.082, 0.110, 0.759})
   end,
-  backgroundColor = {0.070, 0.082, 0.110, 0.66},
+  backgroundColor = {0.070, 0.082, 0.110, 0.759},
   focusColor = C.accentGlow,
 }
 
@@ -498,7 +498,7 @@ skin.textbox = {
 skin.combobox = {
   DrawControl = function(obj)
     local w, h = obj.width, obj.height
-    local base = ReactiveFill({0.105, 0.122, 0.158, 0.62}, obj)
+    local base = ReactiveFill({0.105, 0.122, 0.158, 0.713}, obj)
     Glass.Surface(w, h, {
       radius = ControlRadius(w, h), rimWidth = 1, seg = C.seg, smooth = C.smooth,
       rim = ReactiveRim(obj, C.rim),
@@ -512,7 +512,7 @@ skin.combobox = {
     local cy = math.floor(h * 0.5)
     Glass.RRect(cx, cy - 0.75, cw, 1.5, 0.75, Glass.WithAlpha(caret, 0.85), 2, Glass.CIRCLE_SMOOTH)
   end,
-  backgroundColor = {0.105, 0.122, 0.158, 0.62},
+  backgroundColor = {0.105, 0.122, 0.158, 0.713},
   focusColor = C.accentGlow,
 }
 
@@ -539,8 +539,8 @@ skin.tabbaritem = {
     local state = obj.state
     local selected = state and state.selected
 
-    local base = selected and {0.150, 0.230, 0.330, 0.68}
-      or {0.070, 0.082, 0.110, 0.55}
+    local base = selected and {0.150, 0.230, 0.330, 0.782}
+      or {0.070, 0.082, 0.110, 0.633}
     base = ReactiveFill(base, obj)
 
     Glass.Surface(w, h, {
@@ -556,7 +556,7 @@ skin.tabbaritem = {
       end
     end
   end,
-  backgroundColor = {0.070, 0.082, 0.110, 0.55},
+  backgroundColor = {0.070, 0.082, 0.110, 0.633},
   focusColor = C.accentGlow,
   borderColor = {0, 0, 0, 0},
 }
@@ -579,7 +579,7 @@ skin.line_solid = {
 skin.progressbar = {
   DrawControl = DrawGlassProgressbar,
   color = C.accent,
-  backgroundColor = {0, 0, 0, 0.45},
+  backgroundColor = {0, 0, 0, 0.518},
 }
 
 skin.trackbar = {
@@ -605,8 +605,8 @@ skin.combobox_scrollpanel = {
 }
 
 skin.imagelistview = {
-  colorBK          = {1, 1, 1, 0.06},
-  colorBK_selected = Glass.WithAlpha(C.accent, 0.45),
+  colorBK          = {1, 1, 1, 0.069},
+  colorBK_selected = Glass.WithAlpha(C.accent, 0.518),
 }
 
 skin.treeview = {
