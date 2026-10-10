@@ -1655,10 +1655,11 @@ local function InitializeControls()
 				local certification = sortData[8]
 				if lobby.name == "singleplayer" or certification ~= "Unofficial" then
 					RegisterSortDataForFilters(sortData)
-					mapList:AddItem(mapname, control, sortData)
+					mapItems[#mapItems + 1] = {mapname, control, sortData}
 				end
 			end
 		end
+		mapList:AddItems(mapItems)
 		for i = 1, #headings do
 			UpdateFilterButtonCaption(i)
 		end
