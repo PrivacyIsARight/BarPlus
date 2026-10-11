@@ -178,21 +178,11 @@ function Spring.Utilities.GetTimeToPast(pastTimeString, includeSeconds)
 	end
 
 	-- Example: 2016-07-21T14:49:00.4731696Z
-	local pastTime = {
-		string.sub(pastTimeString, 18, 19),
-		string.sub(pastTimeString, 15, 16),
-		string.sub(pastTimeString, 12, 13),
-		string.sub(pastTimeString, 9, 10),
-		--string.sub(pastTimeString, 6, 7),
-		--string.sub(pastTimeString, 0, 4),
-	}
-
-	for i = 1, #pastTime do
-		pastTime[i] = tonumber(pastTime[i])
-		if not pastTime[i] then
-			return "??"
-		end
+	local day, hour, minute, second = pastTimeString:match("^%d%d%d%d%-%d%d%-(%d%d)T(%d%d):(%d%d):(%d%d)")
+	if not second then
+		return "??"
 	end
+	local pastTime = { tonumber(second), tonumber(minute), tonumber(hour), tonumber(day) }
 
 	local utcNow = os.date("!*t")
 	local currentTime = {
