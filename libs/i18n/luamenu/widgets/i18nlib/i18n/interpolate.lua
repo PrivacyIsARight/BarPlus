@@ -26,8 +26,11 @@ end
 
 
 local function interpolate(str, vars)
-  vars = vars or {}
-  str = escapeDoublePercent(str)
+	if not str:find("%", 1, true) then
+		return str
+	end
+	vars = vars or {}
+	str = escapeDoublePercent(str)
   str = interpolateVariables(str, vars)
   str = interpolateFormattedVariables(str, vars)
   str = string.format(str, unpack(vars))
