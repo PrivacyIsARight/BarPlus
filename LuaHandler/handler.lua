@@ -43,54 +43,6 @@ local emptyTable = {}
 
 
 local userAction = false
-local trustedClient = nil
-
-local CLIENT_NAME   = "Settings Window"
-local CLIENT_DIGEST = "9949382442831602"
-
-local function FNV64(data)
-	local P = 16777619
-	local TWO16 = 65536
-	local TWO32 = 4294967296
-	local function bxor(a, b)
-		local r, t = 0, 1
-		while (a > 0)or(b > 0) do
-			local aa = a % 2
-			local bb = b % 2
-			if (aa ~= bb) then
-				r = r + t
-			end
-			a = (a - aa) / 2
-			b = (b - bb) / 2
-			t = t * 2
-		end
-		return r
-	end
-	local function step(h, byte)
-		h = (h - h % 256) + bxor(h % 256, byte)
-		local hi = math.floor(h / TWO16)
-		local lo = h % TWO16
-		return (lo * P + (hi * P % TWO16) * TWO16) % TWO32
-	end
-	local h = 2166136261
-	for i = 1, #data do
-		h = step(h, data:byte(i))
-	end
-	local h1 = h
-	h = P
-	for i = 1, #data do
-		h = step(h, data:byte(i))
-	end
-	return ("%08x%08x"):format(h1, h)
-end
-
-local function IsTrustedClient(caller)
-	if (type(caller) ~= "table") then
-		return false
-	end
-	return (caller == trustedClient)
-		or (caller.widget == trustedClient)
-end
 
 
 --------------------------------------------------------------------------------
@@ -680,15 +632,6 @@ function handler:Load(filepath, _VFSMODE)
 		Spring.Log(LUA_NAME, "warning", ('loaded unsafe %s: %s'):format(handler.addonName, name))
 	end
 
-	if (name == CLIENT_NAME) then
-		local fdata = VFS.LoadFile(ki.filepath, _VFSMODE or VFSMODE)
-		if (fdata and (FNV64(fdata) == CLIENT_DIGEST)) then
-			trustedClient = addon
-		else
-			Spring.Log(LUA_NAME, "warning", "client widget integrity check failed; widget control is disabled")
-		end
-	end
-
 	--// Link the CallIns
 	for ciName,ciFunc in knownCallins(addon) do
 		InsertAddonCallIn(ciName, addon)
@@ -730,7 +673,7 @@ function handler:Remove(addon, _reason)
 		error("Wrong input to handler:Remove()", 2)
 	end
 
-	if (addon ~= caller) and (_reason ~= "dependency") and (_reason ~= "crash") and (not userAction) and (not IsTrustedClient(caller)) then
+	if (addon ~= caller) and (_reason ~= "dependency") and (_reason ~= "crash") and (not userAction) then
 		Spring.Log(LUA_NAME, "warning", ("blocked deactivation of %s \"%s\"."):format(handler.AddonName, addon._info.name))
 		return
 	end
@@ -949,18 +892,11 @@ end
 
 
 function handler:Disable(name)
-	if (not IsTrustedClient(getfenv(2))) then
-		return false
-	end
 	return DisableAddon(name)
 end
 
 
 function handler:Toggle(name)
-	if (not IsTrustedClient(getfenv(2))) then
-		return false
-	end
-
 	local ki = handler.knownInfos[name]
 	if (not ki) then
 		Spring.Log(LUA_NAME, "warning", "::Toggle: Couldn\'t find \"" .. name .. "\".")
