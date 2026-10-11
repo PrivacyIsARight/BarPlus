@@ -68,25 +68,9 @@ end
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-local lastTimer = Spring.GetTimer()
-local startTimer = Spring.GetTimer()
-local hideInterface = true
-local loadFade = 1
-
 local totalHideInterface = false
-local loadTex = "MenuLoadscreens/loadscreen.png"
 
 function widget:DrawScreen()
-	if startTimer then
-		local timer = Spring.GetTimer()
-		local diff = Spring.DiffTimers(timer, lastTimer)
-		lastTimer = timer
-		--Spring.Echo("diff", diff)
-		if diff < 0.04 or Spring.DiffTimers(timer, startTimer) > 8 then
-			hideInterface = false
-			startTimer = false
-		end
-	end
 	if totalHideInterface or (WG.Chobby and WG.Chobby.Configuration and WG.Chobby.Configuration.hideInterface) then
 		return
 	end
@@ -95,53 +79,13 @@ function widget:DrawScreen()
 	if (not screen0:IsEmpty()) then
 		gl.PushMatrix()
 			local vsx,vsy = gl.GetViewSizes()
-			if hideInterface then
-				gl.Translate(0,0,0)
-				gl.Scale(1,-1,1)
-			else
-				gl.Translate(0,vsy,0)
-				gl.Scale(1,-1,1)
-			end
+			gl.Translate(0,vsy,0)
+			gl.Scale(1,-1,1)
 			gl.Scale(WG.uiScale,WG.uiScale,1)
 			screen0:Draw()
 		gl.PopMatrix()
 	end
 	gl.Color(1,1,1,1)
-
-	if loadFade then
-		if WG.LimitFps and WG.LimitFps.ForceRedrawPeriod then
-			WG.LimitFps.ForceRedrawPeriod()
-		end
-
-		local vsx,vsy = gl.GetViewSizes()
-
-		gl.Color(1,1,1,loadFade)
-		gl.Texture(loadTex)
-
-		-- assume loadscreen is 16:9
-		if (16.0 * vsy < 9.0 * vsx) then
-			local pad = 0
-			if vsx ~= 0 then
-				pad = (1.0 - (16 * vsy) / (9.0 * vsx) ) * 0.5
-			end
-			gl.TexRect(0,0,vsx,vsy,0, 1.0 - pad, 1.0, pad)
-		else
-			local pad = 0
-			if vsy ~= 0 then
-				pad = (1.0 - (9.0 * vsx) / (16 * vsy) ) * 0.5
-			end
-			gl.TexRect(0,0,vsx,vsy,pad, 1.0, 1.0-pad, 0)
-		end
-
-		gl.Color(1,1,1,1)
-
-		if not hideInterface then
-			loadFade = loadFade - 0.18
-			if loadFade <= 0 then
-				loadFade = false
-			end
-		end
-	end
 end
 
 
