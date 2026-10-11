@@ -97,9 +97,18 @@ local function recursiveLoad(currentContext, data)
   end
 end
 
+local keyPathCache = {}
 local function localizedTranslate(key, locale, data)
-  local path, length = dotSplit(locale .. "." .. key)
-  local node = store
+  local path = keyPathCache[key]
+  local length
+  if path then
+    length = #path
+  else
+    path, length = dotSplit(key)
+    keyPathCache[key] = path
+  end
+  local node = store[locale]
+  if not node then return nil end
 
   for i=1, length do
     node = node[path[i]]
@@ -129,13 +138,18 @@ function i18n.set(key, value)
 end
 
 local missingTranslations = {}
+local fallbacksCache = {}
 function i18n.translate(key, data)
   assertPresent('translate', 'key', key)
 
   data = data or {}
   local usedLocale = data.locale or locale
 
-  local fallbacks = variants.fallbacks(usedLocale, fallbackLocale)
+  local fallbacks = fallbacksCache[usedLocale]
+  if not fallbacks then
+    fallbacks = variants.fallbacks(usedLocale, fallbackLocale)
+    fallbacksCache[usedLocale] = fallbacks
+  end
   for i=1, #fallbacks do
     local fallback = fallbacks[i]
     local value = localizedTranslate(key, fallback, data)
@@ -173,6 +187,7 @@ end
 function i18n.setFallbackLocale(newFallbackLocale)
   assertPresent('setFallbackLocale', 'newFallbackLocale', newFallbackLocale)
   fallbackLocale = newFallbackLocale
+  fallbacksCache = {}
 end
 
 function i18n.getFallbackLocale()
