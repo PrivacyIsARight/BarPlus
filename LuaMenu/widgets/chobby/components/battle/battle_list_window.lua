@@ -543,6 +543,10 @@ function BattleListWindow:MakeWatchBattle(battleID, battle)
 	}
 
 	parentButton.runningTimeCaption = lblRunningTime
+	parentButton.lblTitle = lblTitle
+	parentButton.minimapImage = minimapImage
+	parentButton.imgIsRunning = imgIsRunning
+	parentButton.playersOnMapCaption = lblPlayersOnMap
 
 	return parentButton
 end
@@ -689,6 +693,7 @@ function BattleListWindow:MakeJoinBattle(battleID, battle)
 			parent = parentButton,
 		}
 		imgLocked:SetVisibility(battle.locked == true)
+		parentButton.imgLocked = imgLocked
 	end
 
 	local rankimg = Configuration.gameConfig.rankFunction(nil, 1, nil, nil,nil )
@@ -724,6 +729,12 @@ function BattleListWindow:MakeJoinBattle(battleID, battle)
 
 	parentButton.previousMaxPlayers = lobby:GetBattleMaxPlayers(battleID)
 	parentButton.previousPlayerCount = lobby:GetBattlePlayerCount(battleID)
+	parentButton.lblTitle = lblTitle
+	parentButton.minimapImage = minimapImage
+	parentButton.mapCaption = lblMap
+	parentButton.imgIsRunning = imgIsRunning
+	parentButton.imgAvgRank = imgAvgRank
+	parentButton.playersCaption = lblPlayers
 
 	return parentButton
 end
@@ -1095,7 +1106,7 @@ function BattleListWindow:UpdateButtonColor(battleID)
 		end
 	end
 
-	local imgLocked = items.battleButton:GetChildByName("imgLocked")
+	local imgLocked = items.battleButton.imgLocked
 	if imgLocked then
 		imgLocked:SetVisibility(battle.locked == true)
 	end
@@ -1119,7 +1130,7 @@ function BattleListWindow:UpdateRankIcon(battleID, battle, items)
 
 	local items = items or self:GetRowItems(battleID)
 	if not items then return end
-	local imgAvgRank = items.battleButton:GetChildByName("imgAvgRank")
+	local imgAvgRank = items.battleButton.imgAvgRank
 
 	if users then
 		for i, userName in ipairs(users) do
@@ -1231,7 +1242,7 @@ function BattleListWindow:JoinedBattle(battleID)
 	end
 	local battleButton = items.battleButton
 
-	local playersCaption = battleButton:GetChildByName("playersCaption")
+	local playersCaption = battleButton.playersCaption
 	if playersCaption then
 		local newPlayerCount = lobby:GetBattlePlayerCount(battleID)
 		if battleButton.previousPlayerCount ~= newPlayerCount then
@@ -1239,7 +1250,7 @@ function BattleListWindow:JoinedBattle(battleID)
 			battleButton.previousPlayerCount = newPlayerCount
 		end
 	else
-		local playersOnMapCaption = battleButton:GetChildByName("playersOnMapCaption")
+		local playersOnMapCaption = battleButton.playersOnMapCaption
 		local playerCount = lobby:GetBattlePlayerCount(battleID)
 		playersOnMapCaption:SetCaption(playerCount .. ((playerCount == 1 and " player on " ) or " players on ") .. battle.mapName:gsub("_", " "))
 	end
@@ -1261,7 +1272,7 @@ function BattleListWindow:LeftBattle(battleID)
 	end
 	local battleButton = items.battleButton
 
-	local playersCaption = battleButton:GetChildByName("playersCaption")
+	local playersCaption = battleButton.playersCaption
 	if playersCaption then
 		local newPlayerCount = lobby:GetBattlePlayerCount(battleID)
 		if battleButton.previousPlayerCount ~= newPlayerCount then
@@ -1269,7 +1280,7 @@ function BattleListWindow:LeftBattle(battleID)
 			battleButton.previousPlayerCount = newPlayerCount
 		end
 	else
-		local playersOnMapCaption = battleButton:GetChildByName("playersOnMapCaption")
+		local playersOnMapCaption = battleButton.playersOnMapCaption
 		local playerCount = lobby:GetBattlePlayerCount(battleID)
 		playersOnMapCaption:SetCaption(playerCount .. ((playerCount == 1 and " player on " ) or " players on ") .. battle.mapName:gsub("_", " "))
 	end
@@ -1292,7 +1303,7 @@ function BattleListWindow:OnUpdateBattleInfo(battleID)
 		return
 	end
 	local battleButton = items.battleButton
-	local lblTitle = battleButton:GetChildByName("lblTitle")
+	local lblTitle = battleButton.lblTitle
 	--local imHaveMap = battleButton:GetChildByName("imHaveMap")
 	local password = battleButton:GetChildByName("password")
 
@@ -1318,8 +1329,8 @@ function BattleListWindow:OnUpdateBattleInfo(battleID)
 
 		-- Update minimap button if changed
 		if battleButton.previousMapName ~= battle.mapName then
-			local minimapImage = battleButton:GetChildByName("minimap"):GetChildByName("minimapImage")
-			local mapCaption = battleButton:GetChildByName("mapCaption")
+			local minimapImage = battleButton.minimapImage
+			local mapCaption = battleButton.mapCaption
 			minimapImage.file, minimapImage.checkFileExists = Configuration:GetMinimapSmallImage(battle.mapName)
 			minimapImage:Invalidate()
 			mapCaption:SetCaption(battle.mapName:gsub("_", " "))
@@ -1344,7 +1355,7 @@ function BattleListWindow:OnUpdateBattleInfo(battleID)
 		local newPlayerCount = lobby:GetBattlePlayerCount(battleID)
 		local newMaxPlayers = lobby:GetBattleMaxPlayers(battleID)
 		if battleButton.previousPlayerCount ~= newPlayerCount or battleButton.previousMaxPlayers ~= newMaxPlayers then
-			local playersCaption = battleButton:GetChildByName("playersCaption")
+			local playersCaption = battleButton.playersCaption
 			playersCaption:SetCaption(lobby:GetPlayerOccupancy(battleID))
 			battleButton.previousPlayerCount = newPlayerCount
 			battleButton.previousMaxPlayers = newMaxPlayers
@@ -1352,14 +1363,14 @@ function BattleListWindow:OnUpdateBattleInfo(battleID)
 
 	else
 		-- Resets title and truncates.
-		local lblTitle = items.battleButton:GetChildByName("lblTitle")
+		local lblTitle = items.battleButton.lblTitle
 		lblTitle.OnResize[1](lblTitle)
 
-		local minimapImage = items.battleButton:GetChildByName("minimap"):GetChildByName("minimapImage")
+		local minimapImage = items.battleButton.minimapImage
 		minimapImage.file, minimapImage.checkFileExists = Configuration:GetMinimapSmallImage(battle.mapName)
 		minimapImage:Invalidate()
 
-		local playersOnMapCaption = items.battleButton:GetChildByName("playersOnMapCaption")
+		local playersOnMapCaption = items.battleButton.playersOnMapCaption
 		local playerCount = lobby:GetBattlePlayerCount(battleID)
 		playersOnMapCaption:SetCaption(playerCount .. ((playerCount == 1 and " player on " ) or " players on ") .. battle.mapName:gsub("_", " "))
 	end
@@ -1379,7 +1390,7 @@ function BattleListWindow:OnBattleIngameUpdate(battleID, isRunning)
 		return
 	end
 
-	local imgIsRunning = items.battleButton:GetChildByName("imgIsRunning")
+	local imgIsRunning = items.battleButton.imgIsRunning
 	imgIsRunning:SetVisibility(battle.isRunning == true)
 
 	self:UpdateButtonColor(battleID)
@@ -1407,7 +1418,7 @@ function BattleListWindow:OnUpdateBattleTitle(battleID, battleTitle)
 		return
 	end
 
-	local battletitlelable = items.battleButton:GetChildByName("lblTitle")
+	local battletitlelable = items.battleButton.lblTitle
 	battletitlelable:SetCaption(StringUtilities.GetTruncatedStringWithDotDot(battleTitle, battletitlelable.font, math.max(battletitlelable.width, 250) ))
 	battletitlelable:Invalidate()
 	items.battleButton:Invalidate()
