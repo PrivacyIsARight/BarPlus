@@ -209,6 +209,9 @@ function BattleWatchListWindow:AddBattle(battleID)
 	}
 
 	parentButton.runningTimeCaption = lblRunningTime
+	parentButton.lblTitle = lblTitle
+	parentButton.minimapImage = minimapImage
+	parentButton.playersOnMapCaption = lblPlayersOnMap
 
 	self:AddRow({parentButton}, battle.battleID)
 end
@@ -260,7 +263,7 @@ function BattleWatchListWindow:JoinedBattle(battleID)
 		return
 	end
 	local battle = lobby:GetBattle(battleID)
-	local playersOnMapCaption = items.battleButton:GetChildByName("playersOnMapCaption")
+	local playersOnMapCaption = items.battleButton.playersOnMapCaption
 	local playerCount = lobby:GetBattlePlayerCount(battleID)
 	playersOnMapCaption:SetCaption(playerCount .. ((playerCount == 1 and " player on " ) or " players on ") .. battle.mapName:gsub("_", " "))
 	self:RecalculateOrder(battleID)
@@ -272,7 +275,7 @@ function BattleWatchListWindow:LeftBattle(battleID)
 		return
 	end
 	local battle = lobby:GetBattle(battleID)
-	local playersOnMapCaption = items.battleButton:GetChildByName("playersOnMapCaption")
+	local playersOnMapCaption = items.battleButton.playersOnMapCaption
 	local playerCount = lobby:GetBattlePlayerCount(battleID)
 	playersOnMapCaption:SetCaption(playerCount .. ((playerCount == 1 and " player on " ) or " players on ") .. battle.mapName:gsub("_", " "))
 	self:RecalculateOrder(battleID)
@@ -295,14 +298,14 @@ function BattleWatchListWindow:OnUpdateBattleInfo(battleID)
 	end
 
 	-- Resets title and truncates.
-	local lblTitle = items.battleButton:GetChildByName("lblTitle")
+	local lblTitle = items.battleButton.lblTitle
 	lblTitle.OnResize[1](lblTitle)
 
-	local minimapImage = items.battleButton:GetChildByName("minimap"):GetChildByName("minimapImage")
+	local minimapImage = items.battleButton.minimapImage
 	minimapImage.file, minimapImage.checkFileExists = Configuration:GetMinimapSmallImage(battle.mapName)
 	minimapImage:Invalidate()
 
-	local playersOnMapCaption = items.battleButton:GetChildByName("playersOnMapCaption")
+	local playersOnMapCaption = items.battleButton.playersOnMapCaption
 	local playerCount = lobby:GetBattlePlayerCount(battleID)
 	playersOnMapCaption:SetCaption(playerCount .. ((playerCount == 1 and " player on " ) or " players on ") .. battle.mapName:gsub("_", " "))
 
